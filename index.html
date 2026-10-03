@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>講義一覧 | プログラミング特講</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --color-bg-outer: #D1CFCA;
+            --color-bg-page: #F7F6F4;
+            --color-surface-1: #F2EFEA;
+            --color-surface-2: #FFFFFF;
+            --color-border: #DDDAD5;
+            --color-text-main: #222222;
+            --color-text-muted: #555555;
+            --color-text-light: #999999;
+            --navy: #344D61;
+            --accent: #8C7A6B;
+            --terracotta: #994F60;
+            --gold-muted: #C4B298;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            color: var(--color-text-main);
+            background-color: var(--color-bg-outer);
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, .font-serif {
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-weight: 400;
+        }
+
+        .page {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            background-color: var(--color-bg-page);
+            border: 1px solid var(--color-border);
+            position: relative;
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 8px;
+            background: linear-gradient(90deg, var(--navy), var(--accent), var(--gold-muted));
+        }
+
+        header {
+            padding: 80px 60px 40px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .eyebrow {
+            font-size: 0.75rem;
+            color: var(--color-text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            margin-bottom: 26px;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            color: var(--navy);
+            line-height: 1.2;
+            margin: 0 0 16px 0;
+        }
+
+        .header-text {
+            max-width: 860px;
+            color: var(--color-text-muted);
+            font-size: 1.03rem;
+        }
+
+        .weeks {
+            padding: 60px;
+            display: grid;
+            gap: 28px;
+        }
+
+        .week-card {
+            background-color: var(--color-surface-2);
+            border: 1px solid var(--color-border);
+            border-left: 6px solid var(--terracotta);
+            padding: 36px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 28px;
+            align-items: center;
+            transition: all 0.25s ease;
+        }
+
+        .week-card:hover {
+            transform: translateX(8px);
+            box-shadow: 0 14px 30px -12px rgba(0, 0, 0, 0.08);
+            border-color: var(--accent);
+        }
+
+        .week-title {
+            margin: 0 0 10px;
+            font-size: 1.35rem;
+            color: var(--navy);
+        }
+
+        .week-desc {
+            margin: 0;
+            color: var(--color-text-muted);
+            font-size: 0.95rem;
+        }
+
+        .meta {
+            display: inline-block;
+            margin-top: 14px;
+            padding: 4px 12px;
+            border: 1px solid var(--color-border);
+            border-radius: 999px;
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--navy);
+            background-color: var(--color-surface-1);
+            font-weight: 700;
+        }
+
+        .open-btn {
+            display: inline-flex;
+            align-items: center;
+            text-decoration: none;
+            background-color: var(--navy);
+            color: #fff;
+            padding: 12px 28px;
+            font-size: 0.82rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .open-btn:hover {
+            background-color: var(--terracotta);
+            padding-right: 36px;
+        }
+
+        .open-btn i {
+            margin-left: 10px;
+            font-size: 0.72rem;
+        }
+
+        footer {
+            padding: 40px 60px 60px;
+            border-top: 1px solid var(--color-border);
+            background-color: var(--color-surface-1);
+        }
+
+        footer p {
+            margin: 0;
+            font-size: 0.82rem;
+            color: var(--color-text-light);
+            letter-spacing: 0.04em;
+        }
+
+        @media (max-width: 768px) {
+            header, .weeks, footer {
+                padding: 30px;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+            .week-card {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="container">
+            <header>
+                <div class="eyebrow">Programming Special Lecture</div>
+                <h1 class="font-serif">講義Week一覧</h1>
+                <p class="header-text">
+                    このページは講義全体のハブです。各Weekのノート・スライドへここから移動できます。
+                    現在公開中なのは Week 1 のみで、今後ほかのWeekを順次追加していきます。
+                </p>
+            </header>
+
+            <section class="weeks">
+                <article class="week-card">
+                    <div>
+                        <h2 class="week-title font-serif">Week 1: Programming with 2D Coordinates and Shapes</h2>
+                        <p class="week-desc">
+                            図形描画を題材に、問題分解・擬似コード・デバッグの基本を演習中心で学ぶWeekです。
+                        </p>
+                        <span class="meta">公開中</span>
+                    </div>
+                    <a class="open-btn" href="lecture-notes/Week_1/index.html">
+                        Open Week 1
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </article>
+            </section>
+
+            <footer>
+                <p>© 2026 プログラミング特講 | 近畿大学 工学部 | 大澤 峻</p>
+            </footer>
+        </div>
+    </div>
+</body>
+</html>
