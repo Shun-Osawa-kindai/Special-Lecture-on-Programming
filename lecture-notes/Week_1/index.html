@@ -9,309 +9,281 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --color-bg-outer: #D1CFCA;
-            --color-bg-slide: #F7F6F4;
-            --color-surface-1: #F2EFEA;
-            --color-surface-2: #FFFFFF;
-            --color-border: #DDDAD5;
+            --color-bg-outer: #d1cfca;
+            --color-bg-card: #f7f6f4;
+            --color-surface: #ffffff;
+            --color-border: #dddad5;
             --color-text-main: #222222;
-            --color-text-muted: #555555;
-            --color-text-light: #999999;
-            --navy: #344D61;
-            --accent: #8C7A6B;
-            --terracotta: #994F60;
-            --gold-muted: #C4B298;
+            --color-text-muted: #666666;
+            --color-text-light: #9b9b9b;
+            --navy: #344d61;
+            --accent: #8c7a6b;
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
-            font-family: 'Inter', 'Noto Sans JP', sans-serif;
-            background-color: var(--color-bg-outer);
-            color: var(--color-text-main);
             margin: 0;
-            line-height: 1.6;
+            font-family: "Inter", "Noto Sans JP", sans-serif;
+            color: var(--color-text-main);
+            background: var(--color-bg-outer);
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.7;
         }
 
         h1, h2, h3, .font-serif {
-            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-family: "Playfair Display", "Noto Serif JP", serif;
             font-weight: 400;
         }
 
-        .hub-viewport {
+        .viewport {
             min-height: 100vh;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            padding: 40px 20px;
+            justify-content: center;
+            padding: 32px 20px;
         }
 
-        .hub-container {
+        .hub {
             width: 100%;
-            max-width: 1100px;
-            background-color: var(--color-bg-slide);
-            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.1);
-            border-radius: 4px;
-            overflow: hidden;
-            position: relative;
+            max-width: 1220px;
+            background: var(--color-bg-card);
             border: 1px solid var(--color-border);
+            border-radius: 8px;
+            box-shadow: 0 26px 55px -20px rgba(0, 0, 0, 0.16);
+            padding: 48px 64px 28px;
         }
 
-        .hub-container::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 8px;
-            background: linear-gradient(90deg, var(--navy), var(--accent), var(--gold-muted));
-            z-index: 10;
-        }
-
-        header {
-            padding: 80px 60px 40px 60px;
-            border-bottom: 1px solid var(--color-border);
-        }
-
-        header h1 {
-            font-size: 2.8rem;
-            color: var(--navy);
-            line-height: 1.2;
-            margin-bottom: 15px;
-        }
-
-        .breadcrumb {
-            font-size: 0.75rem;
-            color: var(--color-text-light);
-            text-transform: uppercase;
-            letter-spacing: 0.15em;
-            margin-bottom: 40px;
-        }
-
-        .breadcrumb a {
-            color: var(--accent);
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        .breadcrumb a:hover {
-            color: var(--terracotta);
-        }
-
-        .intro-section {
-            padding: 60px;
-            background-color: var(--color-surface-1);
-            border-bottom: 1px solid var(--color-border);
-        }
-
-        .intro-section h2 {
-            color: var(--terracotta);
-            font-size: 0.7rem;
-            font-weight: 600;
-            letter-spacing: 0.4em;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-        }
-
-        .intro-section h3 {
-            font-size: 1.85rem;
-            color: var(--color-text-main);
-            margin-bottom: 25px;
-        }
-
-        .main-text {
-            font-size: 1.05rem;
-            color: var(--color-text-muted);
-            max-width: 800px;
-            line-height: 1.8;
-        }
-
-        .syllabus-meta {
-            margin-top: 24px;
-            padding: 18px 20px;
-            border: 1px solid var(--color-border);
-            background-color: #f6f3ef;
-            max-width: 840px;
-        }
-
-        .syllabus-meta p {
-            margin: 0;
-            font-size: 0.92rem;
-            color: var(--color-text-muted);
-            line-height: 1.8;
-        }
-
-        .syllabus-meta p + p {
-            margin-top: 8px;
-        }
-
-        .highlight {
-            background: linear-gradient(transparent 70%, #E2DDD5 70%);
-            font-weight: 500;
-            padding: 0 0.15em;
-        }
-
-        .lecture-grid {
-            padding: 60px;
-            display: grid;
-            gap: 30px;
-        }
-
-        .lecture-card {
-            background-color: var(--color-surface-2);
-            border: 1px solid var(--color-border);
-            padding: 40px;
-            border-left: 6px solid var(--terracotta);
-            display: grid;
-            grid-template-columns: 1fr auto;
-            align-items: center;
-            gap: 40px;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .lecture-card:hover {
-            transform: translateX(8px);
-            box-shadow: 0 15px 35px -10px rgba(0,0,0,0.05);
-            border-color: var(--accent);
-        }
-
-        .lecture-info h4 {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--navy);
-            margin-bottom: 10px;
+        .topline {
             display: flex;
             align-items: center;
+            justify-content: space-between;
+            font-size: 10px;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+            color: var(--color-text-light);
+            margin-bottom: 34px;
         }
 
-        .lecture-info p {
+        .topline a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .topline a:hover {
+            color: var(--accent);
+        }
+
+        .intro {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 360px);
+            gap: 36px;
+            align-items: start;
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: 30px;
+            margin-bottom: 14px;
+        }
+
+        .eyebrow {
+            font-size: 10px;
+            letter-spacing: 0.36em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin: 0 0 10px 0;
+        }
+
+        h1 {
+            font-size: clamp(1.8rem, 2.8vw, 2.25rem);
+            margin: 0 0 12px 0;
+            letter-spacing: 0.02em;
+        }
+
+        .lead {
+            margin: 0;
             font-size: 0.95rem;
             color: var(--color-text-muted);
-            line-height: 1.6;
+            max-width: 700px;
         }
 
-        .status-badge {
-            font-size: 0.65rem;
-            font-weight: 700;
-            padding: 4px 12px;
-            background-color: var(--color-surface-1);
-            color: var(--navy);
-            border-radius: 20px;
-            margin-left: 15px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+        .week-points {
+            margin: 12px 0 0 0;
+            padding-left: 18px;
+            color: var(--color-text-muted);
+            font-size: 0.88rem;
+        }
+
+        .week-points li + li {
+            margin-top: 6px;
+        }
+
+        .meta-box {
+            background: var(--color-surface);
             border: 1px solid var(--color-border);
+            padding: 16px 18px;
         }
 
-        .view-btn {
+        .meta-box p {
+            margin: 0;
+            font-size: 0.78rem;
+            color: var(--color-text-muted);
+        }
+
+        .meta-box p + p {
+            margin-top: 7px;
+        }
+
+        .slide-list {
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .slide-item {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 26px;
+            align-items: center;
+            text-decoration: none;
+            color: inherit;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--color-border);
+            transition: background-color 0.18s ease, padding-left 0.18s ease;
+        }
+
+        .slide-item:hover {
+            background: rgba(255, 255, 255, 0.52);
+            padding-left: 10px;
+        }
+
+        .slide-item:last-child {
+            border-bottom: none;
+        }
+
+        .slide-label {
+            margin: 0;
+            color: var(--color-text-light);
+            font-size: 0.64rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+
+        .slide-title {
+            margin: 3px 0 3px 0;
+            font-size: 1.02rem;
+            color: var(--navy);
+        }
+
+        .slide-desc {
+            margin: 0;
+            color: var(--color-text-muted);
+            font-size: 0.85rem;
+        }
+
+        .action {
             display: inline-flex;
             align-items: center;
-            background-color: var(--navy);
-            color: white;
-            padding: 12px 30px;
-            border-radius: 2px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            text-decoration: none;
-            letter-spacing: 0.1em;
+            gap: 10px;
+            font-size: 0.68rem;
+            letter-spacing: 0.18em;
             text-transform: uppercase;
-            transition: all 0.2s;
+            color: var(--navy);
+            white-space: nowrap;
         }
 
-        .view-btn:hover {
-            background-color: var(--terracotta);
-            padding-right: 40px;
+        .action i {
+            font-size: 0.62rem;
         }
 
-        .view-btn i {
-            margin-left: 10px;
-            font-size: 0.7rem;
-        }
-
-        footer {
-            padding: 60px;
-            text-align: center;
-            border-top: 1px solid var(--color-border);
-            background-color: var(--color-surface-1);
-        }
-
-        footer p {
-            font-size: 0.8rem;
+        .footline {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 18px;
+            padding-top: 12px;
+            font-size: 10px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
             color: var(--color-text-light);
-            letter-spacing: 0.05em;
         }
 
-        footer a {
-            color: var(--accent);
+        .footline a {
+            color: inherit;
             text-decoration: none;
-            font-weight: 600;
         }
 
-        footer a:hover {
-            color: var(--terracotta);
+        .footline a:hover {
+            color: var(--accent);
         }
 
-        @media (max-width: 768px) {
-            header, .intro-section, .lecture-grid, footer {
-                padding: 30px;
+        @media (max-width: 980px) {
+            .hub {
+                padding: 30px 22px 20px;
             }
-            .lecture-card {
+
+            .intro {
                 grid-template-columns: 1fr;
                 gap: 20px;
             }
-            header h1 {
-                font-size: 2rem;
+
+            .slide-item {
+                grid-template-columns: 1fr;
+                gap: 10px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="hub-viewport">
-        <div class="hub-container">
-            <header>
-                <div class="breadcrumb">
-                    <a href="../../index.html">Course Top</a> / Week 1 / Hub
-                </div>
-                <h1 class="font-serif">Week 1 講義ノート</h1>
-                <p class="text-xs tracking-[0.3em] text-accent font-semibold uppercase">Programming with 2D Coordinates and Shapes</p>
-            </header>
-
-            <section class="intro-section">
-                <h2>Overview</h2>
-                <h3 class="font-serif">Programming with 2D coordinates and shapes</h3>
-                <p class="main-text">
-                    第1回では、図形描画の練習を通して「そのまま実装する」のではなく、問題を分解し、Pseudocodeや図で構造化して考える姿勢を身につけます。加えて、制約条件の中での設計判断、状態管理やデータ永続化が必要になる理由、ユーザー要求と利用文脈に応じた実装構成の説明力を育てます。
-                </p>
-                <div class="syllabus-meta">
-                    <p><strong>学修・教育目標:</strong> 課題解決ができる技術者を育成するため、プログラミングやアルゴリズムなど多様な思考手段を学ぶ。</p>
-                    <p><strong>到達度評価:</strong> 課題（レポート）60% / 演習（プログラム作成）40%</p>
-                    <p><strong>授業形式:</strong> 演習を含む講義　<strong>予習:</strong> シラバス整理 90分　<strong>復習:</strong> White-paper reconstruction 90分</p>
-                    <p><span class="highlight">困ったときはコンソールを見る癖</span>をつけ、デバッグを推理のプロセスとして実践しましょう。</p>
-                </div>
-            </section>
-
-            <div class="lecture-grid">
-                <div class="lecture-card"><div class="lecture-info"><h4 class="font-serif">10. Intro <span class="status-badge">Ready</span></h4><p>授業目標・到達目標・評価方法を確認し、課題解決型の学び方を共有します。</p></div><a href="./10-intro.html" class="view-btn">View Slides <i class="fa-solid fa-arrow-right"></i></a></div>
-                <div class="lecture-card"><div class="lecture-info"><h4 class="font-serif">20. 2D Coordinate System <span class="status-badge">Ready</span></h4><p>座標を使って問題を構造化し、図として説明できる土台をつくる資料です。</p></div><a href="./20-2D_coordinateSystem.html" class="view-btn">View Slides <i class="fa-solid fa-arrow-right"></i></a></div>
-                <div class="lecture-card"><div class="lecture-info"><h4 class="font-serif">30. Programming Exercise 1 <span class="status-badge">Ready</span></h4><p>制約条件のある課題に対し、アルゴリズム的発想で解決策を組み立てる演習です。</p></div><a href="./30-Programming_exercise_1_hackTheRobot.html.html" class="view-btn">View Slides <i class="fa-solid fa-arrow-right"></i></a></div>
-                <div class="lecture-card"><div class="lecture-info"><h4 class="font-serif">40. Programming Exercise 2 <span class="status-badge">Ready</span></h4><p>De Stijl Lab の演習資料です。</p></div><a href="./40-Programming_exercise_2_de-stijl-lab.html" class="view-btn">View Slides <i class="fa-solid fa-arrow-right"></i></a></div>
-                <div class="lecture-card"><div class="lecture-info"><h4 class="font-serif">50. Code Philosophy <span class="status-badge">Ready</span></h4><p>コードを書くときの感覚や考え方に関する補足資料です。</p></div><a href="./50-Code_philosophy_whatItFeelsLikeToCode.html" class="view-btn">View Slides <i class="fa-solid fa-arrow-right"></i></a></div>
-                <div class="lecture-card"><div class="lecture-info"><h4 class="font-serif">60. RGB Colours <span class="status-badge">Ready</span></h4><p>RGB カラーシステムの基礎資料です。</p></div><a href="./60-RGBcolours.html" class="view-btn">View Slides <i class="fa-solid fa-arrow-right"></i></a></div>
-                <div class="lecture-card"><div class="lecture-info"><h4 class="font-serif">70. fill / stroke / noFill <span class="status-badge">Ready</span></h4><p>塗りと線の描画設定についての資料です。</p></div><a href="./70-fill_stroke_noFill.html" class="view-btn">View Slides <i class="fa-solid fa-arrow-right"></i></a></div>
-                <div class="lecture-card"><div class="lecture-info"><h4 class="font-serif">80. setup / draw Flow <span class="status-badge">Ready</span></h4><p>プログラムの状態変化を追い、状態管理が必要になる理由を理解する資料です。</p></div><a href="./80-setup_drawAndProgrammeFlow.html" class="view-btn">View Slides <i class="fa-solid fa-arrow-right"></i></a></div>
-                <div class="lecture-card"><div class="lecture-info"><h4 class="font-serif">90. Basic Shapes <span class="status-badge">Ready</span></h4><p>ellipse / rect / line / triangle / point の基礎資料です。</p></div><a href="./90-ellipse_rect_line_triangle_and_point.html" class="view-btn">View Slides <i class="fa-solid fa-arrow-right"></i></a></div>
-                <div class="lecture-card"><div class="lecture-info"><h4 class="font-serif">100. Programming Exercise 3 <span class="status-badge">Ready</span></h4><p>Kandinsky Lab の演習資料です。</p></div><a href="./100-Programming_exercise_3_kandinsky-lab.html" class="view-btn">View Slides <i class="fa-solid fa-arrow-right"></i></a></div>
-                <div class="lecture-card"><div class="lecture-info"><h4 class="font-serif">110. Teach It To Yourself <span class="status-badge">Ready</span></h4><p>自学自習の進め方に関する資料です。</p></div><a href="./110-teachItToYourself.html" class="view-btn">View Slides <i class="fa-solid fa-arrow-right"></i></a></div>
-                <div class="lecture-card"><div class="lecture-info"><h4 class="font-serif">120. Console Access & Use <span class="status-badge">Ready</span></h4><p>コンソールを使ってエラーを見る方法を扱います。</p></div><a href="./120-howToAccessAndUseTheConsoleToViewErrors.html" class="view-btn">View Slides <i class="fa-solid fa-arrow-right"></i></a></div>
-                <div class="lecture-card"><div class="lecture-info"><h4 class="font-serif">130. Debugging Syntax Errors <span class="status-badge">Ready</span></h4><p>構文エラーの読み方とデバッグ手順の資料です。</p></div><a href="./130-debuggingSyntaxErrors.html" class="view-btn">View Slides <i class="fa-solid fa-arrow-right"></i></a></div>
-                <div class="lecture-card"><div class="lecture-info"><h4 class="font-serif">140. Programming Exercise 4 <span class="status-badge">Ready</span></h4><p>Debug Challenge の演習資料です。</p></div><a href="./140-Programming_exercise_4_debugChallenge.html" class="view-btn">View Slides <i class="fa-solid fa-arrow-right"></i></a></div>
-                <div class="lecture-card"><div class="lecture-info"><h4 class="font-serif">150. Asking For Help <span class="status-badge">Ready</span></h4><p>助けを求める技術とコミュニケーションの資料です。</p></div><a href="./150-Code_philosophy_askingForHelp.html" class="view-btn">View Slides <i class="fa-solid fa-arrow-right"></i></a></div>
-                <div class="lecture-card"><div class="lecture-info"><h4 class="font-serif">160. Game Project Part 1 <span class="status-badge">Ready</span></h4><p>ユーザー要求と利用文脈を踏まえ、必要な構成と実装を説明しながら制作する回です。</p></div><a href="./160-Game_Project_Part_1_backgroundScenery_basicDrawingFunctions.html" class="view-btn">View Slides <i class="fa-solid fa-arrow-right"></i></a></div>
+    <div class="viewport">
+        <main class="hub" aria-label="Week 1 ハブ">
+            <div class="topline">
+                <a href="../../index.html"><i class="fa-solid fa-chevron-left"></i> Course Hub</a>
+                <span>Week 1</span>
             </div>
 
-            <footer>
-                <p><a href="../../index.html"><i class="fa-solid fa-chevron-left mr-2"></i> Back to Course Top</a></p>
-                <p class="mt-8 opacity-60">© 2026 プログラミング特講 | 近畿大学 工学部 | 大澤 峻</p>
-            </footer>
-        </div>
+            <section class="intro">
+                <div>
+                    <p class="eyebrow">Lecture Notes</p>
+                    <h1 class="font-serif">Week 1: 2D Coordinates and Shapes</h1>
+                    <p class="lead">
+                        第1回の学習内容（シラバス準拠）: プログラミング環境と基本的な作業の流れ、2D coordinate systems、基本的な図形描画、コードを書き・実行し・修正する行為の理解。
+                    </p>
+                    <ul class="week-points">
+                        <li>授業形式: 演習を含む講義</li>
+                        <li>予習: シラバスを読み直し、内容を整理する（90分）</li>
+                        <li>復習: White-paper reconstruction に基づき学修する（90分）</li>
+                    </ul>
+                </div>
+                <aside class="meta-box" aria-label="Week 1 概要">
+                    <p><strong>Weekテーマ:</strong> Programming with 2D coordinates and shapes</p>
+                    <p><strong>学習焦点:</strong> 2D座標と図形描画を通した問題構造化</p>
+                    <p><strong>備考:</strong> 本ページ下部に第1回スライド一覧を掲載</p>
+                </aside>
+            </section>
+
+            <section class="slide-list" aria-label="Week 1 スライド一覧">
+                <a class="slide-item" href="./10-intro.html"><div><p class="slide-label">10 / Ready</p><h2 class="slide-title font-serif">Intro</h2><p class="slide-desc">授業目標・到達目標・評価方法を確認します。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+                <a class="slide-item" href="./20-2D_coordinateSystem.html"><div><p class="slide-label">20 / Ready</p><h2 class="slide-title font-serif">2D Coordinate System</h2><p class="slide-desc">座標を使って問題を構造化する基礎を扱います。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+                <a class="slide-item" href="./30-Programming_exercise_1_hackTheRobot.html.html"><div><p class="slide-label">30 / Ready</p><h2 class="slide-title font-serif">Programming Exercise 1</h2><p class="slide-desc">制約条件のある課題をアルゴリズム的に分解します。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+                <a class="slide-item" href="./40-Programming_exercise_2_de-stijl-lab.html"><div><p class="slide-label">40 / Ready</p><h2 class="slide-title font-serif">Programming Exercise 2</h2><p class="slide-desc">De Stijl Lab の演習資料です。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+                <a class="slide-item" href="./50-Code_philosophy_whatItFeelsLikeToCode.html"><div><p class="slide-label">50 / Ready</p><h2 class="slide-title font-serif">Code Philosophy</h2><p class="slide-desc">コードを書く感覚と考え方に関する補足です。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+                <a class="slide-item" href="./60-RGBcolours.html"><div><p class="slide-label">60 / Ready</p><h2 class="slide-title font-serif">RGB Colours</h2><p class="slide-desc">RGBカラーシステムの基礎を確認します。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+                <a class="slide-item" href="./70-fill_stroke_noFill.html"><div><p class="slide-label">70 / Ready</p><h2 class="slide-title font-serif">fill / stroke / noFill</h2><p class="slide-desc">塗りと線の描画設定について学びます。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+                <a class="slide-item" href="./80-setup_drawAndProgrammeFlow.html"><div><p class="slide-label">80 / Ready</p><h2 class="slide-title font-serif">setup / draw Flow</h2><p class="slide-desc">状態変化とプログラムの流れを理解します。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+                <a class="slide-item" href="./90-ellipse_rect_line_triangle_and_point.html"><div><p class="slide-label">90 / Ready</p><h2 class="slide-title font-serif">Basic Shapes</h2><p class="slide-desc">ellipse / rect / line / triangle / point の基礎です。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+                <a class="slide-item" href="./100-Programming_exercise_3_kandinsky-lab.html"><div><p class="slide-label">100 / Ready</p><h2 class="slide-title font-serif">Programming Exercise 3</h2><p class="slide-desc">Kandinsky Lab の演習資料です。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+                <a class="slide-item" href="./110-teachItToYourself.html"><div><p class="slide-label">110 / Ready</p><h2 class="slide-title font-serif">Teach It To Yourself</h2><p class="slide-desc">自学自習の進め方を扱います。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+                <a class="slide-item" href="./120-howToAccessAndUseTheConsoleToViewErrors.html"><div><p class="slide-label">120 / Ready</p><h2 class="slide-title font-serif">Console Access & Use</h2><p class="slide-desc">コンソールでエラーを読む方法を学びます。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+                <a class="slide-item" href="./130-debuggingSyntaxErrors.html"><div><p class="slide-label">130 / Ready</p><h2 class="slide-title font-serif">Debugging Syntax Errors</h2><p class="slide-desc">構文エラーの読み方とデバッグ手順です。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+                <a class="slide-item" href="./140-Programming_exercise_4_debugChallenge.html"><div><p class="slide-label">140 / Ready</p><h2 class="slide-title font-serif">Programming Exercise 4</h2><p class="slide-desc">Debug Challenge の演習資料です。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+                <a class="slide-item" href="./150-Code_philosophy_askingForHelp.html"><div><p class="slide-label">150 / Ready</p><h2 class="slide-title font-serif">Asking For Help</h2><p class="slide-desc">助けを求める技術とコミュニケーションを扱います。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+                <a class="slide-item" href="./160-Game_Project_Part_1_backgroundScenery_basicDrawingFunctions.html"><div><p class="slide-label">160 / Ready</p><h2 class="slide-title font-serif">Game Project Part 1</h2><p class="slide-desc">利用文脈を踏まえた制作プロセスに入ります。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+            </section>
+
+            <div class="footline">
+                <a href="../../index.html">Back to Course Hub</a>
+                <span>© 2026 Programming Special Lecture</span>
+            </div>
+        </main>
     </div>
 </body>
 </html>
