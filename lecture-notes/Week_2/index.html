@@ -6,6 +6,7 @@
     <title>Week 2 講義ノート | プログラミング特講</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --bg:#d1cfca; --card:#f7f6f4; --surface:#fff; --border:#dddad5; --text:#222; --muted:#666; --light:#9b9b9b; --navy:#344d61; --accent:#8c7a6b; }
         * { box-sizing: border-box; }
@@ -21,9 +22,17 @@
         .box { margin-top:24px; border:1px solid var(--border); background:var(--surface); padding:16px 18px; }
         .box h2 { margin:0 0 8px 0; font-size:1rem; color:var(--navy); }
         .box p { margin:0; color:var(--muted); font-size:.88rem; }
-        .meta { margin-top:16px; font-size:.78rem; color:var(--muted); }
+        .slide-list { margin-top:28px; border-top:1px solid var(--border); }
+        .slide-item { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:20px; align-items:center; padding:16px 0; border-bottom:1px solid var(--border); text-decoration:none; color:inherit; transition:background-color .18s ease, padding-left .18s ease; }
+        .slide-item:hover { background:rgba(255,255,255,.5); padding-left:10px; }
+        .slide-label { margin:0; color:var(--light); font-size:10px; letter-spacing:.2em; text-transform:uppercase; }
+        .slide-title { margin:4px 0 3px; font-size:1.02rem; color:var(--navy); }
+        .slide-desc { margin:0; font-size:.85rem; color:var(--muted); }
+        .action { display:inline-flex; align-items:center; gap:10px; font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--navy); white-space:nowrap; }
+        .action i { font-size:.62rem; }
+        .meta { margin-top:18px; font-size:.78rem; color:var(--muted); }
         .bottom { margin-top:20px; border-top:1px solid var(--border); padding-top:12px; display:flex; justify-content:space-between; font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--light); }
-        @media (max-width: 840px) { .card { padding:28px 20px 18px; } }
+        @media (max-width: 840px) { .card { padding:28px 20px 18px; } .slide-item { grid-template-columns:1fr; } }
     </style>
 </head>
 <body>
@@ -32,7 +41,19 @@
     <p class="eyebrow">Special Lecture on Programming</p>
     <h1 class="serif">Creating patterns with variables and loops</h1>
     <p class="lead">Variables and data、loops による repetition、randomness を使った反復的パターン生成を扱います。</p>
-    <section class="box"><h2 class="serif">このWeekのページについて</h2><p>Week 2 の講義ハブは作成済みです。個別スライドは準備中で、公開時にこのページから遷移できるように追加します。</p></section>
+    <section class="slide-list" aria-label="Week 2 スライド一覧">
+        <a class="slide-item" href="./10-builtInVariables_mouseX_mouseY.html"><div><p class="slide-label">10 / Ready</p><h2 class="slide-title serif">Built-in variables</h2><p class="slide-desc">mouseX / mouseY / width / height を使って変数の概念を学びます。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        <a class="slide-item" href="./20-builtInEvents_mousePressed_keyPressed.html"><div><p class="slide-label">20 / Ready</p><h2 class="slide-title serif">Built-in events</h2><p class="slide-desc">mousePressed / keyPressed を使った入力イベントの基礎です。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        <a class="slide-item" href="./30-createYourOwnVariables_var_initialising_and_assigning.html"><div><p class="slide-label">30 / Ready</p><h2 class="slide-title serif">Create your own variables</h2><p class="slide-desc">自分で変数を定義し、初期化と代入を学びます。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        <a class="slide-item" href="./40-12_topTipsForNamingVariables.html"><div><p class="slide-label">40 / Ready</p><h2 class="slide-title serif">12 Tips for naming variables</h2><p class="slide-desc">読みやすく保守しやすい変数名のコツをまとめます。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        <a class="slide-item" href="./50-objects.html"><div><p class="slide-label">50 / Ready</p><h2 class="slide-title serif">Objects</h2><p class="slide-desc">オブジェクトを使って変数を構造化する考え方を扱います。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        <a class="slide-item" href="./60-workingWithOperators.html"><div><p class="slide-label">60 / Ready</p><h2 class="slide-title serif">Working with operators</h2><p class="slide-desc">演算子を使って変数を更新し、アニメーションを作ります。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        <a class="slide-item" href="./70-mathematicalFunctions_random_min_max.html"><div><p class="slide-label">70 / Ready</p><h2 class="slide-title serif">Math functions</h2><p class="slide-desc">random / min / max を使って自然な変化を生みます。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        <a class="slide-item" href="./80-inspectingVariablesInTheConsole.html"><div><p class="slide-label">80 / Ready</p><h2 class="slide-title serif">Inspecting variables</h2><p class="slide-desc">コンソールで state を確認し、デバッグしやすくします。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        <a class="slide-item" href="./90-Code_philosophy_theElegantCoder.html"><div><p class="slide-label">90 / Ready</p><h2 class="slide-title serif">Code philosophy</h2><p class="slide-desc">読みやすく整ったコードを書くための考え方を見ます。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        <a class="slide-item" href="./100-Game_Project_Part_2a_gameCharacter.html"><div><p class="slide-label">100 / Ready</p><h2 class="slide-title serif">Game Project Part 2a</h2><p class="slide-desc">ゲームキャラクターを描き、動きを作る制作演習です。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        <a class="slide-item" href="./110-Game_Project_Part_2b_usingVariables.html"><div><p class="slide-label">110 / Ready</p><h2 class="slide-title serif">Game Project Part 2b</h2><p class="slide-desc">変数とインタラクションを使ってゲームの見た目と動作を統合します。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+    </section>
     <p class="meta">授業形式: 演習を含む講義 / 予習 90分 / 復習 90分</p>
     <div class="bottom"><span>Kindai University</span><a href="../../index.html">Back to Week List</a></div>
 </main></div>

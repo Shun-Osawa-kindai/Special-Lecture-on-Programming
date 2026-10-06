@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プログラミング演習：ゲームプロジェクトの統合とインタラクション</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --color-bg-outer: #D1CFCA;      /* 外側背景：グレイッシュベージュ */        
+            --color-bg-slide:  #F7F6F4;     /* スライド背景：アイボリー */
+            --color-surface-1: #F2EFEA;    /* サブサーフェス */
+            --color-surface-2: #FFFFFF;    /* ホワイトカード */
+            --color-bg-dashed: #F6F5F2;    
+            --color-border: #DDDAD5;       /* 境界線 */
+            --color-text-main: #222222;    /* メイン文字 */
+            --color-text-muted: #555555;   /* サブ文字 */
+            --color-text-light: #999999;   /* 薄い文字 */
+            --color-accent-temp: #8C7A6B;  /* トープアクセント */
+            --navy: #344D61;               /* スレートネイビー */
+            --terracotta: #994F60;         /* ローズレッド */
+            --gold-muted: #C4B298;         /* ソフトゴールド */
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--color-bg-outer);
+            color: var(--color-text-main);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+        }
+
+        /* Typography */
+        h1, h2, h3, .font-serif {
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-weight: 400;
+        }
+
+        /* 16:9 の固定アスペクト比を持たせるビューポート設定 (flex-direction: column を確実に指定) */
+        .presentation-viewport {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .slide-deck {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--color-bg-slide);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        /* 各スライドの基本スタイル設定 */
+        .slide {
+            position: absolute;
+            inset: 0;
+            padding: 5% 7% 7% 7%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transform: translateY(10px);
+            background: var(--color-bg-slide);
+            overflow-y: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        /* タイポグラフィ調整 */
+        h1 {
+            color: var(--color-text-main);
+            font-size: 1.7rem; 
+            font-weight: 400;
+            line-height: 1.35;
+            margin-bottom: 1rem;
+            letter-spacing: 0.05em;
+        }
+
+        h2 {
+            color: var(--color-accent-temp);
+            font-size: 0.65rem; 
+            font-weight: 500;
+            letter-spacing: 0.4em;
+            margin-bottom: 0.4rem;
+            text-transform: uppercase;
+        }
+
+        .main-text {
+            font-size: 1rem; 
+            line-height: 1.7;
+            color: var(--color-text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        .highlight {
+            background: linear-gradient(transparent 70%, #E2DDD5 70%);
+            font-weight: 500;
+            padding: 0 0.15em;
+        }
+
+        code {
+            background: var(--color-surface-1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 2px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--terracotta);
+            font-weight: bold;
+            font-size: 0.85em;
+            border: 1px solid var(--color-border);
+        }
+
+        .code-preview {
+            background: #252423;
+            color: #E2DDD5;
+            padding: 0.75rem;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            border: 1px solid #3A3835;
+        }
+
+        .minimal-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .minimal-list li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem; 
+            color: var(--color-text-muted);
+            display: block;
+            line-height: 1.5;
+        }
+        .minimal-list li::before {
+            content: "・";
+            position: absolute;
+            left: 0;
+            color: var(--color-accent-temp);
+            font-weight: bold;
+        }
+
+        .slide-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: var(--color-text-light);
+            border-top: 1px solid var(--color-border);
+            padding-top: 0.75rem;
+            margin-top: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        /* 矢印・ボタン等のナビゲーション制御 */
+        .nav-btn {
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            color: var(--color-text-main);
+            opacity: 1 !important;
+        }
+
+        /* Hamburger Menu */
+        .hamburger-btn {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            z-index: 50;
+            background: rgba(247, 246, 244, 0.9);
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 0;
+            width: 48px;
+            height: 48px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+
+        .hamburger-btn:hover {
+            background: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .hamburger-btn span {
+            width: 18px;
+            height: 2px;
+            background-color: var(--color-text-main);
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+
+        /* Navigation Sidebar */
+        .nav-sidebar {
+            position: fixed;
+            left: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background-color: var(--color-bg-slide);
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
+            z-index: 40;
+            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            border-right: 1px solid var(--color-border);
+        }
+
+        .nav-sidebar.open {
+            left: 0;
+        }
+
+        .nav-sidebar-content {
+            padding: 100px 24px 40px 24px;
+        }
+
+        .nav-sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--color-text-light);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .nav-item {
+            padding: 8px 0;
+            font-size: 11.5px;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            padding-left: 12px;
+            line-height: 1.4;
+        }
+
+        .nav-item:hover {
+            color: var(--color-text-main);
+            border-left-color: var(--color-accent-temp);
+            background: rgba(0,0,0,0.01);
+        }
+
+        .nav-item.active {
+            color: var(--color-accent-temp);
+            font-weight: 600;
+            border-left-color: var(--color-accent-temp);
+        }
+
+        /* Overlay */
+        .nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0);
+            z-index: 30;
+            transition: background-color 0.3s ease;
+            pointer-events: none;
+        }
+
+        .nav-overlay.open {
+            background-color: rgba(0, 0, 0, 0.3);
+            pointer-events: auto;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Dot Indicators */
+        .dot-active { 
+            background-color: var(--color-text-main); 
+            width: 6px;
+            height: 6px;
+        }
+        .dot-inactive { 
+            background-color: var(--color-border); 
+            width: 4px;
+            height: 4px;
+        }
+
+        /* 16:9比率レスポンシブスケール */
+        @media (max-width: 1320px) {
+            .slide-deck { transform: scale(0.9); }
+        }
+        @media (max-width: 1150px) {
+            .slide-deck { transform: scale(0.8); }
+        }
+        @media (max-width: 980px) {
+            .slide-deck { transform: scale(0.7); }
+        }
+        @media (max-width: 768px) {
+            .presentation-viewport { padding: 10px; height: auto; }
+            .slide-deck { aspect-ratio: auto; height: 560px; transform: none; }
+            .slide { padding: 32px 24px; }
+            h1 { font-size: 1.4rem; }
+            .main-text, .minimal-list li { font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-btn" id="hamburgerBtn" title="目次を開く">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Navigation Sidebar -->
+    <div class="nav-sidebar" id="navSidebar">
+        <div class="nav-sidebar-content">
+            <div class="nav-sidebar-title">講義スライド一覧</div>
+            <div id="navMenu"></div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <div class="presentation-viewport">
+        <div class="slide-deck" id="deck">
+
+            <!-- Slide 1: ゲームプロジェクト統合の全体像 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Game Project Part 3</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Project Integration</h2>
+                    <h1 class="font-serif text-main mb-3">個別パーツを1つのゲームシーンに統合する</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3 text-xs">
+                            <p class="text-slate-600 leading-relaxed text-[11.5px]">
+                                これまで個別に作成してきた「ゲームキャラクター」や「背景オブジェクト（木）」の描画コードを、新しいゲームプロジェクトのスケッチファイルに組み込みます。
+                            </p>
+                            <ul class="minimal-list space-y-1 text-[11px]">
+                                <li><strong>目的：</strong>パーツを組み合わせ、動的なインタラクションを持つ生きたゲーム世界を構築する。</li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[10px] leading-relaxed shadow-sm">
+                                <span class="text-[#7f8c8d] // ワークスペースの準備</span><br>
+                                <span class="text-[#61afef]">sketch.js</span> ➔ メインプログラムの記述<br>
+                                <span class="text-[#61afef]">README.md</span> ➔ 各ステージの指示書<br>
+                                <br>
+                                個別に作ったコードをプロジェクトへ移植しよう！
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Game Project Integration</span>
+                    <span>Slide 1 / 10</span>
+                </div>
+            </section>
+
+            <!-- Slide 2: キャラクターコードのコピーと重複宣言の削除 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Character Integration</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Code Porting</h2>
+                    <h1 class="font-serif text-main mb-3">キャラクターコードの移植と重複変数の削除</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3 text-xs">
+                            <p class="text-slate-600 leading-relaxed text-[11.5px]">
+                                Part 2で作成したキャラクター描画コードをコピーし、新しいスケッチファイルの <code>draw()</code> 内から呼び出します。
+                            </p>
+                            <ul class="minimal-list space-y-1 text-[11px]">
+                                <li><strong>注意点：</strong> キャラクターの位置変数（<code>gameChar_x</code>, <code>gameChar_y</code>）はプロジェクト側で既にグローバル宣言・初期化されているため、コード内の重複した <code>var</code> 宣言の行は削除します。</li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[10px] leading-relaxed shadow-sm">
+                                <span class="text-[#7f8c8d] // ❌ var gameChar_x; (重複するため削除)</span><br>
+                                <br>
+                                <span class="text-[#c678dd]">function</span> <span class="text-[#61afef]">draw</span>() {<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">background</span>(<span class="text-[#d19a66]">100, 155, 255</span>);<br>
+                                &nbsp;&nbsp;<span class="text-[#7f8c8d]">// キャラクター描画関数の呼び出し</span><br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">drawGameCharacter</span>();<br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Game Project Integration</span>
+                    <span>Slide 2 / 10</span>
+                </div>
+            </section>
+
+            <!-- Slide 3: マウスイベントによる位置更新 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Mouse Interaction</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Interactive Positioning</h2>
+                    <h1 class="font-serif text-main mb-3"><code>mousePressed()</code> でキャラクターを動かす</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[10px] leading-relaxed shadow-sm">
+                                <div class="flex justify-between items-center text-[10px] text-slate-400 mb-1 pb-1 border-b border-[#3A3835]">
+                                    <span>クリックでキャラクターを移動</span>
+                                    <button onclick="copyCode(this, 'function mousePressed() {\n  gameChar_x = mouseX;\n  gameChar_y = mouseY;\n}')" class="hover:text-white transition-colors cursor-pointer flex items-center gap-1">
+                                        <i class="fa-regular fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <span class="text-[#c678dd]">function</span> <span class="text-[#61afef]">mousePressed</span>() {<br>
+                                &nbsp;&nbsp;<span class="text-[#e06c75]">gameChar_x</span> = <span class="text-[#e06c75]">mouseX</span>;<br>
+                                &nbsp;&nbsp;<span class="text-[#e06c75]">gameChar_y</span> = <span class="text-[#e06c75]">mouseY</span>;<br>
+                                }
+                            </div>
+                        </div>
+                        <div class="md:col-span-6 space-y-3 text-xs">
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                まだ重力や物理演算が実装されていない段階として、まずはマウスクリックを利用し、クリックした位置へキャラクターが瞬間移動するインタラクションを確認します。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Game Project Integration</span>
+                    <span>Slide 3 / 10</span>
+                </div>
+            </section>
+
+            <!-- Slide 4: ツリーオブジェクトの組み込み -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Tree Integration</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Object Placement</h2>
+                    <h1 class="font-serif text-main mb-3">背景オブジェクト「木」のコード移植</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3 text-xs">
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                背景オブジェクトである「木」の描画コードをプロジェクトに組み込みます。
+                            </p>
+                            <ul class="minimal-list space-y-1 text-[11px]">
+                                <li>プロジェクト側にはすでに <code>treePos_x</code> や <code>treePos_y</code> といった位置変数が用意されています。</li>
+                                <li>これらを基準点として、木の各パーツ（幹・葉）を相対位置（オフセット計算）で配置し直す必要があります。</li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[10px] leading-relaxed shadow-sm">
+                                <span class="text-[#7f8c8d] // 木の描画関数のイメージ</span><br>
+                                <span class="text-[#c678dd]">function</span> <span class="text-[#61afef]">drawTree</span>() {<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">fill</span>(<span class="text-[#d19a66]">120, 80, 40</span>);<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">rect</span>(<span class="text-[#e06c75]">treePos_x</span>, <span class="text-[#e06c75]">treePos_y</span>, <span class="text-[#d19a66]">30, 150</span>);<br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Game Project Integration</span>
+                    <span>Slide 4 / 10</span>
+                </div>
+            </section>
+
+            <!-- Slide 5: 相対座標・オフセット計算の数学（X座標） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Coordinate Math</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Offset Arithmetic</h2>
+                    <h1 class="font-serif text-main mb-3">基準点からの差分（オフセット）の計算：X軸</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <p class="font-bold text-navy border-b border-border pb-1">① 絶対座標から相対座標への変換</p>
+                            <p class="text-slate-600 text-[11px] leading-relaxed">
+                                元の絶対座標（例: <code>850</code>）と基準点（例: <code>900</code>）の差分（<code>900 - 850 = 50</code>）を求めます。<br>
+                                <code>treePos_x - 50</code> のように書き換えることで、基準点が動いたときに木全体が連動して移動するようになります。
+                            </p>
+                        </div>
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <p class="font-bold text-terracotta border-b border-border pb-1">② トライアングル（葉）のX座標例</p>
+                            <div class="code-preview font-mono text-[9.5px] leading-tight">
+                                <span class="text-[#7f8c8d]">// 1つ目の三角形の頂点</span><br>
+                                triangle(<br>
+                                &nbsp;&nbsp;<span class="text-[#e06c75]">treePos_x</span> - <span class="text-[#d19a66]">50</span>,<br>
+                                &nbsp;&nbsp;<span class="text-[#e06c75]">treePos_y</span>,<br>
+                                &nbsp;&nbsp;...<br>
+                                );
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Game Project Integration</span>
+                    <span>Slide 5 / 10</span>
+                </div>
+            </section>
+
+            <!-- Slide 6: Y座標のオフセット計算とツリーの組み立て -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Y-Coordinate Math</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Vertical Offsets</h2>
+                    <h1 class="font-serif text-main mb-3">基準点からの縦方向の差分計算</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3 text-xs">
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                X座標と同様に、Y座標についても基準点（<code>treePos_y</code>）からの高低差を計算します。
+                            </p>
+                            <ul class="minimal-list space-y-1 text-[11px]">
+                                <li>基準点より上にあるパーツ：<code>treePos_y - 50</code> のように引き算</li>
+                                <li>基準点より下にあるパーツ：<code>treePos_y + 50</code> のように足し算</li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[10px] leading-relaxed shadow-sm">
+                                <span class="text-[#7f8c8d] // 葉のY座標の計算例</span><br>
+                                <span class="text-[#61afef]">triangle</span>(<br>
+                                &nbsp;&nbsp;<span class="text-[#e06c75]">treePos_x</span> - <span class="text-[#d19a66]">50</span>, <span class="text-[#e06c75]">treePos_y</span> + <span class="text-[#d19a66]">50</span>,<br>
+                                &nbsp;&nbsp;<span class="text-[#e06c75]">treePos_x</span> + <span class="text-[#d19a66]">30</span>, <span class="text-[#e06c75]">treePos_y</span> - <span class="text-[#d19a66]">50</span>,<br>
+                                &nbsp;&nbsp;<span class="text-[#e06c75]">treePos_x</span> + <span class="text-[#d19a66]">110</span>, <span class="text-[#e06c75]">treePos_y</span> + <span class="text-[#d19a66]">50</span><br>
+                                );
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Game Project Integration</span>
+                    <span>Slide 6 / 10</span>
+                </div>
+            </section>
+
+            <!-- Slide 7: デバッグとエラー対処（スペルミス・変数未定義） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Debugging Practice</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Troubleshooting</h2>
+                    <h1 class="font-serif text-main mb-3">画面が真っ白になったときのデバッグ手法</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <p class="font-bold text-terracotta border-b border-border pb-1">よくあるエラー例</p>
+                            <p class="text-slate-600 text-[11px] leading-relaxed">
+                                複数が入り組む座標計算では、変数名のタイポ（例: <code>treePos_x</code> を <code>treepos_x</code> と大文字小文字を間違える等）が発生しやすくなります。
+                            </p>
+                            <p class="font-mono text-[10px] text-terracotta">ReferenceError: treePos_x is not defined</p>
+                        </div>
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <p class="font-bold text-navy border-b border-border pb-1">解決のための3ステップ</p>
+                            <ul class="minimal-list space-y-1 text-[11px]">
+                                <li><strong>1. コンソールを確認：</strong> 赤文字のエラーメッセージと行番号を見る</li>
+                                <li><strong>2. スペルチェック：</strong> 変数名や関数名（<code>triangle</code> 等）の綴りを確認</li>
+                                <li><strong>3. 一時的なコメントアウト：</strong> 怪しい行を順にコメントアウトして原因箇所を絞り込む</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Game Project Integration</span>
+                    <span>Slide 7 / 10</span>
+                </div>
+            </section>
+
+            <!-- Slide 8: 試行錯誤からの学びとコードの修正 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Trial &amp; Error</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Iterative Process</h2>
+                    <h1 class="font-serif text-main mb-3">試行錯誤はプログラミングの正常なプロセス</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3 text-xs">
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                複雑な座標計算を一度で完璧に書き上げるプログラマーはいません。
+                            </p>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                実行結果を見て「形がおかしい」「表示されない」ときは、ひとつずつ数値を調整し直します。失敗を恐れず、修正を繰り返すことで正確なコードに仕上がります。
+                            </p>
+                        </div>
+                        <div class="md:col-span-6 p-4 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2 text-xs">
+                            <p class="font-bold text-navy border-b border-border pb-1">安全な修正のコツ</p>
+                            <ul class="minimal-list text-[11px] space-y-1">
+                                <li>古いコードを完全に消さず、コメントアウトして残しておく</li>
+                                <li>新しい書き方を試して比較する</li>
+                                <li>一箇所ずつ確実に動くことを確かめる</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Game Project Integration</span>
+                    <span>Slide 8 / 10</span>
+                </div>
+            </section>
+
+            <!-- Slide 9: 2つ目の木パーツの配置と完成 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Tree Completion</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Multiple Parts</h2>
+                    <h1 class="font-serif text-main mb-3">複数のパーツを連動させる</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[10px] leading-relaxed shadow-sm">
+                                <span class="text-[#7f8c8d] // 完成したツリー描画のイメージ</span><br>
+                                <span class="text-[#c678dd]">function</span> <span class="text-[#61afef]">drawTree</span>() {<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">fill</span>(<span class="text-[#d19a66]">120, 80, 40</span>);<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">rect</span>(<span class="text-[#e06c75]">treePos_x</span> - <span class="text-[#d19a66]">15</span>, <span class="text-[#e06c75]">treePos_y</span> - <span class="text-[#d19a66]">150</span>, <span class="text-[#d19a66]">30, 150</span>);<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">fill</span>(<span class="text-[#d19a66]">0, 150, 0</span>);<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">triangle</span>(<span class="text-[#e06c75]">treePos_x</span> - <span class="text-[#d19a66]">50</span>, <span class="text-[#e06c75]">treePos_y</span> - <span class="text-[#d19a66]">100</span>, ...);<br>
+                                }
+                            </div>
+                        </div>
+                        <div class="md:col-span-6 space-y-3 text-xs">
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                幹と複数の葉（三角形）のすべての座標が <code>treePos_x</code> と <code>treePos_y</code> を基準とした相対計算に置き換わりました。
+                            </p>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                これにより、変数 <code>treePos_x</code> の数値を書き換えるだけで、木全体がシーン内の好きな位置へスムーズに移動できるようになります。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Game Project Integration</span>
+                    <span>Slide 9 / 10</span>
+                </div>
+            </section>
+
+            <!-- Slide 10: 次のステップとチャレンジ -->
+            <section class="slide text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Next Stages</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content max-w-2xl py-4">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Upcoming Challenges</h2>
+                    <h1 class="font-serif text-main mb-4">世界をさらに広げよう</h1>
+                    
+                    <p class="text-xs text-muted leading-relaxed max-w-lg mx-auto mb-4">
+                        キャラクターと木がシーンに統合されました。ここからさらにゲーム世界を作り込んでいきます。
+                    </p>
+
+                    <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-left text-xs space-y-2 max-w-lg mx-auto mb-4">
+                        <p class="font-bold text-navy border-b border-border pb-1">今後の課題</p>
+                        <ul class="minimal-list text-[11px] space-y-1">
+                            <li><strong>峡谷（Canyon）の追加：</strong> オブジェクト変数を用いた穴（落下エリア）の配置</li>
+                            <li><strong>収集アイテム（Collectable）：</strong> キャラクターが近づいたときに反応するオブジェクト</li>
+                            <li><strong>山と雲の統合：</strong> 背景全体の完全なレイヤー構築</li>
+                        </ul>
+                    </div>
+
+                    <div class="p-3 bg-surface-1 border border-border rounded-sm shadow-sm text-center">
+                        <p class="font-serif text-xs font-bold text-navy">
+                            「個別に作ったパーツを組み合わせる。それがゲーム開発の醍醐味」
+                        </p>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Game Project Integration</span>
+                    <span>Slide 10 / 10</span>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- 枠（slide-deck）の外側に配置されたナビゲーションコントロール -->
+        <div class="w-full max-w-[1280px] flex justify-between items-center mt-3 px-4 pointer-events-auto z-30">
+            <div class="flex gap-6">
+                <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-600 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                    <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
+                </button>
+                <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-600 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                    Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                </button>
+            </div>
+
+            <!-- Dynamic Step Indicators Container -->
+            <div class="flex gap-1.5 overflow-x-auto max-w-xs justify-center px-2 no-scrollbar" id="dots-container"></div>
+        </div>
+
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsContainer = document.getElementById('dots-container');
+        const pageNumDisplays = document.querySelectorAll('.page-num');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const navSidebar = document.getElementById('navSidebar');
+        const navOverlay = document.getElementById('navOverlay');
+        const navMenu = document.getElementById('navMenu');
+        
+        let currentSlide = 0;
+        let indicators = [];
+
+        slides.forEach((_, index) => {
+            const dot = document.createElement('span');
+            dot.className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 ' + (index === 0 ? 'dot-active' : 'dot-inactive');
+            dotsContainer.appendChild(dot);
+            indicators.push(dot);
+            
+            if(pageNumDisplays[index]) {
+                pageNumDisplays[index].textContent = `Slide ${index + 1} / ${slides.length}`;
+            }
+
+            const title = slides[index].querySelector('h1')?.innerText.replace(/\n/g, ' ') || `Slide ${index + 1}`;
+            const navItem = document.createElement('div');
+            navItem.className = `nav-item ${index === 0 ? 'active' : ''}`;
+            navItem.textContent = `${index + 1}. ${title}`;
+            navItem.onclick = () => { updateSlide(index); closeSidebar(); };
+            navMenu.appendChild(navItem);
+        });
+
+        function updateSlide(index) {
+            if (index < 0 || index >= slides.length) return;
+
+            slides[currentSlide].classList.remove('active');
+            indicators[currentSlide].className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 bg-gray-300';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.remove('active');
+
+            currentSlide = index;
+            
+            slides[currentSlide].classList.add('active');
+            indicators[currentSlide].className = 'w-1.5 h-1.5 rounded-full transition-all duration-300 bg-black';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.add('active');
+
+            prevBtn.style.opacity = currentSlide === 0 ? '0.2' : '1';
+            prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+            nextBtn.style.opacity = currentSlide === slides.length - 1 ? '0.2' : '1';
+            nextBtn.style.pointerEvents = currentSlide === slides.length - 1 ? 'none' : 'auto';
+        }
+
+        function closeSidebar() {
+            navSidebar.classList.remove('open');
+            navOverlay.classList.remove('open');
+            hamburgerBtn.classList.remove('active');
+        }
+
+        hamburgerBtn.onclick = () => {
+            hamburgerBtn.classList.toggle('active');
+            navSidebar.classList.toggle('open');
+            navOverlay.classList.toggle('open');
+        };
+        navOverlay.onclick = closeSidebar;
+
+        prevBtn.onclick = () => updateSlide(currentSlide - 1);
+        nextBtn.onclick = () => updateSlide(currentSlide + 1);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                updateSlide(currentSlide - 1);
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                updateSlide(currentSlide + 1);
+            }
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const deck = document.getElementById('deck');
+        deck.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        deck.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                updateSlide(currentSlide + 1);
+            }
+            if (touchEndX > touchStartX + 50) {
+                updateSlide(currentSlide - 1);
+            }
+        }
+
+        function copyCode(button, code) {
+            navigator.clipboard.writeText(code).then(() => {
+                const originalContent = button.innerHTML;
+                button.innerHTML = '<i class="fa-solid fa-check text-[#8A9A86]"></i> Copied';
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                }, 2000);
+            }).catch(err => {
+                console.error('Copy failed:', err);
+            });
+        }
+
+        updateSlide(0);
+    </script>
+</body>
+</html>

@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>講義スライド：数学関数入門 (random, min, max)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            /* テンプレート配色（デ・ステイル基準アイボリー調） */
+            --color-bg-outer: #D1CFCA;      /* 外側背景：グレイッシュベージュ */        
+            --color-bg-slide:  #F7F6F4;     /* スライド背景：アイボリー */
+            --color-surface-1: #F2EFEA;    /* サブサーフェス */
+            --color-surface-2: #FFFFFF;    /* ホワイトカード */
+            --color-bg-dashed: #F6F5F2;    
+            --color-border: #DDDAD5;       /* 境界線 */
+            --color-text-main: #222222;    /* メイン文字 */
+            --color-text-muted: #555555;   /* サブ文字 */
+            --color-text-light: #999999;   /* 薄い文字 */
+            --color-accent-temp: #8C7A6B;  /* トープアクセント */
+            --navy: #344D61;               /* スレートネイビー */
+            --terracotta: #994F60;         /* ローズレッド */
+            --gold-muted: #C4B298;         /* ソフトゴールド */
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--color-bg-outer);
+            color: var(--color-text-main);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+        }
+
+        /* Typography */
+        h1, h2, h3, .font-serif {
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-weight: 400;
+        }
+
+        /* 16:9 の固定アスペクト比を持たせるビューポート設定 */
+        .presentation-viewport {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .slide-deck {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--color-bg-slide);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        /* 各スライドの基本スタイル設定 */
+        .slide {
+            position: absolute;
+            inset: 0;
+            padding: 5% 7% 7% 7%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transform: translateY(10px);
+            background: var(--color-bg-slide);
+            overflow-y: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        /* タイポグラフィ調整 */
+        h1 {
+            color: var(--color-text-main);
+            font-size: 1.85rem; 
+            font-weight: 400;
+            line-height: 1.4;
+            margin-bottom: 1.25rem;
+            letter-spacing: 0.05em;
+        }
+
+        h2 {
+            color: var(--color-accent-temp);
+            font-size: 0.65rem; 
+            font-weight: 500;
+            letter-spacing: 0.4em;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .main-text {
+            font-size: 1.05rem; 
+            line-height: 1.8;
+            color: var(--color-text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        .highlight {
+            background: linear-gradient(transparent 70%, #E2DDD5 70%);
+            font-weight: 500;
+            padding: 0 0.15em;
+        }
+
+        code {
+            background: var(--color-surface-1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 2px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--terracotta);
+            font-weight: bold;
+            font-size: 0.85em;
+            border: 1px solid var(--color-border);
+        }
+
+        .code-preview {
+            background: #252423;
+            color: #E2DDD5;
+            padding: 0.85rem;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            border: 1px solid #3A3835;
+        }
+
+        .minimal-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .minimal-list li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.6rem;
+            font-size: 0.95rem; 
+            color: var(--color-text-muted);
+            display: block;
+            line-height: 1.6;
+        }
+        .minimal-list li::before {
+            content: "・";
+            position: absolute;
+            left: 0;
+            color: var(--color-accent-temp);
+            font-weight: bold;
+        }
+
+        .slide-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: var(--color-text-light);
+            border-top: 1px solid var(--color-border);
+            padding-top: 0.75rem;
+            margin-top: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        /* 矢印・ボタン等のナビゲーション制御 */
+        .nav-btn {
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            color: var(--color-text-main);
+            opacity: 1 !important;
+        }
+
+        /* Hamburger Menu */
+        .hamburger-btn {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            z-index: 50;
+            background: rgba(247, 246, 244, 0.9);
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 0;
+            width: 48px;
+            height: 48px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+
+        .hamburger-btn:hover {
+            background: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .hamburger-btn span {
+            width: 18px;
+            height: 2px;
+            background-color: var(--color-text-main);
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+
+        /* Navigation Sidebar */
+        .nav-sidebar {
+            position: fixed;
+            left: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background-color: var(--color-bg-slide);
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
+            z-index: 40;
+            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            border-right: 1px solid var(--color-border);
+        }
+
+        .nav-sidebar.open {
+            left: 0;
+        }
+
+        .nav-sidebar-content {
+            padding: 100px 24px 40px 24px;
+        }
+
+        .nav-sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--color-text-light);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .nav-item {
+            padding: 10px 0;
+            font-size: 12px;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            padding-left: 12px;
+            line-height: 1.4;
+        }
+
+        .nav-item:hover {
+            color: var(--color-text-main);
+            border-left-color: var(--color-accent-temp);
+            background: rgba(0,0,0,0.01);
+        }
+
+        .nav-item.active {
+            color: var(--color-accent-temp);
+            font-weight: 600;
+            border-left-color: var(--color-accent-temp);
+        }
+
+        /* Overlay */
+        .nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0);
+            z-index: 30;
+            transition: background-color 0.3s ease;
+            pointer-events: none;
+        }
+
+        .nav-overlay.open {
+            background-color: rgba(0, 0, 0, 0.3);
+            pointer-events: auto;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Dot Indicators */
+        .dot-active { 
+            background-color: var(--color-text-main); 
+            width: 6px;
+            height: 6px;
+        }
+        .dot-inactive { 
+            background-color: var(--color-border); 
+            width: 4px;
+            height: 4px;
+        }
+
+        /* 16:9比率レスポンシブスケール */
+        @media (max-width: 1320px) {
+            .slide-deck { transform: scale(0.9); }
+        }
+        @media (max-width: 1150px) {
+            .slide-deck { transform: scale(0.8); }
+        }
+        @media (max-width: 980px) {
+            .slide-deck { transform: scale(0.7); }
+        }
+        @media (max-width: 768px) {
+            .presentation-viewport { padding: 10px; height: auto; }
+            .slide-deck { aspect-ratio: auto; height: 560px; transform: none; }
+            .slide { padding: 32px 24px; }
+            h1 { font-size: 1.5rem; }
+            .main-text, .minimal-list li { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-btn" id="hamburgerBtn" title="目次を開く">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Navigation Sidebar -->
+    <div class="nav-sidebar" id="navSidebar">
+        <div class="nav-sidebar-content">
+            <div class="nav-sidebar-title">講義スライド一覧</div>
+            <div id="navMenu"></div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <div class="presentation-viewport">
+        <div class="slide-deck" id="deck">
+
+            <!-- Slide 1: 描画関数から「数学関数（Math Functions）」へ -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Math Functions</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1 font-sans">Drawing vs Returning Values</h2>
+                    <h1 class="font-serif text-main mb-3">描画関数から<br><span class="highlight">「数値を返す数学関数」へ</span></h1>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mt-2">
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2 text-xs">
+                            <p class="font-serif font-semibold text-terracotta border-b border-border pb-1">これまでの関数（描画・設定）</p>
+                            <p class="text-slate-600 leading-relaxed text-[11.5px]">
+                                <code>ellipse()</code> や <code>fill()</code> などは、画面に直接図形を描画したり、描画状態を変更するための命令でした。
+                            </p>
+                        </div>
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2 text-xs">
+                            <p class="font-serif font-semibold text-navy border-b border-border pb-1">これからの関数（数学関数）</p>
+                            <p class="text-slate-600 leading-relaxed text-[11.5px]">
+                                <code>random()</code>, <code>min()</code>, <code>max()</code> などは、画面を一切変化させず、<span class="highlight">「計算された数値を結果として返す（Return）」</span>関数です。
+                            </p>
+                            <p class="text-slate-600 leading-relaxed text-[11.5px]">
+                                返された数値をそのまま画面に表示したり確認するには、<code>console.log()</code> を利用します。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Math Functions in p5.js</span>
+                    <span>Slide 1 / 5</span>
+                </div>
+            </section>
+
+            <!-- Slide 2: 乱数を生み出す random() 関数の基礎 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Random Function</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1 font-sans">Generating Random Values</h2>
+                    <h1 class="font-serif text-main mb-3">ランダムな数値を生成する：<code>random()</code></h1>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3 text-xs">
+                            <div class="p-3 bg-surface-2 border border-border rounded-sm shadow-sm space-y-1">
+                                <p class="font-bold text-navy">引数の指定方法と生成される範囲</p>
+                                <ul class="minimal-list space-y-1 text-[11px]">
+                                    <li><code>random()</code> ➔ <code>0</code> 以上 <code>1</code> 未満の小数を返す</li>
+                                    <li><code>random(250)</code> ➔ <code>0</code> 以上 <code>250</code> 未満の小数を返す</li>
+                                    <li><code>random(50, 250)</code> ➔ <code>50</code> 以上 <code>250</code> 未満の小数を返す</li>
+                                </ul>
+                            </div>
+                            <p class="text-slate-600 text-[11px] leading-relaxed">
+                                実行されるたびに毎回異なる数値が得られます。図形の幅や高さ、位置、色などに与えることで不規則で表現豊かなグラフィックが作れます。
+                            </p>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[10.5px] leading-relaxed shadow-sm">
+                                <div class="flex justify-between items-center text-[10px] text-slate-400 mb-1 pb-1 border-b border-[#3A3835]">
+                                    <span>ランダムなサイズの楕円</span>
+                                    <button onclick="copyCode(this, 'function draw() {\n  background(220);\n  // 幅と高さを50〜250のランダム値にする\n  ellipse(200, 200, random(50, 250), random(50, 250));\n}')" class="hover:text-white transition-colors cursor-pointer flex items-center gap-1">
+                                        <i class="fa-regular fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <span class="text-[#c678dd]">function</span> <span class="text-[#61afef]">draw</span>() {<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">background</span>(<span class="text-[#d19a66]">220</span>);<br>
+                                &nbsp;&nbsp;<span class="text-[#7f8c8d]">// 毎フレーム、幅と高さが別々にランダム変化</span><br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">ellipse</span>(<span class="text-[#d19a66]">200, 200</span>, <span class="text-[#61afef]">random</span>(<span class="text-[#d19a66]">50, 250</span>), <span class="text-[#61afef]">random</span>(<span class="text-[#d19a66]">50, 250</span>));<br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Math Functions in p5.js</span>
+                    <span>Slide 2 / 5</span>
+                </div>
+            </section>
+
+            <!-- Slide 3: 変数との組み合わせで「正円」に保つ -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Random &amp; Variables</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1 font-sans">Storing Random Results</h2>
+                    <h1 class="font-serif text-main mb-3">変数に代入して乱数の結果を保持する</h1>
+                    
+                    <p class="text-xs text-muted leading-relaxed mb-3">
+                        <code>random()</code> を関数引数のなかで直接2回呼び出すと、幅と高さに別の乱数が与えられて歪んだ楕円になります。幅と高さを等しく揃えて「整った正円」にするには、一度計算結果を変数に保存します。
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                        <div class="md:col-span-6 space-y-3 text-xs">
+                            <div class="p-3 bg-surface-2 border border-border rounded-sm shadow-sm space-y-1">
+                                <p class="font-bold text-navy">一度変数に代入するメリット</p>
+                                <ul class="minimal-list space-y-1 text-[11px]">
+                                    <li><code>var r = random(50, 250);</code> で乱数値を確定</li>
+                                    <li><code>ellipse(200, 200, r, r);</code> と指定すれば、同じ数値 <code>r</code> が適用されて綺麗な正円を保てる</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[10.5px] leading-relaxed shadow-sm">
+                                <div class="flex justify-between items-center text-[10px] text-slate-400 mb-1 pb-1 border-b border-[#3A3835]">
+                                    <span>ランダムなサイズの正円</span>
+                                    <button onclick="copyCode(this, 'function draw() {\n  background(220);\n  var r = random(50, 250);\n  ellipse(200, 200, r, r);\n}')" class="hover:text-white transition-colors cursor-pointer flex items-center gap-1">
+                                        <i class="fa-regular fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <span class="text-[#c678dd]">function</span> <span class="text-[#61afef]">draw</span>() {<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">background</span>(<span class="text-[#d19a66]">220</span>);<br>
+                                &nbsp;&nbsp;<span class="text-[#c678dd]">var</span> <span class="text-[#e06c75]">r</span> = <span class="text-[#61afef]">random</span>(<span class="text-[#d19a66]">50, 250</span>); <span class="text-[#7f8c8d]">// 乱数を変数rに保持</span><br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">ellipse</span>(<span class="text-[#d19a66]">200, 200</span>, <span class="text-[#e06c75]">r</span>, <span class="text-[#e06c75]">r</span>); <span class="text-[#7f8c8d]">// 同じrを使う</span><br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Math Functions in p5.js</span>
+                    <span>Slide 3 / 5</span>
+                </div>
+            </section>
+
+            <!-- Slide 4: 上限を制限する min() 関数 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Min Function</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1 font-sans">Upper Limit Restriction</h2>
+                    <h1 class="font-serif text-main mb-3">上限を制限する：<code>min()</code> 関数</h1>
+                    
+                    <div class="p-3 bg-surface-1 border border-border rounded-sm text-xs mb-3 text-slate-600">
+                        <code>min(a, b)</code> は与えられた2つの数値のうち<strong>「小さい方（最小値）」</strong>を返します。これを利用すると、値が一定以上大きくならないように「上限（ストッパー）」を設けることができます。
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div class="p-3 bg-surface-2 border border-border rounded-sm shadow-sm space-y-1">
+                            <p class="font-bold text-navy border-b border-border pb-1">① カーソル移動の範囲制限</p>
+                            <p class="text-slate-600 text-[11px] leading-relaxed">
+                                <code>var x = min(mouseX, 250);</code><br>
+                                カーソルが250pxを超えて右へ移動しても、250と比べられて「常に小さい方の250」が選択されるため、画面中央より右へ進まなくなります。
+                            </p>
+                        </div>
+                        <div class="p-3 bg-surface-2 border border-border rounded-sm shadow-sm space-y-1">
+                            <p class="font-bold text-terracotta border-b border-border pb-1">② アニメーションの停止（ストップ）</p>
+                            <p class="text-slate-600 text-[11px] leading-relaxed">
+                                <code>x = min(x + 1, 250);</code><br>
+                                フレームごとに1ずつ増加しますが、250に達した瞬間に加算（251）よりも250が選ばれるようになり、ボールが自動的に停止します。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Math Functions in p5.js</span>
+                    <span>Slide 4 / 5</span>
+                </div>
+            </section>
+
+            <!-- Slide 5: 下限を制限する max() と発展的な関数 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Max &amp; Advanced Math</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1 font-sans">Lower Limit &amp; Useful Functions</h2>
+                    <h1 class="font-serif text-main mb-3">下限を制限する <code>max()</code> とその他の便利な関数</h1>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3 text-xs">
+                            <div class="p-3 bg-surface-2 border border-border rounded-sm shadow-sm space-y-1">
+                                <p class="font-bold text-navy">下限（ストッパー）を作る max(a, b)</p>
+                                <p class="text-[11px] text-slate-600 leading-relaxed">
+                                    <code>max(a, b)</code> は与えられた数値のうち「大きい方」を返します。<br>
+                                    <code>x = max(x - 1, 250);</code> のように記述すると、右から左へ移動するアニメーションが 250px より小さくならず綺麗に停止します。
+                                </p>
+                            </div>
+                        </div>
+                        <div class="md:col-span-6 space-y-2 text-xs">
+                            <div class="p-3 bg-surface-2 border border-border rounded-sm shadow-sm space-y-1">
+                                <p class="font-bold text-terracotta border-b border-border pb-1">今後役立つ関連数学関数</p>
+                                <ul class="minimal-list space-y-1 text-[11px]">
+                                    <li><strong>constrain(val, min, max):</strong> 値を指定範囲内に強制クランプする</li>
+                                    <li><strong>map(val, inMin, inMax, outMin, max):</strong> 数値の範囲を別の範囲へ変換する</li>
+                                    <li><strong>floor() / round():</strong> 小数点の切り捨てや四捨五入を行う</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-surface-1 border border-border rounded-sm shadow-sm text-center mt-4">
+                        <p class="font-serif text-xs font-bold text-navy">
+                            「数学関数を使いこなせば、グラフィックのコントロールは自在になる」
+                        </p>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Math Functions in p5.js</span>
+                    <span>Slide 5 / 6</span>
+                </div>
+            </section>
+
+            <!-- Slide 6: 自ら学ぶ力（独学のすすめ：Teach it to yourself） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Self-Directed Learning</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1 font-sans">Teach It To Yourself</h2>
+                    <h1 class="font-serif text-main mb-3">自ら学ぶ力（独学のすすめ）</h1>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center text-xs">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-slate-600 leading-relaxed text-[11.5px]">
+                                優れたプログラマーになるためには、自立した学習者であることが重要です。プログラミング言語や技術は頻繁に変化するため、新しい構文やテクニックをご自身で学ぶスキルが求められます。
+                            </p>
+                            <p class="text-slate-600 leading-relaxed text-[11.5px]">
+                                このコースでは、あえていくつかの領域を未解説のまま残しています。公式の <span class="highlight">p5.jsリファレンスガイド</span> やオンラインリソースを活用して、自分でコードを学ぶ練習をしましょう。
+                            </p>
+                        </div>
+                        <div class="md:col-span-6 p-4 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <p class="font-bold text-navy border-b border-border pb-1">今後に向けて自習すべき3つの領域</p>
+                            <ul class="minimal-list space-y-1.5 text-[11px]">
+                                <li><strong>1. 追加イベント:</strong> <code>keyReleased()</code>, <code>mouseReleased()</code>, <code>mouseMoved()</code>, <code>mouseDragged()</code>, <code>key</code>, <code>keyCode</code> (Case 303等)</li>
+                                <li><strong>2. 演算子の短縮形:</strong> <code>+=</code>, <code>-=</code>, <code>/=</code>, <code>*=</code></li>
+                                <li><strong>3. 数学関数:</strong> <code>random()</code>, <code>min()</code> / <code>max()</code>, <code>map()</code>, <code>constrain()</code></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Math Functions in p5.js</span>
+                    <span>Slide 6 / 6</span>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- 枠（slide-deck）の外側に配置されたナビゲーションコントロール -->
+        <div class="w-full max-w-[1280px] flex justify-between items-center mt-3 px-4 pointer-events-auto z-30">
+            <div class="flex gap-6">
+                <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-600 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                    <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
+                </button>
+                <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-600 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                    Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                </button>
+            </div>
+
+            <!-- Dynamic Step Indicators Container -->
+            <div class="flex gap-1.5 overflow-x-auto max-w-xs justify-center px-2 no-scrollbar" id="dots-container"></div>
+        </div>
+
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsContainer = document.getElementById('dots-container');
+        const pageNumDisplays = document.querySelectorAll('.page-num');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const navSidebar = document.getElementById('navSidebar');
+        const navOverlay = document.getElementById('navOverlay');
+        const navMenu = document.getElementById('navMenu');
+        
+        let currentSlide = 0;
+        let indicators = [];
+
+        slides.forEach((_, index) => {
+            const dot = document.createElement('span');
+            dot.className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 ' + (index === 0 ? 'dot-active' : 'dot-inactive');
+            dotsContainer.appendChild(dot);
+            indicators.push(dot);
+            
+            if(pageNumDisplays[index]) {
+                pageNumDisplays[index].textContent = `Slide ${index + 1} / ${slides.length}`;
+            }
+
+            const title = slides[index].querySelector('h1')?.innerText.replace(/\n/g, ' ') || `Slide ${index + 1}`;
+            const navItem = document.createElement('div');
+            navItem.className = `nav-item ${index === 0 ? 'active' : ''}`;
+            navItem.textContent = `${index + 1}. ${title}`;
+            navItem.onclick = () => { updateSlide(index); closeSidebar(); };
+            navMenu.appendChild(navItem);
+        });
+
+        function updateSlide(index) {
+            if (index < 0 || index >= slides.length) return;
+
+            slides[currentSlide].classList.remove('active');
+            indicators[currentSlide].className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 bg-gray-300';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.remove('active');
+
+            currentSlide = index;
+            
+            slides[currentSlide].classList.add('active');
+            indicators[currentSlide].className = 'w-1.5 h-1.5 rounded-full transition-all duration-300 bg-black';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.add('active');
+
+            prevBtn.style.opacity = currentSlide === 0 ? '0.2' : '1';
+            prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+            nextBtn.style.opacity = currentSlide === slides.length - 1 ? '0.2' : '1';
+            nextBtn.style.pointerEvents = currentSlide === slides.length - 1 ? 'none' : 'auto';
+        }
+
+        function closeSidebar() {
+            navSidebar.classList.remove('open');
+            navOverlay.classList.remove('open');
+            hamburgerBtn.classList.remove('active');
+        }
+
+        hamburgerBtn.onclick = () => {
+            hamburgerBtn.classList.toggle('active');
+            navSidebar.classList.toggle('open');
+            navOverlay.classList.toggle('open');
+        };
+        navOverlay.onclick = closeSidebar;
+
+        prevBtn.onclick = () => updateSlide(currentSlide - 1);
+        nextBtn.onclick = () => updateSlide(currentSlide + 1);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                updateSlide(currentSlide - 1);
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                updateSlide(currentSlide + 1);
+            }
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const deck = document.getElementById('deck');
+        deck.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        deck.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                updateSlide(currentSlide + 1);
+            }
+            if (touchEndX > touchStartX + 50) {
+                updateSlide(currentSlide - 1);
+            }
+        }
+
+        function copyCode(button, code) {
+            navigator.clipboard.writeText(code).then(() => {
+                const originalContent = button.innerHTML;
+                button.innerHTML = '<i class="fa-solid fa-check text-[#8A9A86]"></i> Copied';
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                }, 2000);
+            }).catch(err => {
+                console.error('Copy failed:', err);
+            });
+        }
+
+        updateSlide(0);
+    </script>
+</body>
+</html>

@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>講義スライド：エレガントなコード</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Playfair Display / Noto Serif JP / Inter / Noto Sans JP -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Font Awesome (for icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            /* テンプレートの配色 */
+            --color-bg-outer: #D1CFCA;      /* 外側背景：グレイッシュベージュ */        
+            --color-bg-slide:  #F7F6F4;     /* スライド背景：アイボリー */
+            --color-surface-1: #F2EFEA;    /* サブサーフェス */
+            --color-surface-2: #FFFFFF;    /* ホワイトカード */
+            --color-bg-dashed: #F6F5F2;    
+            --color-border: #DDDAD5;       /* 境界線 */
+            --color-text-main: #222222;    /* メイン文字 */
+            --color-text-muted: #555555;   /* サブ文字 */
+            --color-text-light: #999999;   /* 薄い文字 */
+            --color-accent-temp: #8C7A6B;  /* テンプレートアクセント（トープ） */
+            --color-label-green: #344D61;  
+            --color-label-red: #994F60;    
+
+            /* 講義資料の配色をテンプレートの調和トーンとして共存 */
+            --navy: #344D61;               /* 洗練されたスレートネイビー */
+            --accent: #8C7A6B;             
+            --bg-light: #F2EFEA;           
+            --blue-muted: #5B7E8D;         
+            --sand-light: #F2EFEA;         
+            --gold-muted: #C4B298;         /* ソフトゴールド */
+            --terracotta: #994F60;         /* 落ち着いたローズレッド */
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--color-bg-outer);
+            color: var(--color-text-main);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+        }
+
+        /* Typography */
+        h1, h2, h3, .font-serif {
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-weight: 400;
+        }
+
+        /* 16:9 の固定アスペクト比を持たせるビューポート設定 */
+        .presentation-viewport {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .slide-deck {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--color-bg-slide);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        /* 各スライドの基本スタイル設定 */
+        .slide {
+            position: absolute;
+            inset: 0;
+            padding: 5% 7% 7% 7%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transform: translateY(10px);
+            background: var(--color-bg-slide);
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        /* 上部の極薄ライン（装飾） */
+        .slide::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--navy), var(--accent-temp), var(--gold-muted));
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        /* 講義資料のタイポグラフィ調整（大画面の視認性を考慮したスケール） */
+        h1 {
+            color: var(--color-text-main);
+            font-size: 2.1rem;
+            font-weight: 400;
+            line-height: 1.4;
+            margin-bottom: 1rem;
+            letter-spacing: 0.05em;
+        }
+
+        h2 {
+            color: var(--color-accent-temp);
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.4em;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .main-text {
+            font-size: 1.28rem;
+            line-height: 1.7;
+            color: var(--color-text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        .highlight {
+            background: linear-gradient(transparent 70%, #E2DDD5 70%);
+            font-weight: 500;
+            padding: 0 0.15em;
+        }
+
+        code {
+            font-family: 'Courier New', Courier, monospace;
+            color: var(--terracotta);
+            font-weight: bold;
+        }
+
+        /* ミニマルな引用ボックス */
+        .quote-box {
+            background-color: var(--color-surface-1);
+            border-left: 2px solid var(--color-accent-temp);
+            border-radius: 2px;
+            padding: 1.25rem 1.75rem;
+            margin: 1.25rem 0;
+            position: relative;
+        }
+
+        .quote-box::after {
+            content: "“";
+            position: absolute;
+            top: 5px;
+            left: 10px;
+            font-size: 2.5rem;
+            font-family: 'Playfair Display', serif;
+            color: var(--color-accent-temp);
+            opacity: 0.12;
+            line-height: 1;
+        }
+
+        blockquote {
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-weight: 400;
+            color: var(--color-text-main);
+            border-left: 2px solid var(--gold-muted);
+            padding-left: 1.5rem;
+            margin: 1.5rem 0;
+            font-size: 1.35rem;
+            line-height: 1.6;
+        }
+
+        /* Custom List Styling */
+        .minimal-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .minimal-list li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.6rem;
+            font-size: 1.18rem;
+            color: var(--color-text-muted);
+            display: block;
+            line-height: 1.6;
+        }
+        .minimal-list li::before {
+            content: "・";
+            position: absolute;
+            left: 0;
+            color: var(--color-accent-temp);
+            font-weight: bold;
+        }
+
+        /* アローマーカー付きリスト */
+        .arrow-list li::before {
+            content: ">";
+            color: var(--color-accent-temp);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            top: 1px;
+        }
+
+        .slide-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: var(--color-text-light);
+            border-top: 1px solid var(--color-border);
+            padding-top: 0.75rem;
+            margin-top: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        /* テンプレート調のダークスライド */
+        .slide-dark {
+            background-color: #2F2D2B !important; /* シックなチャコールトープ */
+            color: #F7F6F4;
+        }
+
+        .slide-dark::before {
+            background: transparent;
+        }
+
+        .slide-dark h1 {
+            color: #F7F6F4;
+        }
+        .slide-dark h2 {
+            color: var(--color-accent-temp);
+        }
+        .slide-dark .main-text {
+            color: #D1CFCA;
+        }
+
+        /* 矢印・ボタン等のナビゲーション制御 */
+        .nav-btn {
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            color: var(--color-text-main);
+            opacity: 1 !important;
+        }
+
+        /* Hamburger Menu */
+        .hamburger-btn {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            z-index: 50;
+            background: rgba(247, 246, 244, 0.9);
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 0;
+            width: 48px;
+            height: 48px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+
+        .hamburger-btn:hover {
+            background: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .hamburger-btn span {
+            width: 18px;
+            height: 2px;
+            background-color: var(--color-text-main);
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+
+        /* Navigation Sidebar */
+        .nav-sidebar {
+            position: fixed;
+            left: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background-color: var(--color-bg-slide);
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
+            z-index: 40;
+            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            border-right: 1px solid var(--color-border);
+        }
+
+        .nav-sidebar.open {
+            left: 0;
+        }
+
+        .nav-sidebar-content {
+            padding: 100px 24px 40px 24px;
+        }
+
+        .nav-sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--color-text-light);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .nav-item {
+            padding: 10px 0;
+            font-size: 12px;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            padding-left: 12px;
+            line-height: 1.4;
+        }
+
+        .nav-item:hover {
+            color: var(--color-text-main);
+            border-left-color: var(--color-accent-temp);
+            background: rgba(0,0,0,0.01);
+        }
+
+        .nav-item.active {
+            color: var(--color-accent-temp);
+            font-weight: 600;
+            border-left-color: var(--color-accent-temp);
+        }
+
+        /* Overlay */
+        .nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0);
+            z-index: 30;
+            transition: background-color 0.3s ease;
+            pointer-events: none;
+        }
+
+        .nav-overlay.open {
+            background-color: rgba(0, 0, 0, 0.3);
+            pointer-events: auto;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Dot Indicators */
+        .dot-active { 
+            background-color: var(--color-text-main); 
+            width: 6px;
+            height: 6px;
+        }
+        .dot-inactive { 
+            background-color: var(--color-border); 
+            width: 4px;
+            height: 4px;
+        }
+
+        /* 16:9比率を保つためのレスポンシブスケール */
+        @media (max-width: 1320px) {
+            .slide-deck {
+                transform: scale(0.9);
+            }
+        }
+        @media (max-width: 1150px) {
+            .slide-deck {
+                transform: scale(0.8);
+            }
+        }
+        @media (max-width: 980px) {
+            .slide-deck {
+                transform: scale(0.7);
+            }
+        }
+        @media (max-width: 768px) {
+            .presentation-viewport {
+                padding: 10px;
+                height: auto;
+            }
+            .slide-deck {
+                aspect-ratio: auto;
+                height: 560px;
+                transform: none;
+            }
+            .slide {
+                padding: 32px 24px;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            .main-text, .minimal-list li {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* 特有の表スタイル：横スクロールを排除し一度に全行を大きく見せる(15.2px相当) */
+        .table-cell {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--color-border);
+            font-size: 15.2px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-btn" id="hamburgerBtn" title="目次を開く">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Navigation Sidebar -->
+    <div class="nav-sidebar" id="navSidebar">
+        <div class="nav-sidebar-content">
+            <div class="nav-sidebar-title">講義スライド一覧</div>
+            <div id="navMenu"></div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <div class="presentation-viewport">
+        <div class="slide-deck" id="deck">
+
+            <!-- Slide 1: Cover -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Special Lecture</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content max-w-4xl text-center md:text-left py-4">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp mb-2">今週のコード哲学</h2>
+                    <h1 class="text-3xl md:text-4xl font-serif text-main leading-[1.3] mb-4">
+                        エレガントなコードを書くこと<br>
+                        <span class="text-accent-temp font-light text-2xl">Always be an elegant coder.</span>
+                    </h1>
+                    <div class="pt-4 border-t border-border inline-block text-left mt-4">
+                        <span class="text-[10px] uppercase tracking-[0.2em] text-light block mb-1 font-medium font-serif">Programming Philosophy</span>
+                        <span class="text-[12px] text-muted font-light">プログラマーは、何を実現するかだけでなく、どのように実現するかも大切にする</span>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Code Aesthetics</span>
+                    <span>Slide 1 / 14</span>
+                </div>
+            </section>
+
+            <!-- Slide 2: Positioning Table (フルサイズ表示) -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Positioning</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp mb-1">プログラムの品質</h2>
+                    <h1 class="font-serif text-main mb-3">美しい解法を追い求める心</h1>
+                    <p class="text-xs text-muted mb-4 leading-relaxed">数学者が美しい数式を愛するように、プログラマーもまた「美しい（エレガントな）コード」を目指します。</p>
+                    
+                    <div class="bg-surface-2 border border-sub shadow-sm rounded-sm overflow-hidden mb-4">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-surface-1 text-xs text-muted uppercase tracking-wider font-mono">
+                                <tr>
+                                    <th class="table-cell font-semibold py-3 px-4">観点</th>
+                                    <th class="table-cell font-semibold py-3 px-4">一般的なプログラミング</th>
+                                    <th class="table-cell font-semibold py-3 px-4">エレガントなプログラミング</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm text-muted font-light">
+                                <tr class="border-b border-border">
+                                    <td class="table-cell py-3.5 px-4 font-semibold text-main">目的 (What)</td>
+                                    <td class="table-cell py-3.5 px-4">要件を満たし、正しく動作するシステムを作る</td>
+                                    <td class="table-cell py-3.5 px-4">シンプルで美しく、誰もが直観的に読める構造にする</td>
+                                </tr>
+                                <tr class="border-b border-border">
+                                    <td class="table-cell py-3.5 px-4 font-semibold text-main">実現手法 (How)</td>
+                                    <td class="table-cell py-3.5 px-4">動けばどのような複雑なコード記述でも良い</td>
+                                    <td class="table-cell py-3.5 px-4">余計なものを削ぎ落とし、論理的な美を内包させる</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Defining Aesthetics</span>
+                    <span>Slide 2 / 14</span>
+                </div>
+            </section>
+
+            <!-- Slide 3: Chapter 1 Cover -->
+            <section class="slide slide-dark text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Chapter 1</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content max-w-2xl py-8">
+                    <h2 class="text-xs uppercase tracking-[0.4em] text-accent-temp mb-4 font-semibold">第1章：エレガントなコードとは？</h2>
+                    <h1 class="text-3xl font-serif text-white leading-snug">
+                        ただ短いコードや、<br>
+                        巧妙な難解コードがエレガントではない理由
+                    </h1>
+                </div>
+                <div class="slide-footer" style="color: rgba(255,255,255,0.4); border-top-color: rgba(255,255,255,0.1);">
+                    <span>Core definition</span>
+                    <span>Slide 3 / 14</span>
+                </div>
+            </section>
+
+            <!-- Slide 4: Briefness vs. Elegance -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Briefness</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp mb-1">エレガントとは「短い」コードのことか？</h2>
+                    <h1 class="font-serif text-main mb-3">簡潔さの名人芸とFredrik Olofssonの芸術</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                        <div class="md:col-span-7 space-y-3">
+                            <p class="main-text">
+                                アーティストの Fredrik Olofsson は、Twitterに収まるわずか<span class="highlight">240文字程度のコード</span>だけで、複雑で重厚な音楽を生み出しました。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                この作品は「簡潔さ」の極致であり、驚くべき名人芸ですが、プログラマーはこのコードをエレガントとは呼びません。読解が極めて困難だからです。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-sub rounded-sm shadow-sm">
+                            <!-- 音波のようなインラインSVG -->
+                            <svg viewBox="0 0 300 150" class="w-full max-w-xs px-2">
+                                <path d="M 10 75 Q 30 10, 50 75 T 90 75 T 130 75 T 170 75 T 210 75 T 250 75 T 290 75" fill="none" stroke="var(--color-accent-temp)" stroke-width="1.5" />
+                                <path d="M 10 75 Q 40 140, 70 75 T 130 75 T 190 75 T 250 75" fill="none" stroke="var(--terracotta)" stroke-width="1" opacity="0.6" />
+                                <text x="150" y="140" text-anchor="middle" font-size="10" fill="var(--color-text-light)" font-weight="bold">Fredrik Olofsson: 240 Letters Music Code</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Briefness is not enough</span>
+                    <span>Slide 4 / 14</span>
+                </div>
+            </section>
+
+            <!-- Slide 5: Cleverness vs. Elegance -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Cleverness</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp mb-1">エレガントとは「賢く巧妙な」コードのことか？</h2>
+                    <h1 class="font-serif text-main mb-3">Obfuscated C Contest（難読Cコードコンテスト）の問い</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                        <div class="md:col-span-7 space-y-3">
+                            <p class="main-text">
+                                空白で迷路の形を描いたコードが、動かすと「本物の迷路ゲーム」を作り出す。2004年コンテスト優勝作品は極めて巧妙です。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                この迷路プログラムはパズルのように非常に巧妙で高度な作品ですが、これも「エレガントなコード」の条件には当てはまりません。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-sub rounded-sm shadow-sm">
+                            <!-- 迷路風のグリッドSVG -->
+                            <svg viewBox="0 0 160 160" class="w-28 h-28">
+                                <rect x="10" y="10" width="140" height="140" fill="none" stroke="var(--navy)" stroke-width="2" />
+                                <line x1="10" y1="50" x2="110" y2="50" stroke="var(--color-accent-temp)" stroke-width="2" />
+                                <line x1="50" y1="50" x2="50" y2="110" stroke="var(--color-accent-temp)" stroke-width="2" />
+                                <line x1="90" y1="10" x2="90" y2="80" stroke="var(--color-accent-temp)" stroke-width="2" />
+                                <line x1="50" y1="110" x2="150" y2="110" stroke="var(--color-accent-temp)" stroke-width="2" />
+                                <line x1="110" y1="80" x2="110" y2="150" stroke="var(--color-accent-temp)" stroke-width="2" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Cleverness is not enough</span>
+                    <span>Slide 5 / 14</span>
+                </div>
+            </section>
+
+            <!-- Slide 6: Antoine de Saint-Exupéry -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Simplicity</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp mb-1">エレガントなコードの本質</h2>
+                    <h1 class="font-serif text-main mb-2">可能な限りシンプルであること</h1>
+                    <p class="text-xs text-muted mb-4 leading-relaxed">フランスの作家 アントワーヌ・ド・サン＝テグジュペリ は、次のような言葉を残しています。</p>
+                    
+                    <blockquote class="italic max-w-2xl mx-auto py-2">
+                        「完璧とは、これ以上付け加えるものがなくなったときではなく、これ以上取り除くものがなくなったときに達成される。」
+                    </blockquote>
+                    
+                    <p class="text-center text-xs text-light mt-4 italic">真のエレガンスとは、極限まで「シンプルさ」を追求したコードにこそ宿ります。</p>
+                </div>
+                <div class="slide-footer">
+                    <span>The Essence of Simplicity</span>
+                    <span>Slide 6 / 14</span>
+                </div>
+            </section>
+
+            <!-- Slide 7: Chapter 2 Cover -->
+            <section class="slide slide-dark text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-slate-400 font-semibold">Chapter 2</span>
+                    <span class="text-[9px] font-mono text-slate-400 tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content max-w-2xl py-8">
+                    <h2 class="text-xs uppercase tracking-[0.4em] text-accent-temp mb-4 font-semibold">第2章：エレガントなコードの条件</h2>
+                    <h1 class="text-3xl font-serif text-white leading-snug">
+                        読み手の立場に立ち、<br>
+                        意図を明快にする設計とクリーンアップ
+                    </h1>
+                </div>
+                <div class="slide-footer" style="color: rgba(255,255,255,0.4); border-top-color: rgba(255,255,255,0.1);">
+                    <span>Readability & Cleaning</span>
+                    <span>Slide 7 / 14</span>
+                </div>
+            </section>
+
+            <!-- Slide 8: The Design of Readability -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Readability</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp mb-1">「読みやすさ」の設計</h2>
+                    <h1 class="font-serif text-main mb-4">エレガントなコードが備えるべき要件</h1>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
+                        <div class="p-4 bg-surface-2 border border-sub rounded-sm shadow-sm h-36">
+                            <span class="font-serif font-semibold text-main block mb-1 text-[17px] tracking-wide">意味の明快な変数命名</span>
+                            <p class="text-sm text-slate-500 leading-normal">略語や曖昧な一文字の変数を避け、一目で役割が伝わる名前を付与する。</p>
+                        </div>
+                        <div class="p-4 bg-surface-2 border border-sub rounded-sm h-36">
+                            <span class="font-serif font-semibold text-main block mb-1 text-[17px]">適切なオブジェクト活用</span>
+                            <p class="text-sm text-slate-500 leading-normal">データと振る舞いをオブジェクトへ適切にカプセル化し、複雑さを隠蔽する。</p>
+                        </div>
+                        <div class="p-4 bg-surface-2 border border-sub rounded-sm h-36">
+                            <span class="font-serif font-semibold text-main block mb-1 text-[17px]">論理的な階層整理</span>
+                            <p class="text-sm text-slate-500 leading-normal">処理の流れを整理し、ネスト（入れ子）を浅く保ち、上から下へ流れるように書く。</p>
+                        </div>
+                        <div class="p-4 bg-surface-2 border border-accent-temp rounded-sm h-36">
+                            <span class="font-serif font-semibold text-accent-temp block mb-1 text-[17px]">意図を補うコメント</span>
+                            <p class="text-sm text-slate-500 leading-normal">「何をしているか」ではなく、「なぜそうしているか（背景・意図）」を書く。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Designing for the Reader</span>
+                    <span>Slide 8 / 14</span>
+                </div>
+            </section>
+
+            <!-- Slide 9: Removing Redundancy (反映：セル幅・フォントサイズをフルスケール表示) -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Cleanliness</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp mb-1">冗長さ（不要なもの）の排除</h2>
+                    <h1 class="font-serif text-main mb-3">使われない「ゴミ」を残さない引き算の徹底</h1>
+                    
+                    <div class="bg-surface-2 border border-sub shadow-sm rounded-sm overflow-hidden mb-4">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-surface-1 text-xs text-muted uppercase tracking-wider font-mono">
+                                <tr>
+                                    <th class="table-cell font-semibold py-3 px-4">冗長な要素</th>
+                                    <th class="table-cell font-semibold py-3 px-4">発生する問題</th>
+                                    <th class="table-cell font-semibold py-3 px-4">対策（クリーンなアプローチ）</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm text-muted font-light">
+                                <tr class="border-b border-border">
+                                    <td class="table-cell py-3.5 px-4 font-semibold text-main">コメントアウトされた不要コード</td>
+                                    <td class="table-cell py-3.5 px-4">他者が読んだ際の混乱を招き、不要に可読性を低下させる</td>
+                                    <td class="table-cell py-3.5 px-4">躊躇なく即座に削除する（過去履歴はGit等の管理ツールに一任）</td>
+                                </tr>
+                                <tr class="border-b border-border">
+                                    <td class="table-cell py-3.5 px-4 font-semibold text-main">使われていない変数</td>
+                                    <td class="table-cell py-3.5 px-4">メモリを浪費し、処理の追跡を著しく妨げる</td>
+                                    <td class="table-cell py-3.5 px-4">未使用の宣言をツールで検知し、常にクリーンアップする</td>
+                                </tr>
+                                <tr class="border-b border-border">
+                                    <td class="table-cell py-3.5 px-4 font-semibold text-main">表示されることのない画像・アセット</td>
+                                    <td class="table-cell py-3.5 px-4">プロジェクトサイズを肥大化させ、構造を不透明にする</td>
+                                    <td class="table-cell py-3.5 px-4">利用していないリソースファイルを検出し、ビルドから取り除く</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Eradicating Bloat</span>
+                    <span>Slide 9 / 14</span>
+                </div>
+            </section>
+
+            <!-- Slide 10: Chapter 3 Cover -->
+            <section class="slide slide-dark text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-slate-400 font-semibold">Chapter 3</span>
+                    <span class="text-[9px] font-mono text-slate-400 tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content max-w-2xl py-8">
+                    <h2 class="text-xs uppercase tracking-[0.4em] text-accent-temp mb-4 font-semibold">第3章：コーディング規約と慣習</h2>
+                    <h1 class="text-3xl font-serif text-white leading-snug">
+                        共通のルールが、<br>
+                        チームとしてのコードの美を形づくる
+                    </h1>
+                </div>
+                <div class="slide-footer" style="color: rgba(255,255,255,0.4); border-top-color: rgba(255,255,255,0.1);">
+                    <span>Standards & Rules</span>
+                    <span>Slide 10 / 14</span>
+                </div>
+            </section>
+
+            <!-- Slide 11: Coding Standards Table (反映：セル幅・フォントサイズをフルスケール表示) -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Standards</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp mb-1">基本的なルールや慣習</h2>
+                    <h1 class="font-serif text-main mb-3">コーディング規約に従う重要性</h1>
+                    
+                    <div class="bg-surface-2 border border-sub shadow-sm rounded-sm overflow-hidden mb-4">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-surface-1 text-xs text-muted uppercase tracking-wider font-mono">
+                                <tr>
+                                    <th class="table-cell font-semibold py-3 px-4">項目</th>
+                                    <th class="table-cell font-semibold py-3 px-4">具体的なアクション</th>
+                                    <th class="table-cell font-semibold py-3 px-4">目的・得られる効果</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm text-muted font-light">
+                                <tr class="border-b border-border">
+                                    <td class="table-cell py-3.5 px-4 font-semibold text-main">波括弧 {} の位置</td>
+                                    <td class="table-cell py-3.5 px-4">言語ごとの標準的かつ一貫した位置に配置する</td>
+                                    <td class="table-cell py-3.5 px-4">ブロック構造（処理の区切り）を一目で認識可能にする</td>
+                                </tr>
+                                <tr class="border-b border-border">
+                                    <td class="table-cell py-3.5 px-4 font-semibold text-main">適切なインデント</td>
+                                    <td class="table-cell py-3.5 px-4">インデント（字下げ）を適切な深さで一貫して行う</td>
+                                    <td class="table-cell py-3.5 px-4">プログラムの入れ子構造（階層関係）を視覚的に表現する</td>
+                                </tr>
+                                <tr class="border-b border-border">
+                                    <td class="table-cell py-3.5 px-4 font-semibold text-main">適切な改行</td>
+                                    <td class="table-cell py-3.5 px-4">1行が長くなりすぎたら、適切な位置で改行する</td>
+                                    <td class="table-cell py-3.5 px-4">横スクロールを排除し、視線移動の負荷を最小化する</td>
+                                </tr>
+                                <tr class="border-b border-border">
+                                    <td class="table-cell py-3.5 px-4 font-semibold text-main">丁寧なコメント</td>
+                                    <td class="table-cell py-3.5 px-4">必要に応じて、何のためにその設計にしたかを残す</td>
+                                    <td class="table-cell py-3.5 px-4">未来の自分や他者の仕様解読・改修コストを劇的に下げる</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Consistent Codebase</span>
+                    <span>Slide 11 / 14</span>
+                </div>
+            </section>
+
+            <!-- Slide 12: Growing your Aesthetics Sense -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Growth</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp mb-1">美意識を育てる</h2>
+                    <h1 class="font-serif text-main mb-3">ルールを超えて「美しさ」を感覚化する</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                        <div class="md:col-span-7 space-y-4">
+                            <p class="main-text">
+                                エレガントなコードを書くためには、ルールを覚えるだけでは十分ではありません。<br>
+                                知識や経験が増えるにつれて、<span class="highlight">何がエレガントなのか</span>という優れた感覚が少しずつ育っていきます。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                この感覚を磨くためには、日々の練習が必要です。どんなに小さなプログラムであっても、一行一行を丁寧に書き、常にエレガントなコードを書くことを毎回意識し続けてください。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-sub rounded-sm shadow-sm">
+                            <!-- 螺旋・黄金比を連想させるSVG -->
+                            <svg viewBox="0 0 160 160" class="w-28 h-28 opacity-75">
+                                <rect x="10" y="10" width="140" height="140" fill="none" stroke="var(--color-accent-temp)" stroke-width="1.2" />
+                                <rect x="96" y="10" width="54" height="54" fill="none" stroke="var(--color-accent-temp)" stroke-width="1" />
+                                <rect x="96" y="64" width="34" height="34" fill="none" stroke="var(--color-accent-temp)" stroke-width="1" />
+                                <path d="M 10 150 A 140 140 0 0 1 150 10" fill="none" stroke="var(--terracotta)" stroke-width="1.5" />
+                                <text x="80" y="145" text-anchor="middle" font-size="8" fill="var(--color-text-light)" font-weight="bold">Growth Spiral</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Cultivating Code Elegance</span>
+                    <span>Slide 12 / 14</span>
+                </div>
+            </section>
+
+            <!-- Slide 13: Chapter 4 Cover -->
+            <section class="slide slide-dark text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-slate-400 font-semibold">Chapter 4</span>
+                    <span class="text-[9px] font-mono text-slate-400 tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content max-w-2xl py-8">
+                    <h2 class="text-xs uppercase tracking-[0.4em] text-accent-temp mb-4 font-semibold">第4章：まとめ</h2>
+                    <h1 class="text-3xl font-serif text-white leading-snug">
+                        常にエレガントなプログラマーであれ
+                    </h1>
+                </div>
+                <div class="slide-footer" style="color: rgba(255,255,255,0.4); border-top-color: rgba(255,255,255,0.1);">
+                    <span>Core Takeaway</span>
+                    <span>Slide 13 / 14</span>
+                </div>
+            </section>
+
+            <!-- Slide 14: Conclusion Message -->
+            <section class="slide text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Conclusion</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content max-w-4xl py-4">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp mb-2 font-semibold">特別講義の合言葉</h2>
+                    <h1 class="text-2xl md:text-3xl font-serif text-main leading-tight mb-4">Always be an elegant coder.</h1>
+                    <div class="quote-box max-w-xl mx-auto py-3 text-xs leading-relaxed text-slate-700">
+                        プログラミングは、単にコンピュータを動かす道具ではありません。<br>
+                        他者に伝わり、それ自体が美的な感動を与えるための知的な表現行為なのです。
+                    </div>
+                    <p class="text-xs text-muted max-w-lg mx-auto leading-relaxed mt-4">
+                        不要な記述を削ぎ落とし、可能な限りシンプルにする。<br>
+                        読み手の立場に立ち、規約を遵守して一行一行を丁寧に書き上げる。<br>
+                        その誠実な習慣が、皆さんを真に「エレガントなプログラマー」へと導いてくれます。
+                    </p>
+                </div>
+                <div class="slide-footer">
+                    <span>Elegance as a Habit</span>
+                    <span>Slide 14 / 14</span>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Minimalist Navigation Controls Footer overlay -->
+    <div class="absolute bottom-6 left-10 right-10 flex justify-between items-center pointer-events-auto z-10">
+        <div class="flex gap-6">
+            <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
+            </button>
+            <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
+            </button>
+        </div>
+
+        <!-- Dynamic Step Indicators Container -->
+        <div class="flex gap-1.5 overflow-x-auto max-w-xs justify-center px-2 no-scrollbar" id="dots-container"></div>
+    </div>
+
+    <!-- Script for interactive presentation features -->
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsContainer = document.getElementById('dots-container');
+        const pageNumDisplays = document.querySelectorAll('.page-num');
+        
+        let currentSlide = 0;
+        let indicators = [];
+
+        // Dynamically create dots based on number of slides
+        slides.forEach((_, index) => {
+            const dot = document.createElement('span');
+            dot.className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 ' + (index === 0 ? 'dot-active' : 'dot-inactive');
+            dotsContainer.appendChild(dot);
+            indicators.push(dot);
+            
+            // Set slide footers page numbers
+            if(pageNumDisplays[index]) {
+                pageNumDisplays[index].textContent = `Slide ${index + 1} / ${slides.length}`;
+            }
+        });
+
+        function updateSlide(index) {
+            if (index < 0 || index >= slides.length) return;
+
+            slides[currentSlide].classList.remove('active');
+            indicators[currentSlide].classList.remove('dot-active');
+            indicators[currentSlide].classList.add('dot-inactive');
+
+            currentSlide = index;
+            
+            slides[currentSlide].classList.add('active');
+            indicators[currentSlide].classList.add('dot-active');
+            indicators[currentSlide].classList.remove('dot-inactive');
+
+            // Prev Button state
+            prevBtn.style.opacity = currentSlide === 0 ? '0.2' : '1';
+            prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+            
+            // Next Button state
+            nextBtn.style.opacity = currentSlide === slides.length - 1 ? '0.2' : '1';
+            nextBtn.style.pointerEvents = currentSlide === slides.length - 1 ? 'none' : 'auto';
+
+            // Sync menu active state
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach((item, i) => {
+                item.classList.remove('active');
+                if (i === index) {
+                    item.classList.add('active');
+                    // Scroll into view within the sidebar
+                    item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                }
+            });
+        }
+
+        prevBtn.addEventListener('click', () => updateSlide(currentSlide - 1));
+        nextBtn.addEventListener('click', () => updateSlide(currentSlide + 1));
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                updateSlide(currentSlide - 1);
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                updateSlide(currentSlide + 1);
+            }
+        });
+
+        // Touch Swipe Navigation Support
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const deck = document.getElementById('deck');
+        deck.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        deck.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                updateSlide(currentSlide + 1);
+            }
+            if (touchEndX > touchStartX + 50) {
+                updateSlide(currentSlide - 1);
+            }
+        }
+
+        // Hamburger Menu Functionality
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const navSidebar = document.getElementById('navSidebar');
+        const navOverlay = document.getElementById('navOverlay');
+        const navMenu = document.getElementById('navMenu');
+
+        // Extract page titles dynamically from slide contents
+        const pageData = [];
+        slides.forEach((slide, index) => {
+            const h2Element = slide.querySelector('h2');
+            const h1Element = slide.querySelector('h1');
+            
+            const category = h2Element ? h2Element.textContent.trim() : 'Slide';
+            let title = h1Element ? h1Element.innerHTML.replace(/<br\s*\/?>/gi, ' ').trim() : `Slide ${index + 1}`;
+            
+            // Remove span wrap content or nested tags from menu display title
+            title = title.replace(/<\/?[^>]+(>|$)/g, "");
+
+            pageData.push({ index: index, title: title, category: category });
+        });
+
+        // Build navigation menu dynamically
+        pageData.forEach((page) => {
+            const navItem = document.createElement('div');
+            navItem.className = `nav-item ${page.index === 0 ? 'active' : ''}`;
+            navItem.textContent = `${String(page.index + 1).padStart(2, '0')}. [${page.category}] ${page.title}`;
+            navItem.addEventListener('click', () => {
+                updateSlide(page.index);
+                closeMenu();
+            });
+            navMenu.appendChild(navItem);
+        });
+
+        function openMenu() {
+            hamburgerBtn.classList.add('active');
+            navSidebar.classList.add('open');
+            navOverlay.classList.add('open');
+        }
+
+        function closeMenu() {
+            hamburgerBtn.classList.remove('active');
+            navSidebar.classList.remove('open');
+            navOverlay.classList.remove('open');
+        }
+
+        // Hamburger Events
+        hamburgerBtn.addEventListener('click', () => {
+            if (hamburgerBtn.classList.contains('active')) {
+                closeMenu();
+            } else {
+                openMenu();
+            }
+        });
+
+        navOverlay.addEventListener('click', closeMenu);
+
+        // Safe Clipboard Copy (Optimized for iframe environments)
+        function copyCode(btn, text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed'; // Avoid scrolling to bottom
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                const originalText = btn.innerHTML;
+                btn.style.color = '#86efac';
+                btn.innerHTML = '<i class="fa-solid fa-check mr-1"></i> Copied';
+                setTimeout(() => {
+                    btn.style.color = '';
+                    btn.innerHTML = originalText;
+                }, 1500);
+            } catch (err) {
+                console.error('Failed to copy', err);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        // Initialize presentation with Slide 1 active
+        updateSlide(0);
+    </script>
+</body>
+</html>
