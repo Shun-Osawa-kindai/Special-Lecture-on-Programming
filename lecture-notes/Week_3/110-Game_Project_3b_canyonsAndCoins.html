@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>講義スライド：アイテム収集と当たり判定 (Game Project Part 3)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --color-bg-outer: #D1CFCA;      
+            --color-bg-slide:  #F7F6F4;     
+            --color-surface-1: #F2EFEA;    
+            --color-surface-2: #FFFFFF;    
+            --color-border: #DDDAD5;       
+            --color-text-main: #222222;    
+            --color-text-muted: #555555;   
+            --color-text-light: #999999;   
+            --color-accent-temp: #8C7A6B;  
+            --navy: #344D61;               
+            --terracotta: #994F60;         
+            --gold-muted: #C4B298;         
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--color-bg-outer);
+            color: var(--color-text-main);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+        }
+
+        h1, h2, h3, .font-serif {
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-weight: 400;
+        }
+
+        .presentation-viewport {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .slide-deck {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--color-bg-slide);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            padding: 5% 7% 7% 7%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transform: translateY(10px);
+            background: var(--color-bg-slide);
+            overflow-y: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        h1 {
+            color: var(--color-text-main);
+            font-size: 1.85rem; 
+            font-weight: 400;
+            line-height: 1.4;
+            margin-bottom: 1.25rem;
+            letter-spacing: 0.05em;
+        }
+
+        h2 {
+            color: var(--color-accent-temp);
+            font-size: 0.65rem; 
+            font-weight: 500;
+            letter-spacing: 0.4em;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .main-text {
+            font-size: 1.05rem; 
+            line-height: 1.8;
+            color: var(--color-text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        .highlight {
+            background: linear-gradient(transparent 70%, #E2DDD5 70%);
+            font-weight: 500;
+            padding: 0 0.15em;
+        }
+
+        code {
+            background: var(--color-surface-1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 2px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--terracotta);
+            font-weight: bold;
+            font-size: 0.85em;
+            border: 1px solid var(--color-border);
+        }
+
+        .code-preview {
+            background: #252423;
+            color: #E2DDD5;
+            padding: 0.85rem;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            border: 1px solid #3A3835;
+        }
+
+        .minimal-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .minimal-list li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.6rem;
+            font-size: 0.95rem; 
+            color: var(--color-text-muted);
+            display: block;
+            line-height: 1.6;
+        }
+        .minimal-list li::before {
+            content: "・";
+            position: absolute;
+            left: 0;
+            color: var(--color-accent-temp);
+            font-weight: bold;
+        }
+
+        .slide-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: var(--color-text-light);
+            border-top: 1px solid var(--color-border);
+            padding-top: 0.75rem;
+            margin-top: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .nav-btn {
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            color: var(--color-text-main);
+            opacity: 1 !important;
+        }
+
+        .hamburger-btn {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            z-index: 50;
+            background: rgba(247, 246, 244, 0.9);
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 0;
+            width: 48px;
+            height: 48px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+
+        .hamburger-btn:hover {
+            background: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .hamburger-btn span {
+            width: 18px;
+            height: 2px;
+            background-color: var(--color-text-main);
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+
+        .nav-sidebar {
+            position: fixed;
+            left: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background-color: var(--color-bg-slide);
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
+            z-index: 40;
+            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            border-right: 1px solid var(--color-border);
+        }
+
+        .nav-sidebar.open {
+            left: 0;
+        }
+
+        .nav-sidebar-content {
+            padding: 100px 24px 40px 24px;
+        }
+
+        .nav-sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--color-text-light);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .nav-item {
+            padding: 10px 0;
+            font-size: 12px;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            padding-left: 12px;
+            line-height: 1.4;
+        }
+
+        .nav-item:hover {
+            color: var(--color-text-main);
+            border-left-color: var(--color-accent-temp);
+            background: rgba(0,0,0,0.01);
+        }
+
+        .nav-item.active {
+            color: var(--color-accent-temp);
+            font-weight: 600;
+            border-left-color: var(--color-accent-temp);
+        }
+
+        .nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0);
+            z-index: 30;
+            transition: background-color 0.3s ease;
+            pointer-events: none;
+        }
+
+        .nav-overlay.open {
+            background-color: rgba(0, 0, 0, 0.3);
+            pointer-events: auto;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .dot-active { 
+            background-color: var(--color-text-main); 
+            width: 6px;
+            height: 6px;
+        }
+        .dot-inactive { 
+            background-color: var(--color-border); 
+            width: 4px;
+            height: 4px;
+        }
+
+        @media (max-width: 1320px) {
+            .slide-deck { transform: scale(0.9); }
+        }
+        @media (max-width: 1150px) {
+            .slide-deck { transform: scale(0.8); }
+        }
+        @media (max-width: 980px) {
+            .slide-deck { transform: scale(0.7); }
+        }
+        @media (max-width: 768px) {
+            .presentation-viewport { padding: 10px; height: auto; }
+            .slide-deck { aspect-ratio: auto; height: 560px; transform: none; }
+            .slide { padding: 32px 24px; }
+            h1 { font-size: 1.5rem; }
+            .main-text, .minimal-list li { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-btn" id="hamburgerBtn" title="目次を開く">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Navigation Sidebar -->
+    <div class="nav-sidebar" id="navSidebar">
+        <div class="nav-sidebar-content">
+            <div class="nav-sidebar-title">講義スライド一覧</div>
+            <div id="navMenu"></div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <div class="presentation-viewport">
+        <div class="slide-deck" id="deck">
+
+            <!-- Slide 1: アイテム収集と当たり判定の導入 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Game Project Part 3</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Collectable Interaction</h2>
+                    <h1 class="font-serif text-main mb-4">収集アイテムの取得判定と消失演出<br><span class="highlight">「Picking up Collectables」</span></h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-4">
+                            <p class="main-text text-xs text-muted leading-relaxed">
+                                前半で実装した「走る・ジャンプするキャラクター」にゲームとしての目的（ゴール・リワード）を与えます。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                Part 2で作成した収集アイテム（<code>collectable</code>）をシーンに配置し、キャラクターが近づいて触れた瞬間に<span class="highlight">「アイテムを拾い、画面から消える」</span>インタラクションを構築しましょう。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <svg viewBox="0 0 160 120" class="w-36 h-28 bg-[#F2EFEA] rounded-sm">
+                                <!-- 地面 -->
+                                <rect x="0" y="90" width="160" height="30" fill="var(--color-border)" opacity="0.6"/>
+                                <!-- キャラクター -->
+                                <circle cx="50" cy="65" r="9" fill="var(--terracotta)" />
+                                <rect x="45" y="74" width="10" height="16" rx="2" fill="var(--navy)" />
+                                <!-- コイン・収集アイテム -->
+                                <circle cx="115" cy="78" r="8" fill="#F59E0B" stroke="#D97706" stroke-width="1.5" />
+                                <text x="115" y="81" font-size="7" font-family="monospace" text-anchor="middle" fill="#78350F" font-weight="bold">$</text>
+                                <!-- 接近の軌跡矢印 -->
+                                <path d="M 68 76 L 98 76" fill="none" stroke="var(--navy)" stroke-width="1.5" stroke-dasharray="2 2" />
+                                <polygon points="98,73 104,76 98,79" fill="var(--navy)" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Collectable Interaction</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 2: collectable オブジェクトの移植と isFound プロパティ -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Object State</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Object Properties</h2>
+                    <h1 class="font-serif text-main mb-3">アイテムオブジェクトの移植と <code>isFound</code> フラグ</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                Part 2Bで作成した <code>collectable</code> 変数とオブジェクト定義を、Part 3のスケッチの <code>setup()</code> 内へコピーします。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                そして、アイテムが「すでに拾われたか」を記憶するために、新しいBooleanプロパティ <span class="highlight"><code>isFound: false</code></span> をオブジェクト内に追加します。
+                            </p>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9.5px] leading-relaxed shadow-sm">
+                                <div class="flex justify-between items-center text-[10px] text-slate-400 mb-1 pb-1 border-b border-[#3A3835]">
+                                    <span>setup() 内でのオブジェクト定義</span>
+                                    <button onclick="copyCode(this, 'collectable = {\n  x_pos: 100,\n  y_pos: 400,\n  size: 50,\n  isFound: false\n};')" class="hover:text-white transition-colors cursor-pointer flex items-center gap-1">
+                                        <i class="fa-regular fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <span class="text-[#7f8c8d]// グローバル変数宣言</span><br>
+                                <span class="text-[#c678dd]">var</span> collectable;<br><br>
+                                <span class="text-[#7f8c8d]// setup() 内で初期化</span><br>
+                                collectable = {<br>
+                                &nbsp;&nbsp;x_pos: <span class="text-[#d19a66]">100</span>,<br>
+                                &nbsp;&nbsp;y_pos: <span class="text-[#d19a66]">400</span>,<br>
+                                &nbsp;&nbsp;size: <span class="text-[#d19a66]">50</span>,<br>
+                                &nbsp;&nbsp;<span class="text-[#e06c75]">isFound</span>: <span class="text-[#56b6c2]">false</span> <span class="text-[#7f8c8d]// 初期状態は「未発見」</span><br>
+                                };
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Collectable Interaction</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 3: isFound による条件付き描画 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Conditional Rendering</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Visibility Control</h2>
+                    <h1 class="font-serif text-main mb-3"><code>isFound</code> による「消える」描画制御</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                アイテムを消すために描画命令を削除する必要はありません。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                <code>draw()</code> 内のアイテム描画コード全体を <span class="highlight"><code>if (collectable.isFound == false)</code></span> で包むだけで、拾われた（<code>true</code> になった）瞬間に自動的に描画がスキップされ、画面から綺麗に消え去ります。
+                            </p>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9.5px] leading-relaxed shadow-sm">
+                                <div class="flex justify-between items-center text-[10px] text-slate-400 mb-1 pb-1 border-b border-[#3A3835]">
+                                    <span>条件付き描画ブロック</span>
+                                    <button onclick="copyCode(this, 'if (collectable.isFound == false) {\n  // アイテムの描画コード\n  fill(255, 215, 0);\n  ellipse(collectable.x_pos, collectable.y_pos, 20, 20);\n}')" class="hover:text-white transition-colors cursor-pointer flex items-center gap-1">
+                                        <i class="fa-regular fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <span class="text-[#7f8c8d]// 未発見の時だけ描画する</span><br>
+                                <span class="text-[#c678dd]">if</span> (collectable.<span class="text-[#e06c75]">isFound</span> == <span class="text-[#56b6c2]">false</span>) {<br>
+                                &nbsp;&nbsp;<span class="text-[#7f8c8d]// Part 2で作成した描画処理</span><br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">fill</span>(<span class="text-[#d19a66]">255, 215, 0</span>);<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">ellipse</span>(collectable.x_pos, collectable.y_pos, <span class="text-[#d19a66]">20, 20</span>);<br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Collectable Interaction</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 4: 描画ステートの汚染とストロークリセット -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">State Retention</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Style Reset</h2>
+                    <h1 class="font-serif text-main mb-3">描画スタイルの汚染を防ぐリセット処理</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mt-2">
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-terracotta border-b border-border pb-1">⚠️ 発生するトラブル</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                コイン等のアイテム描画内で <code>noStroke()</code> や特殊な輪郭色・太さを設定したままにしておくと、その直後に描画される<strong>キャラクターの輪郭線が消えたり色化けする</strong>事故（ステート汚染）が起きます。
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-navy border-b border-border pb-1">💡 解決策：直前に明示リセット</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                キャラクターを描くブロックの直前で、ペンの輪郭を元の規定値（黒色・太さ1）に戻します。
+                            </p>
+                            <div class="p-2 bg-surface-1 border border-border rounded font-mono text-[11px]">
+                                <span class="text-[#61afef]">stroke</span>(<span class="text-[#d19a66]">0</span>); &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#7f8c8d]// 輪郭を黒に戻す</span><br>
+                                <span class="text-[#61afef]">strokeWeight</span>(<span class="text-[#d19a66]">1</span>); <span class="text-[#7f8c8d]// 太さを1に戻す</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Collectable Interaction</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 5: dist() 関数による接触判定の仕組み -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Collision Detection</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Distance Measurement</h2>
+                    <h1 class="font-serif text-main mb-3"><code>dist()</code> 関数による2点間の距離判定</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                キャラクターがアイテムに触れたかを判定するには、2点間の直線距離を測る <code>dist(x1, y1, x2, y2)</code> を使います。
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1">
+                                <li><strong>点1：</strong> キャラクター座標（<code>gameChar_x</code>, <code>gameChar_y</code>）</li>
+                                <li><strong>点2：</strong> アイテム座標（<code>collectable.x_pos</code>, <code>collectable.y_pos</code>）</li>
+                                <li>距離が <code>20px</code> 未満なら「拾った範囲」とみなします。</li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-6 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <svg viewBox="0 0 160 110" class="w-40 h-28 bg-[#F2EFEA] rounded-sm">
+                                <!-- 当たり判定円 (半径20) -->
+                                <circle cx="100" cy="55" r="28" fill="#F59E0B" fill-opacity="0.15" stroke="#F59E0B" stroke-width="1.5" stroke-dasharray="2 2" />
+                                <circle cx="100" cy="55" r="5" fill="#F59E0B" />
+                                <text x="100" y="70" font-size="7" font-family="monospace" text-anchor="middle" fill="#B45309">Item(x, y)</text>
+                                <!-- キャラクター位置 -->
+                                <circle cx="78" cy="55" r="5" fill="var(--terracotta)" />
+                                <text x="65" y="70" font-size="7" font-family="monospace" text-anchor="middle" fill="var(--terracotta)">Char</text>
+                                <!-- 距離線 -->
+                                <line x1="78" y1="55" x2="100" y2="55" stroke="var(--navy)" stroke-width="1.5" />
+                                <text x="89" y="50" font-size="7" font-family="monospace" text-anchor="middle" fill="var(--navy)" font-weight="bold">d &lt; 20</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Collectable Interaction</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 6: アイテム取得ロジックの実装コード -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Interaction Logic</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Pickup Code</h2>
+                    <h1 class="font-serif text-main mb-3">接触時に <code>isFound</code> を <code>true</code> に更新する</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                <code>draw()</code> 内に条件分岐を追加します。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                <code>dist()</code> の計算結果が <code>20</code> 未満になった瞬間に <span class="highlight"><code>collectable.isFound = true;</code></span> を代入します。
+                            </p>
+                            <p class="text-[11px] text-slate-500">※<code>if</code> 文の条件カッコの末尾にはセミコロン（<code>;</code>）を絶対につけないよう注意しましょう。</p>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9px] leading-relaxed shadow-sm">
+                                <div class="flex justify-between items-center text-[10px] text-slate-400 mb-1 pb-1 border-b border-[#3A3835]">
+                                    <span>draw() 内の接触判定ロジック</span>
+                                    <button onclick="copyCode(this, 'if (dist(gameChar_x, gameChar_y, collectable.x_pos, collectable.y_pos) < 20) {\n  collectable.isFound = true;\n}')" class="hover:text-white transition-colors cursor-pointer flex items-center gap-1">
+                                        <i class="fa-regular fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <span class="text-[#7f8c8d]// キャラクターとアイテムの距離を測定</span><br>
+                                <span class="text-[#c678dd]">if</span> (<span class="text-[#61afef]">dist</span>(<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;gameChar_x, gameChar_y,<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;collectable.x_pos, collectable.y_pos<br>
+                                &nbsp;&nbsp;) &lt; <span class="text-[#d19a66]">20</span>) {<br>
+                                &nbsp;&nbsp;<span class="text-[#7f8c8d]// 範囲内に入ったら取得フラグをON</span><br>
+                                &nbsp;&nbsp;collectable.<span class="text-[#e06c75]">isFound</span> = <span class="text-[#56b6c2]">true</span>;<br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Collectable Interaction</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 7: まとめとキャニオン（谷）への落下判定の展望 -->
+            <section class="slide text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Summary &amp; Next Stage</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content max-w-2xl py-4">
+                    <h2>Summary</h2>
+                    <h1 class="font-serif text-main mb-4">アイテム取得から「キャニオンの落下判定」へ</h1>
+                    
+                    <p class="text-xs text-muted leading-relaxed max-w-lg mx-auto mb-6">
+                        接触判定（コリジョン）を実装したことで、世界とキャラクターが相互作用する本格的なゲームの手応えが生まれました。
+                    </p>
+
+                    <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-left text-xs space-y-1.5 max-w-md mx-auto mb-4">
+                        <p class="font-bold text-navy border-b border-border pb-1">今回の要点と次のミッション</p>
+                        <ul class="minimal-list">
+                            <li>オブジェクトへの状態フラグ（<code>isFound</code>）追加</li>
+                            <li>フラグによる条件付き描画（消去演出）</li>
+                            <li><code>dist()</code> 関数による半径・距離の当たり判定</li>
+                            <li><strong>次の挑戦：</strong> 峡谷（Canyon）の描画と落下判定！<br>
+                            <span class="text-slate-500">※キャニオンは円形（<code>dist</code>）ではなく、X座標の不等号を用いた「範囲・ボックス判定」で行います。</span></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Collectable Interaction</span><span class="page-num"></span>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Minimalist Navigation Controls Footer overlay inside the slide deck -->
+    <div class="absolute bottom-6 left-10 right-10 flex justify-between items-center pointer-events-auto z-30">
+        <div class="flex gap-6">
+            <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
+            </button>
+            <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
+            </button>
+        </div>
+
+        <!-- Dynamic Step Indicators Container -->
+        <div class="flex gap-1.5 overflow-x-auto max-w-xs justify-center px-2 no-scrollbar" id="dots-container"></div>
+    </div>
+
+    <!-- Script for interactive presentation features -->
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsContainer = document.getElementById('dots-container');
+        const pageNumDisplays = document.querySelectorAll('.page-num');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const navSidebar = document.getElementById('navSidebar');
+        const navOverlay = document.getElementById('navOverlay');
+        const navMenu = document.getElementById('navMenu');
+        
+        let currentSlide = 0;
+        let indicators = [];
+
+        slides.forEach((_, index) => {
+            const dot = document.createElement('span');
+            dot.className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 ' + (index === 0 ? 'dot-active' : 'dot-inactive');
+            dotsContainer.appendChild(dot);
+            indicators.push(dot);
+            
+            if(pageNumDisplays[index]) {
+                pageNumDisplays[index].textContent = `Slide ${index + 1} / ${slides.length}`;
+            }
+
+            const title = slides[index].querySelector('h1')?.innerText.replace(/\n/g, ' ') || `Slide ${index + 1}`;
+            const navItem = document.createElement('div');
+            navItem.className = `nav-item ${index === 0 ? 'active' : ''}`;
+            navItem.textContent = `${index + 1}. ${title}`;
+            navItem.onclick = () => { updateSlide(index); closeSidebar(); };
+            navMenu.appendChild(navItem);
+        });
+
+        function updateSlide(index) {
+            // Strict boundary guard - prevent looping back to start or past end
+            if (index < 0) {
+                currentSlide = 0;
+                return;
+            }
+            if (index >= slides.length) {
+                currentSlide = slides.length - 1;
+                return;
+            }
+
+            slides[currentSlide].classList.remove('active');
+            indicators[currentSlide].className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 bg-gray-300';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.remove('active');
+
+            currentSlide = index;
+            
+            slides[currentSlide].classList.add('active');
+            indicators[currentSlide].className = 'w-1.5 h-1.5 rounded-full transition-all duration-300 bg-black';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.add('active');
+
+            prevBtn.style.opacity = currentSlide === 0 ? '0.2' : '1';
+            prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+            nextBtn.style.opacity = currentSlide === slides.length - 1 ? '0.2' : '1';
+            nextBtn.style.pointerEvents = currentSlide === slides.length - 1 ? 'none' : 'auto';
+        }
+
+        function closeSidebar() {
+            navSidebar.classList.remove('open');
+            navOverlay.classList.remove('open');
+            hamburgerBtn.classList.remove('active');
+        }
+
+        hamburgerBtn.onclick = () => {
+            hamburgerBtn.classList.toggle('active');
+            navSidebar.classList.toggle('open');
+            navOverlay.classList.toggle('open');
+        };
+        navOverlay.onclick = closeSidebar;
+
+        prevBtn.onclick = () => updateSlide(currentSlide - 1);
+        nextBtn.onclick = () => updateSlide(currentSlide + 1);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                updateSlide(currentSlide - 1);
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                updateSlide(currentSlide + 1);
+            }
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const deck = document.getElementById('deck');
+        deck.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        deck.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                updateSlide(currentSlide + 1);
+            }
+            if (touchEndX > touchStartX + 50) {
+                updateSlide(currentSlide - 1);
+            }
+        }
+
+        function copyCode(button, code) {
+            const textarea = document.createElement('textarea');
+            textarea.value = code;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                const originalContent = button.innerHTML;
+                button.innerHTML = '<i class="fa-solid fa-check text-[#8A9A86]"></i> Copied';
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                }, 2000);
+            } catch (err) {
+                console.error('Copy failed:', err);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        updateSlide(0);
+    </script>
+</body>
+</html>
