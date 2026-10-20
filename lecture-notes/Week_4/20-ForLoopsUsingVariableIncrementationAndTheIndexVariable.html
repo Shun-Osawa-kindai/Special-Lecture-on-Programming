@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>講義スライド：forループによる整列配置とインデックス変数の活用 (p5.js)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --color-bg-outer: #D1CFCA;      
+            --color-bg-slide:  #F7F6F4;     
+            --color-surface-1: #F2EFEA;    
+            --color-surface-2: #FFFFFF;    
+            --color-border: #DDDAD5;       
+            --color-text-main: #222222;    
+            --color-text-muted: #555555;   
+            --color-text-light: #999999;   
+            --color-accent-temp: #8C7A6B;  
+            --navy: #344D61;               
+            --terracotta: #994F60;         
+            --gold-muted: #C4B298;         
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--color-bg-outer);
+            color: var(--color-text-main);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+        }
+
+        h1, h2, h3, .font-serif {
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-weight: 400;
+        }
+
+        .presentation-viewport {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .slide-deck {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--color-bg-slide);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            padding: 5% 7% 7% 7%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transform: translateY(10px);
+            background: var(--color-bg-slide);
+            overflow-y: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        h1 {
+            color: var(--color-text-main);
+            font-size: 1.85rem; 
+            font-weight: 400;
+            line-height: 1.4;
+            margin-bottom: 1.25rem;
+            letter-spacing: 0.05em;
+        }
+
+        h2 {
+            color: var(--color-accent-temp);
+            font-size: 0.65rem; 
+            font-weight: 500;
+            letter-spacing: 0.4em;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .main-text {
+            font-size: 1.05rem; 
+            line-height: 1.8;
+            color: var(--color-text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        .highlight {
+            background: linear-gradient(transparent 70%, #E2DDD5 70%);
+            font-weight: 500;
+            padding: 0 0.15em;
+        }
+
+        code {
+            background: var(--color-surface-1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 2px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--terracotta);
+            font-weight: bold;
+            font-size: 0.85em;
+            border: 1px solid var(--color-border);
+        }
+
+        .code-preview {
+            background: #252423;
+            color: #E2DDD5;
+            padding: 0.85rem;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            border: 1px solid #3A3835;
+        }
+
+        .minimal-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .minimal-list li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.6rem;
+            font-size: 0.95rem; 
+            color: var(--color-text-muted);
+            display: block;
+            line-height: 1.6;
+        }
+        .minimal-list li::before {
+            content: "・";
+            position: absolute;
+            left: 0;
+            color: var(--color-accent-temp);
+            font-weight: bold;
+        }
+
+        .slide-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: var(--color-text-light);
+            border-top: 1px solid var(--color-border);
+            padding-top: 0.75rem;
+            margin-top: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .nav-btn {
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            color: var(--color-text-main);
+            opacity: 1 !important;
+        }
+
+        .hamburger-btn {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            z-index: 50;
+            background: rgba(247, 246, 244, 0.9);
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 0;
+            width: 48px;
+            height: 48px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+
+        .hamburger-btn:hover {
+            background: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .hamburger-btn span {
+            width: 18px;
+            height: 2px;
+            background-color: var(--color-text-main);
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+
+        .nav-sidebar {
+            position: fixed;
+            left: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background-color: var(--color-bg-slide);
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
+            z-index: 40;
+            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            border-right: 1px solid var(--color-border);
+        }
+
+        .nav-sidebar.open {
+            left: 0;
+        }
+
+        .nav-sidebar-content {
+            padding: 100px 24px 40px 24px;
+        }
+
+        .nav-sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--color-text-light);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .nav-item {
+            padding: 10px 0;
+            font-size: 12px;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            padding-left: 12px;
+            line-height: 1.4;
+        }
+
+        .nav-item:hover {
+            color: var(--color-text-main);
+            border-left-color: var(--color-accent-temp);
+            background: rgba(0,0,0,0.01);
+        }
+
+        .nav-item.active {
+            color: var(--color-accent-temp);
+            font-weight: 600;
+            border-left-color: var(--color-accent-temp);
+        }
+
+        .nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0);
+            z-index: 30;
+            transition: background-color 0.3s ease;
+            pointer-events: none;
+        }
+
+        .nav-overlay.open {
+            background-color: rgba(0, 0, 0, 0.3);
+            pointer-events: auto;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .dot-active { 
+            background-color: var(--color-text-main); 
+            width: 6px;
+            height: 6px;
+        }
+        .dot-inactive { 
+            background-color: var(--color-border); 
+            width: 4px;
+            height: 4px;
+        }
+
+        @media (max-width: 1320px) {
+            .slide-deck { transform: scale(0.9); }
+        }
+        @media (max-width: 1150px) {
+            .slide-deck { transform: scale(0.8); }
+        }
+        @media (max-width: 980px) {
+            .slide-deck { transform: scale(0.7); }
+        }
+        @media (max-width: 768px) {
+            .presentation-viewport { padding: 10px; height: auto; }
+            .slide-deck { aspect-ratio: auto; height: 560px; transform: none; }
+            .slide { padding: 32px 24px; }
+            h1 { font-size: 1.5rem; }
+            .main-text, .minimal-list li { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-btn" id="hamburgerBtn" title="目次を開く">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Navigation Sidebar -->
+    <div class="nav-sidebar" id="navSidebar">
+        <div class="nav-sidebar-content">
+            <div class="nav-sidebar-title">講義スライド一覧</div>
+            <div id="navMenu"></div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <div class="presentation-viewport">
+        <div class="slide-deck" id="deck">
+
+            <!-- Slide 1: 規則的な配置への挑戦 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Repetition &amp; Alignment</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">From Random to Order</h2>
+                    <h1 class="font-serif text-main mb-4">重なりから「等間隔の整列」へ<br><span class="highlight">「for ループによる規則的な描画」</span></h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-4">
+                            <p class="main-text text-xs text-muted leading-relaxed">
+                                前回の講義では、<code>random()</code> を用いて画面全体に散らばる円を描画しました。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                しかし、ゲームのブロック崩し、整列したコイン、UIメニューなど、現実の開発では<span class="highlight">「同じ図形を等間隔に美しく並べたい」</span>場面が数多く登場します。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                普通に固定値で描けば1点に重なってしまう図形を、どうすれば1行・1列に展開できるかを学びます。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <!-- ビットマップ調：重なり vs 整列の比較図 -->
+                            <svg viewBox="0 0 160 120" class="w-36 h-28 bg-[#F2EFEA] rounded-sm p-2">
+                                <!-- 重なった単一の円 -->
+                                <circle cx="40" cy="40" r="14" fill="var(--terracotta)" opacity="0.9" />
+                                <text x="40" y="66" font-size="6" font-family="monospace" text-anchor="middle" fill="var(--color-text-light)">20 circles</text>
+                                <text x="40" y="74" font-size="6" font-family="monospace" text-anchor="middle" fill="var(--color-text-light)">(overlapping)</text>
+                                <!-- 等間隔に整列した円列 -->
+                                <circle cx="20" cy="100" r="6" fill="var(--navy)" />
+                                <circle cx="44" cy="100" r="6" fill="var(--navy)" />
+                                <circle cx="68" cy="100" r="6" fill="var(--navy)" />
+                                <circle cx="92" cy="100" r="6" fill="var(--navy)" />
+                                <circle cx="116" cy="100" r="6" fill="var(--navy)" />
+                                <circle cx="140" cy="100" r="6" fill="var(--navy)" />
+                                <text x="80" y="115" font-size="6" font-family="monospace" text-anchor="middle" fill="var(--navy)" font-weight="bold">aligned row</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>For Loop Alignment</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 2: 外部変数による配置（アプローチ1: xPos） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Incremental Step</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Approach 01</h2>
+                    <h1 class="font-serif text-main mb-3">変数 <code>xPos</code> を使った逐次加算</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                まず思いつく方法は、X座標を保持する変数 <span class="highlight"><code>xPos</code></span> を用意し、1個描くごとに数値を増やしていく手法です。
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1.5">
+                                <li><strong>1周目：</strong> <code>xPos = 100</code> で円を描画 ➔ <code>xPos += 30</code> (130へ)</li>
+                                <li><strong>2周目：</strong> <code>xPos = 130</code> で円を描画 ➔ <code>xPos += 30</code> (160へ)</li>
+                                <li><strong>3周目：</strong> <code>xPos = 160</code> で円を描画...</li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9.5px] leading-relaxed shadow-sm">
+                                <div class="flex justify-between items-center text-[10px] text-slate-400 mb-1 pb-1 border-b border-[#3A3835]">
+                                    <span>ループ内での逐次加算</span>
+                                    <button onclick="copyCode(this, 'for (var i = 0; i < 20; i++) {\n  ellipse(xPos, 100, 20, 20);\n  xPos += 30;\n}')" class="hover:text-white transition-colors cursor-pointer flex items-center gap-1">
+                                        <i class="fa-regular fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <span class="text-[#c678dd]">for</span> (<span class="text-[#c678dd]">var</span> i = <span class="text-[#d19a66]">0</span>; i &lt; <span class="text-[#d19a66]">20</span>; i++) {<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">ellipse</span>(<span class="text-[#e06c75]">xPos</span>, <span class="text-[#d19a66]">100, 20, 20</span>);<br>
+                                &nbsp;&nbsp;<span class="text-[#e06c75]">xPos</span> <span class="text-[#56b6c2]">+=</span> <span class="text-[#d19a66]">30</span>; <span class="text-[#7f8c8d]// 次の周回のために30px進める</span><br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>For Loop Alignment</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 3: draw() ループの落とし穴（変数の再初期化） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Draw Loop Trap</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Re-initialization Trap</h2>
+                    <h1 class="font-serif text-main mb-3">画面外へ消え去る円：<code>draw()</code> での再初期化</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mt-2">
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-terracotta border-b border-border pb-1">⚠️ なぜ何も表示されなくなるのか？</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                <code>setup()</code> だけで <code>xPos = 100</code> と初期化していると、<code>draw()</code> が2周目、3周目と回るたびに <code>xPos</code> は <code>700, 730, 760...</code> と加算され続けます。
+                            </p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                一瞬でキャンバスの右端彼方（数万ピクセル先）へ飛び去ってしまい、画面には何も映らなくなります。
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-navy border-b border-border pb-1">💡 解決策：毎フレーム冒頭でリセット</p>
+                            <div class="code-preview font-mono text-[10px] leading-relaxed">
+                                <span class="text-[#c678dd]">function</span> <span class="text-[#61afef]">draw</span>() {<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">background</span>(<span class="text-[#d19a66]">220</span>);<br>
+                                &nbsp;&nbsp;<span class="text-[#e06c75]">xPos</span> = <span class="text-[#d19a66]">100</span>; <span class="text-[#7f8c8d]// ★毎フレーム100に戻す！</span><br><br>
+                                &nbsp;&nbsp;<span class="text-[#c678dd]">for</span> (<span class="text-[#c678dd]">var</span> i = <span class="text-[#d19a66]">0</span>; i &lt; <span class="text-[#d19a66]">20</span>; i++) {<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#61afef]">ellipse</span>(xPos, <span class="text-[#d19a66]">100, 20, 20</span>);<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;xPos += <span class="text-[#d19a66]">30</span>;<br>
+                                &nbsp;&nbsp;}<br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>For Loop Alignment</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 4: 縦並びと斜め配置への展開 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Directional Alignment</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Rows, Columns &amp; Diagonals</h2>
+                    <h1 class="font-serif text-main mb-3">縦並び（列）と斜め配置への展開</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                同じ考え方で <code>yPos</code> を加算すれば、縦一列の「カラム配置」になります。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                さらに、<span class="highlight"><code>xPos</code> と <code>yPos</code> の両方を同時に加算</span>すれば、X方向とY方向に等しい比率で進み、美しい斜め45度の対角線配置が生まれます。
+                            </p>
+                        </div>
+                        <div class="md:col-span-6 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <!-- ビットマップ調：縦並びと斜め並びのSVG -->
+                            <svg viewBox="0 0 160 110" class="w-40 h-28 bg-[#F2EFEA] rounded-sm p-2">
+                                <!-- 縦並び (yPos) -->
+                                <circle cx="35" cy="20" r="5" fill="var(--navy)" />
+                                <circle cx="35" cy="40" r="5" fill="var(--navy)" />
+                                <circle cx="35" cy="60" r="5" fill="var(--navy)" />
+                                <circle cx="35" cy="80" r="5" fill="var(--navy)" />
+                                <text x="35" y="100" font-size="6" font-family="monospace" text-anchor="middle" fill="var(--navy)">column</text>
+                                
+                                <!-- 斜め並び (xPos & yPos) -->
+                                <circle cx="80" cy="20" r="5" fill="var(--terracotta)" />
+                                <circle cx="98" cy="38" r="5" fill="var(--terracotta)" />
+                                <circle cx="116" cy="56" r="5" fill="var(--terracotta)" />
+                                <circle cx="134" cy="74" r="5" fill="var(--terracotta)" />
+                                <circle cx="152" cy="92" r="5" fill="var(--terracotta)" />
+                                <text x="120" y="102" font-size="6" font-family="monospace" text-anchor="middle" fill="var(--terracotta)">diagonal</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>For Loop Alignment</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 5: よりスマートな解法：カウンタ i の数式利用 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Index Arithmetic</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Approach 02 (Best Practice)</h2>
+                    <h1 class="font-serif text-main mb-3">インデックス変数 <code>i</code> を直接計算に使う</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                外部変数（<code>xPos</code>）を宣言してリセットする代わりに、ループ自体が持っているカウンタ <span class="highlight"><code>i</code>（インデックス変数）</span> をそのまま座標計算に活用できます。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                <code>100 + i</code> だと1pxずつしかズレませんが、<span class="highlight"><code>100 + i * 30</code></span> と間隔幅（30）を掛け算することで、追加の変数なしで等間隔に展開できます。
+                            </p>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9.5px] leading-relaxed shadow-sm">
+                                <div class="flex justify-between items-center text-[10px] text-slate-400 mb-1 pb-1 border-b border-[#3A3835]">
+                                    <span>i を使ったスマートな整列</span>
+                                    <button onclick="copyCode(this, 'for (var i = 0; i < 20; i++) {\n  ellipse(100 + i * 30, 100, 20, 20);\n}')" class="hover:text-white transition-colors cursor-pointer flex items-center gap-1">
+                                        <i class="fa-regular fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <span class="text-[#7f8c8d]// xPos 変数は一切不要！</span><br>
+                                <span class="text-[#c678dd]">for</span> (<span class="text-[#c678dd]">var</span> i = <span class="text-[#d19a66]">0</span>; i &lt; <span class="text-[#d19a66]">20</span>; i++) {<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">ellipse</span>(<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#d19a66]">100</span> <span class="text-[#56b6c2]">+</span> <span class="text-[#e06c75]">i</span> <span class="text-[#56b6c2]">*</span> <span class="text-[#d19a66]">30</span>, &nbsp;<span class="text-[#7f8c8d]// 基準位置 + i × 間隔</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#d19a66]">100</span>,<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#d19a66]">20, 20</span><br>
+                                &nbsp;&nbsp;);<br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>For Loop Alignment</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 6: 演算子の優先順位と計算プロセス -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Operator Precedence</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Math Mechanism</h2>
+                    <h1 class="font-serif text-main mb-3"><code>100 + i * 30</code> の計算ステップ</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mt-2">
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-navy border-b border-border pb-1">💡 掛け算（乗算）が先に計算される</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                数学のルール通り、<code>+</code> より <code>*</code> が優先されるため、カッコ <code>()</code> で囲まなくても正しく計算されます。
+                            </p>
+                            <div class="p-2 bg-surface-1 border border-border rounded font-mono text-[10px] text-slate-700 leading-relaxed">
+                                i = 0 ➔ 100 + (0 × 30) = <strong>100px</strong><br>
+                                i = 1 ➔ 100 + (1 × 30) = <strong>130px</strong><br>
+                                i = 2 ➔ 100 + (2 × 30) = <strong>160px</strong><br>
+                                ...<br>
+                                i = 19 ➔ 100 + (19 × 30) = <strong>670px</strong>
+                            </div>
+                        </div>
+
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-terracotta border-b border-border pb-1">🌟 この手法のメリット</p>
+                            <ul class="minimal-list text-slate-600 text-[11px] space-y-1">
+                                <li>コード行数が削減され、見通しが良い</li>
+                                <li><code>draw()</code> 内でのリセット忘れによるバグが起きない</li>
+                                <li>XとYの両方に同じ式を書くだけで、即座に対角線を描ける</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>For Loop Alignment</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 7: 表現の拡張と「絶対ルール」 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Golden Rule &amp; Variations</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Visual Scaling &amp; Safety</h2>
+                    <h1 class="font-serif text-main mb-3">属性の連動と、決して犯してはならない「掟」</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mt-2">
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-navy border-b border-border pb-1">🎨 サイズや色彩も i に連動させる</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                直径に <code>10 + i * 2</code> を与えれば徐々に巨大化し、<code>fill(i * 12)</code> を与えれば滑らかなグラデーション列が完成します。
+                            </p>
+                            <div class="code-preview font-mono text-[9px]">
+                                fill(i * 12);<br>
+                                ellipse(100 + i * 30, 100, 10 + i * 2, 10 + i * 2);
+                            </div>
+                        </div>
+
+                        <div class="p-4 bg-surface-2 border-2 border-terracotta rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-terracotta border-b border-border pb-1">⚠️ 厳禁ルール：i 自体を書き換えない！</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                <code>i</code> は計算式の中で参照するだけに留めます。ループの内部で <span class="highlight text-terracotta font-bold"><code>i += 1</code> や <code>i = 5</code> などの再代入を絶対にしてはいけません。</span>
+                            </p>
+                            <p class="text-[10px] text-slate-500">
+                                ※ループの周回ステップが狂い、無限ループやスキップの原因になります。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>For Loop Alignment</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 8: まとめと実験チャレンジ -->
+            <section class="slide text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Summary &amp; Practice</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content max-w-2xl py-4">
+                    <h2>Summary</h2>
+                    <h1 class="font-serif text-main mb-4">整列配置をマスターし、自在なパターンへ</h1>
+                    
+                    <p class="text-xs text-muted leading-relaxed max-w-lg mx-auto mb-6">
+                        インデックス変数 <code>i</code> と掛け算を組み合わせることで、一行のシンプルなコードから整然とした幾何学模様を生み出せるようになりました。
+                    </p>
+
+                    <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-left text-xs space-y-1.5 max-w-md mx-auto mb-4">
+                        <p class="font-bold text-navy border-b border-border pb-1">整列配置のマスターチェック</p>
+                        <ul class="minimal-list">
+                            <li>基本公式：<code>初期位置 + i * ステップ幅</code></li>
+                            <li>Xの変更 ➔ 行（横並び）、Yの変更 ➔ 列（縦並び）</li>
+                            <li>XとYの同時変更 ➔ 斜め（対角線）配置</li>
+                            <li>直径や色彩へも <code>i</code> を適用して表現を拡張</li>
+                            <li><code>i</code> の値は参照のみとし、直接代入して改変しない</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>For Loop Alignment</span><span class="page-num"></span>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Minimalist Navigation Controls Footer overlay inside the slide deck -->
+    <div class="absolute bottom-6 left-10 right-10 flex justify-between items-center pointer-events-auto z-30">
+        <div class="flex gap-6">
+            <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
+            </button>
+            <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
+            </button>
+        </div>
+
+        <!-- Dynamic Step Indicators Container -->
+        <div class="flex gap-1.5 overflow-x-auto max-w-xs justify-center px-2 no-scrollbar" id="dots-container"></div>
+    </div>
+
+    <!-- Script for interactive presentation features -->
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsContainer = document.getElementById('dots-container');
+        const pageNumDisplays = document.querySelectorAll('.page-num');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const navSidebar = document.getElementById('navSidebar');
+        const navOverlay = document.getElementById('navOverlay');
+        const navMenu = document.getElementById('navMenu');
+        
+        let currentSlide = 0;
+        let indicators = [];
+
+        slides.forEach((_, index) => {
+            const dot = document.createElement('span');
+            dot.className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 ' + (index === 0 ? 'dot-active' : 'dot-inactive');
+            dotsContainer.appendChild(dot);
+            indicators.push(dot);
+            
+            if(pageNumDisplays[index]) {
+                pageNumDisplays[index].textContent = `Slide ${index + 1} / ${slides.length}`;
+            }
+
+            const title = slides[index].querySelector('h1')?.innerText.replace(/\n/g, ' ') || `Slide ${index + 1}`;
+            const navItem = document.createElement('div');
+            navItem.className = `nav-item ${index === 0 ? 'active' : ''}`;
+            navItem.textContent = `${index + 1}. ${title}`;
+            navItem.onclick = () => { updateSlide(index); closeSidebar(); };
+            navMenu.appendChild(navItem);
+        });
+
+        function updateSlide(index) {
+            // Strict boundary guard - prevent looping back to start or past end
+            if (index < 0) {
+                currentSlide = 0;
+                return;
+            }
+            if (index >= slides.length) {
+                currentSlide = slides.length - 1;
+                return;
+            }
+
+            slides[currentSlide].classList.remove('active');
+            indicators[currentSlide].className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 bg-gray-300';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.remove('active');
+
+            currentSlide = index;
+            
+            slides[currentSlide].classList.add('active');
+            indicators[currentSlide].className = 'w-1.5 h-1.5 rounded-full transition-all duration-300 bg-black';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.add('active');
+
+            prevBtn.style.opacity = currentSlide === 0 ? '0.2' : '1';
+            prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+            nextBtn.style.opacity = currentSlide === slides.length - 1 ? '0.2' : '1';
+            nextBtn.style.pointerEvents = currentSlide === slides.length - 1 ? 'none' : 'auto';
+        }
+
+        function closeSidebar() {
+            navSidebar.classList.remove('open');
+            navOverlay.classList.remove('open');
+            hamburgerBtn.classList.remove('active');
+        }
+
+        hamburgerBtn.onclick = () => {
+            hamburgerBtn.classList.toggle('active');
+            navSidebar.classList.toggle('open');
+            navOverlay.classList.toggle('open');
+        };
+        navOverlay.onclick = closeSidebar;
+
+        prevBtn.onclick = () => updateSlide(currentSlide - 1);
+        nextBtn.onclick = () => updateSlide(currentSlide + 1);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                updateSlide(currentSlide - 1);
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                updateSlide(currentSlide + 1);
+            }
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const deck = document.getElementById('deck');
+        deck.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        deck.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                updateSlide(currentSlide + 1);
+            }
+            if (touchEndX > touchStartX + 50) {
+                updateSlide(currentSlide - 1);
+            }
+        }
+
+        function copyCode(button, code) {
+            const textarea = document.createElement('textarea');
+            textarea.value = code;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                const originalContent = button.innerHTML;
+                button.innerHTML = '<i class="fa-solid fa-check text-[#8A9A86]"></i> Copied';
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                }, 2000);
+            } catch (err) {
+                console.error('Copy failed:', err);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        updateSlide(0);
+    </script>
+</body>
+</html>

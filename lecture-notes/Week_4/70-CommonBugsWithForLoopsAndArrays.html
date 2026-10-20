@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>講義スライド：配列とforループの落とし穴とデバッグ (p5.js)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --color-bg-outer: #D1CFCA;      
+            --color-bg-slide:  #F7F6F4;     
+            --color-surface-1: #F2EFEA;    
+            --color-surface-2: #FFFFFF;    
+            --color-border: #DDDAD5;       
+            --color-text-main: #222222;    
+            --color-text-muted: #555555;   
+            --color-text-light: #999999;   
+            --color-accent-temp: #8C7A6B;  
+            --navy: #344D61;               
+            --terracotta: #994F60;         
+            --gold-muted: #C4B298;         
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--color-bg-outer);
+            color: var(--color-text-main);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+        }
+
+        h1, h2, h3, .font-serif {
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-weight: 400;
+        }
+
+        .presentation-viewport {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .slide-deck {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--color-bg-slide);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            padding: 5% 7% 7% 7%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transform: translateY(10px);
+            background: var(--color-bg-slide);
+            overflow-y: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        h1 {
+            color: var(--color-text-main);
+            font-size: 1.85rem; 
+            font-weight: 400;
+            line-height: 1.4;
+            margin-bottom: 1.25rem;
+            letter-spacing: 0.05em;
+        }
+
+        h2 {
+            color: var(--color-accent-temp);
+            font-size: 0.65rem; 
+            font-weight: 500;
+            letter-spacing: 0.4em;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .main-text {
+            font-size: 1.05rem; 
+            line-height: 1.8;
+            color: var(--color-text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        .highlight {
+            background: linear-gradient(transparent 70%, #E2DDD5 70%);
+            font-weight: 500;
+            padding: 0 0.15em;
+        }
+
+        code {
+            background: var(--color-surface-1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 2px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--terracotta);
+            font-weight: bold;
+            font-size: 0.85em;
+            border: 1px solid var(--color-border);
+        }
+
+        .code-preview {
+            background: #252423;
+            color: #E2DDD5;
+            padding: 0.85rem;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            border: 1px solid #3A3835;
+        }
+
+        .minimal-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .minimal-list li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.6rem;
+            font-size: 0.95rem; 
+            color: var(--color-text-muted);
+            display: block;
+            line-height: 1.6;
+        }
+        .minimal-list li::before {
+            content: "・";
+            position: absolute;
+            left: 0;
+            color: var(--color-accent-temp);
+            font-weight: bold;
+        }
+
+        .slide-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: var(--color-text-light);
+            border-top: 1px solid var(--color-border);
+            padding-top: 0.75rem;
+            margin-top: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .nav-btn {
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            color: var(--color-text-main);
+            opacity: 1 !important;
+        }
+
+        .hamburger-btn {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            z-index: 50;
+            background: rgba(247, 246, 244, 0.9);
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 0;
+            width: 48px;
+            height: 48px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+
+        .hamburger-btn:hover {
+            background: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .hamburger-btn span {
+            width: 18px;
+            height: 2px;
+            background-color: var(--color-text-main);
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+
+        .nav-sidebar {
+            position: fixed;
+            left: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background-color: var(--color-bg-slide);
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
+            z-index: 40;
+            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            border-right: 1px solid var(--color-border);
+        }
+
+        .nav-sidebar.open {
+            left: 0;
+        }
+
+        .nav-sidebar-content {
+            padding: 100px 24px 40px 24px;
+        }
+
+        .nav-sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--color-text-light);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .nav-item {
+            padding: 10px 0;
+            font-size: 12px;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            padding-left: 12px;
+            line-height: 1.4;
+        }
+
+        .nav-item:hover {
+            color: var(--color-text-main);
+            border-left-color: var(--color-accent-temp);
+            background: rgba(0,0,0,0.01);
+        }
+
+        .nav-item.active {
+            color: var(--color-accent-temp);
+            font-weight: 600;
+            border-left-color: var(--color-accent-temp);
+        }
+
+        .nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0);
+            z-index: 30;
+            transition: background-color 0.3s ease;
+            pointer-events: none;
+        }
+
+        .nav-overlay.open {
+            background-color: rgba(0, 0, 0, 0.3);
+            pointer-events: auto;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .dot-active { 
+            background-color: var(--color-text-main); 
+            width: 6px;
+            height: 6px;
+        }
+        .dot-inactive { 
+            background-color: var(--color-border); 
+            width: 4px;
+            height: 4px;
+        }
+
+        @media (max-width: 1320px) {
+            .slide-deck { transform: scale(0.9); }
+        }
+        @media (max-width: 1150px) {
+            .slide-deck { transform: scale(0.8); }
+        }
+        @media (max-width: 980px) {
+            .slide-deck { transform: scale(0.7); }
+        }
+        @media (max-width: 768px) {
+            .presentation-viewport { padding: 10px; height: auto; }
+            .slide-deck { aspect-ratio: auto; height: 560px; transform: none; }
+            .slide { padding: 32px 24px; }
+            h1 { font-size: 1.5rem; }
+            .main-text, .minimal-list li { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-btn" id="hamburgerBtn" title="目次を開く">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Navigation Sidebar -->
+    <div class="nav-sidebar" id="navSidebar">
+        <div class="nav-sidebar-content">
+            <div class="nav-sidebar-title">講義スライド一覧</div>
+            <div id="navMenu"></div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <div class="presentation-viewport">
+        <div class="slide-deck" id="deck">
+
+            <!-- Slide 1: トピック総括とよくある落とし穴 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Common Pitfalls &amp; Debugging</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Troubleshooting Essentials</h2>
+                    <h1 class="font-serif text-main mb-4">配列とforループの落とし穴<br><span class="highlight">「よくあるバグとその回避策」</span></h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-4">
+                            <p class="main-text text-xs text-muted leading-relaxed">
+                                本トピックでは、プログラミングにおける2大重要概念である<strong>「配列（Arrays）」</strong>と<strong>「forループ（for loops）」</strong>を学びました。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                非常に強力な道具である一方、初心者のみならず熟練プログラマーでさえ一度はハマる<span class="highlight">「典型的な構文ミス・論理エラー」</span>が存在します。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                エラーが出たときに冷静に原因を突き止められるよう、代表的なトラブル事例とデバッグの鉄則を確認しましょう。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <!-- 抽象図解SVG: バグとループの幾何学パターン -->
+                            <svg viewBox="0 0 200 120" class="w-48 h-32 bg-[#F2EFEA] rounded-sm p-2">
+                                <circle cx="100" cy="60" r="38" fill="none" stroke="var(--navy)" stroke-width="1.5" stroke-dasharray="4 3"/>
+                                <circle cx="100" cy="60" r="24" fill="none" stroke="var(--terracotta)" stroke-width="2"/>
+                                <path d="M 100 16 L 100 36" stroke="var(--navy)" stroke-width="2"/>
+                                <path d="M 100 84 L 100 104" stroke="var(--navy)" stroke-width="2"/>
+                                <path d="M 56 60 L 76 60" stroke="var(--navy)" stroke-width="2"/>
+                                <path d="M 124 60 L 144 60" stroke="var(--navy)" stroke-width="2"/>
+                                <rect x="94" y="54" width="12" height="12" fill="var(--terracotta)"/>
+                                <text x="100" y="114" font-size="7" font-family="monospace" text-anchor="middle" fill="var(--color-text-muted)">Bug Detection &amp; Analysis</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Common Pitfalls &amp; Bugs</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 2: 配列の罠①：波括弧 {} と角括弧 [] の混同 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Array Pitfall 01</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Bracket Syntax Confusion</h2>
+                    <h1 class="font-serif text-main mb-3">配列の宣言で「波括弧 <code>{}</code>」を使ってしまう</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                配列を定義するときは必ず<strong>角括弧（Square Brackets）<code>[]</code></strong> を使用します。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                しかし、誤ってオブジェクト用の<strong>波括弧（Curly Brackets）<code>{}</code></strong> を書いてしまい、カンマで値を並べると、コンソールに次のエラーが発生します。
+                            </p>
+                            <div class="p-3 bg-surface-2 border border-terracotta rounded-sm text-[10.5px] font-mono text-terracotta">
+                                <strong>エラー表示例:</strong><br>
+                                SyntaxError: Unexpected token ','
+                            </div>
+                            <p class="text-[11px] text-slate-600 leading-relaxed">
+                                JavaScriptは <code>{}</code> を見ると「オブジェクト（キーと値のペア）」が来ると解釈するため、いきなり <code>,</code> が現れたことで構文エラーを出します。
+                            </p>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9.5px] leading-relaxed shadow-sm">
+                                <div class="flex justify-between items-center text-[10px] text-slate-400 mb-1 pb-1 border-b border-[#3A3835]">
+                                    <span>誤りと修正の対比</span>
+                                    <button onclick="copyCode(this, 'var myArray = [1, 2, 3]; // 正しい角括弧')" class="hover:text-white transition-colors cursor-pointer flex items-center gap-1">
+                                        <i class="fa-regular fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <span class="text-[#7f8c8d]// 誤り：波括弧（オブジェクト記法）</span><br>
+                                <span class="text-[#c678dd]">var</span> <span class="text-[#e06c75]">myArray</span> = {<span class="text-[#d19a66]">1</span>, <span class="text-[#d19a66]">2</span>, <span class="text-[#d19a66]">3</span>};<br>
+                                <span class="text-[#e06c75]">// => Unexpected token ',' エラー！</span><br><br>
+                                <span class="text-[#7f8c8d]// 正解：角括弧（配列記法）</span><br>
+                                <span class="text-[#c678dd]">var</span> <span class="text-[#e06c75]">myArray</span> = [<span class="text-[#d19a66]">1</span>, <span class="text-[#d19a66]">2</span>, <span class="text-[#d19a66]">3</span>];<br>
+                                <span class="text-[#98c379]">// => 正常に配列として認識される</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Common Pitfalls &amp; Bugs</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 3: 配列の罠②：末尾の余計なカンマ（未定義要素の混入） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Array Pitfall 02</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Trailing Comma &amp; Undefined</h2>
+                    <h1 class="font-serif text-main mb-3">末尾にカンマを置くと「見えない要素」ができる</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mt-2">
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-terracotta border-b border-border pb-1">エラーが出ない「サイレントバグ」</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                配列の最後の要素の直後に、誤って余分なカンマ（<code>,</code>）を残してしまうケースです。
+                            </p>
+                            <div class="code-preview font-mono text-[9.5px]">
+                                <span class="text-[#c678dd]">var</span> items = [<span class="text-[#d19a66]">10</span>, <span class="text-[#d19a66]">20</span>, <span class="text-[#d19a66]">30</span>, ];<br>
+                                <span class="text-[#7f8c8d]// 3要素のつもりが末尾に何かができる？</span>
+                            </div>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                JavaScriptは構文エラー（赤文字）を出さないため一見動いているように見えます。しかし、実行環境によっては末尾に未定義の空要素（<code>undefined</code>）が作られたり、<code>length</code> が想定と食い違う原因になります。
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-surface-2 border border-navy rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-navy border-b border-border pb-1">対策：末尾のカンマは必ず閉じる直前に消す</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                最後の値の後ろにはカンマを置かず、直接閉じ角括弧 <code>]</code> を書くのが安全で美しい作法です。
+                            </p>
+                            <div class="code-preview font-mono text-[9.5px]">
+                                <span class="text-[#7f8c8d]// 適切な記述：最後の30の後はカンマなし</span><br>
+                                <span class="text-[#c678dd]">var</span> items = [<span class="text-[#d19a66]">10</span>, <span class="text-[#d19a66]">20</span>, <span class="text-[#d19a66]">30</span>];<br>
+                                <span class="text-[#61afef]">console</span>.<span class="text-[#61afef]">log</span>(items.<span class="text-[#e06c75]">length</span>); <span class="text-[#7f8c8d]// 正確に 3</span>
+                            </div>
+                            <p class="text-[10px] text-slate-500">
+                                余計なカンマを排除して、常に意図通りの要素数・インデックス境界を保ちましょう。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Common Pitfalls &amp; Bugs</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 4: forループの罠①：後処理 i++ の記述漏れ -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">For Loop Pitfall 01</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Missing Afterthought</h2>
+                    <h1 class="font-serif text-main mb-3">後処理 <code>i++</code> を忘れると「無限ループ」に突入する</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                <code>for</code> ループの3つの要素（初期化・継続条件・後処理）のうち、最後の<strong>後処理（<code>i++</code> や <code>i += 1</code>）を書き忘れる</strong>のは極めて多いミスです。
+                            </p>
+                            <div class="p-3 bg-surface-2 border border-terracotta rounded-sm text-[11px] text-slate-700 space-y-1">
+                                <span class="font-bold text-terracotta">何が起きるのか？</span><br>
+                                カウンタ <code>i</code> の値が <code>0</code> のまま一度も増えません。<br>
+                                そのため条件式 <code>i &lt; 40</code> は永遠に <code>true</code> のまま成立し続け、プログラムが一生ループを抜け出せなくなります。
+                            </div>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9.5px] leading-relaxed shadow-sm">
+                                <div class="flex justify-between items-center text-[10px] text-slate-400 mb-1 pb-1 border-b border-[#3A3835]">
+                                    <span>致命的な無限ループの例</span>
+                                </div>
+                                <span class="text-[#7f8c8d]// 危険：最後の後処理が空っぽ！</span><br>
+                                <span class="text-[#c678dd]">for</span> (<span class="text-[#c678dd]">var</span> i = <span class="text-[#d19a66]">0</span>; i &lt; <span class="text-[#d19a66]">40</span>; ) {<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">console</span>.<span class="text-[#61afef]">log</span>(i);<br>
+                                &nbsp;&nbsp;<span class="text-[#7f8c8d]// i は永久に 0 のまま増加しない</span><br>
+                                }<br>
+                                <span class="text-[#e06c75]">// => 永久に 0 を出力し続けブラウザがフリーズ！</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Common Pitfalls &amp; Bugs</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 5: 無限ループの代償と復旧方法 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">System Freeze Warning</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Infinite Loop Impact</h2>
+                    <h1 class="font-serif text-main mb-3">ブラウザが固まり、PCのファンが唸り声をあげる</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mt-2">
+                        <div class="p-4 bg-surface-2 border-2 border-terracotta rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-terracotta border-b border-border pb-1">発生する現象</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                無限ループに陥ると、CPU使用率が一瞬で100%近くまで跳ね上がり、パソコンのファンが激しく回転し始めます。
+                            </p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                ブラウザの画面は完全にフリーズし、クリックしてもリロードしても一切反応しなくなります（クラッシュ状態）。
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-surface-2 border-2 border-navy rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-navy border-b border-border pb-1">脱出と復旧の手順</p>
+                            <ul class="minimal-list text-slate-600 text-[11px] space-y-1">
+                                <li><strong>1. タブを強制終了：</strong> ブラウザの応答不能タブを強制的に閉じます。</li>
+                                <li><strong>2. コードを修正：</strong> エディタ側で <code>i++</code> を確実に書き足します。</li>
+                                <li><strong>3. 再度開く：</strong> 修正後にブラウザでプレビューを開き直します。</li>
+                            </ul>
+                            <p class="text-[10px] text-slate-500">
+                                ※ベテランでもうっかり起こす事故です。焦らずタブを閉じて対処しましょう。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Common Pitfalls &amp; Bugs</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 6: forループの罠②：不等号の向きの逆転（静かな不発） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">For Loop Pitfall 02</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Reversed Condition Bug</h2>
+                    <h1 class="font-serif text-main mb-3">不等号の向きを逆にすると「1回も動かない」</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                条件式で <code>&lt;</code>（小なり）と書くべきところを、うっかり <span class="highlight font-bold"><code>&gt;</code>（大なり）</span> と書いてしまうミスです。
+                            </p>
+                            <div class="p-3 bg-surface-2 border border-border rounded-sm text-[11px] text-slate-600 space-y-1">
+                                <strong>なぜ何も起きないのか？</strong><br>
+                                ループの開始時、初期値は <code>i = 0</code> です。<br>
+                                最初の1回目を実行する前の判定で <code>0 &gt; 40</code> をテストしますが、これは最初から <strong><code>false</code>（偽）</strong> です。<br>
+                                したがって、ループ本体の処理は<strong>1回も実行されずに即座にスキップ</strong>されます。
+                            </div>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9.5px] leading-relaxed shadow-sm">
+                                <div class="flex justify-between items-center text-[10px] text-slate-400 mb-1 pb-1 border-b border-[#3A3835]">
+                                    <span>実行されない不発コード</span>
+                                </div>
+                                <span class="text-[#7f8c8d]// 誤り：不等号が逆</span><br>
+                                <span class="text-[#c678dd]">for</span> (<span class="text-[#c678dd]">var</span> i = <span class="text-[#d19a66]">0</span>; <span class="text-[#e06c75]">i &gt; 40</span>; i++) {<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">console</span>.<span class="text-[#61afef]">log</span>(i); <span class="text-[#7f8c8d]// 一度も実行されない！</span><br>
+                                }<br><br>
+                                <span class="text-[#7f8c8d]// 正解：iが40未満の間だけ実行</span><br>
+                                <span class="text-[#c678dd]">for</span> (<span class="text-[#c678dd]">var</span> i = <span class="text-[#d19a66]">0</span>; <span class="text-[#98c379]">i &lt; 40</span>; i++) {<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">console</span>.<span class="text-[#61afef]">log</span>(i); <span class="text-[#7f8c8d]// 0から39まで40回実行される</span><br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Common Pitfalls &amp; Bugs</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 7: カウンタ変数 i の宣言ルール（var の重要性） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Scope &amp; Declaration</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Counter Declaration</h2>
+                    <h1 class="font-serif text-main mb-3">カウンタ変数の先頭には必ず <code>var</code> をつける</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mt-2">
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-terracotta border-b border-border pb-1"><code>var</code> を省略した場合の危険性</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                <code>for (i = 0; ...)</code> のように <code>var</code> を付けずに書くと、JavaScriptは変数 <code>i</code> を勝手に<strong>グローバル変数（プログラム全体で共有される変数）</strong>として登録してしまいます。
+                            </p>
+                            <div class="code-preview font-mono text-[9.5px]">
+                                <span class="text-[#7f8c8d]// 危険：var のない省略記法</span><br>
+                                <span class="text-[#c678dd]">for</span> (<span class="text-[#e06c75]">i = 0</span>; i &lt; 10; i++) { ... }
+                            </div>
+                        </div>
+
+                        <div class="p-4 bg-surface-2 border border-navy rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-navy border-b border-border pb-1">意図しない値の衝突事故を防ぐ</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                他の場所や別のループでも同じ名前 <code>i</code> を使っていた場合、変数の値が互いに上書きし合ってループ回数が狂う凶悪なバグを引き起こします。
+                            </p>
+                            <div class="code-preview font-mono text-[9.5px]">
+                                <span class="text-[#7f8c8d]// 安全：明示的に変数を宣言する</span><br>
+                                <span class="text-[#c678dd]">for</span> (<span class="text-[#c678dd]">var</span> <span class="text-[#98c379]">i = 0</span>; i &lt; 10; i++) { ... }
+                            </div>
+                            <p class="text-[10px] text-slate-500">
+                                短いコードであっても、常に <code>var i = 0</code> と宣言する習慣を守りましょう。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Common Pitfalls &amp; Bugs</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 8: まとめとフォーラムでの知見共有 -->
+            <section class="slide text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Summary &amp; Community</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content max-w-2xl py-4">
+                    <h2>Summary &amp; Sharing</h2>
+                    <h1 class="font-serif text-main mb-4">バグと出会った経験こそが最高の財産</h1>
+                    
+                    <p class="text-xs text-muted leading-relaxed max-w-lg mx-auto mb-6">
+                        配列とループを使いこなす過程でバグに遭遇するのは、プログラミングを学ぶ上でのごく正常なステップです。
+                    </p>
+
+                    <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-left text-xs space-y-1.5 max-w-md mx-auto mb-4">
+                        <p class="font-bold text-navy border-b border-border pb-1">トラブルシューティング・チェックリスト</p>
+                        <ul class="minimal-list">
+                            <li><strong>配列の括弧：</strong> 波括弧 <code>{}</code> ではなく角括弧 <code>[]</code> を使っているか</li>
+                            <li><strong>末尾カンマ：</strong> 最後の要素の後ろに余計な <code>,</code> を残していないか</li>
+                            <li><strong>後処理：</strong> ループの最後に <code>i++</code> を書き忘れていないか</li>
+                            <li><strong>不等号：</strong> <code>i &lt; 40</code> の向きが逆になっていないか</li>
+                            <li><strong>変数宣言：</strong> カウンタの前に <code>var</code> を明記しているか</li>
+                        </ul>
+                    </div>
+
+                    <p class="text-[11px] text-slate-500 italic mt-3">
+                        自分が遭遇した珍しいエラーや解決法をフォーラムで仲間と共有し、デバッグの引き出しを増やしていきましょう！
+                    </p>
+                </div>
+                <div class="slide-footer">
+                    <span>Common Pitfalls &amp; Bugs</span><span class="page-num"></span>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Minimalist Navigation Controls Footer overlay inside the slide deck -->
+    <div class="absolute bottom-6 left-10 right-10 flex justify-between items-center pointer-events-auto z-30">
+        <div class="flex gap-6">
+            <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
+            </button>
+            <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
+            </button>
+        </div>
+
+        <!-- Dynamic Step Indicators Container -->
+        <div class="flex gap-1.5 overflow-x-auto max-w-xs justify-center px-2 no-scrollbar" id="dots-container"></div>
+    </div>
+
+    <!-- Script for interactive presentation features -->
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsContainer = document.getElementById('dots-container');
+        const pageNumDisplays = document.querySelectorAll('.page-num');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const navSidebar = document.getElementById('navSidebar');
+        const navOverlay = document.getElementById('navOverlay');
+        const navMenu = document.getElementById('navMenu');
+        
+        let currentSlide = 0;
+        let indicators = [];
+
+        slides.forEach((_, index) => {
+            const dot = document.createElement('span');
+            dot.className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 ' + (index === 0 ? 'dot-active' : 'dot-inactive');
+            dotsContainer.appendChild(dot);
+            indicators.push(dot);
+            
+            if(pageNumDisplays[index]) {
+                pageNumDisplays[index].textContent = `Slide ${index + 1} / ${slides.length}`;
+            }
+
+            const title = slides[index].querySelector('h1')?.innerText.replace(/\n/g, ' ') || `Slide ${index + 1}`;
+            const navItem = document.createElement('div');
+            navItem.className = `nav-item ${index === 0 ? 'active' : ''}`;
+            navItem.textContent = `${index + 1}. ${title}`;
+            navItem.onclick = () => { updateSlide(index); closeSidebar(); };
+            navMenu.appendChild(navItem);
+        });
+
+        function updateSlide(index) {
+            // Strict boundary guard - prevent looping back to start or past end
+            if (index < 0) {
+                currentSlide = 0;
+                return;
+            }
+            if (index >= slides.length) {
+                currentSlide = slides.length - 1;
+                return;
+            }
+
+            slides[currentSlide].classList.remove('active');
+            indicators[currentSlide].className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 bg-gray-300';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.remove('active');
+
+            currentSlide = index;
+            
+            slides[currentSlide].classList.add('active');
+            indicators[currentSlide].className = 'w-1.5 h-1.5 rounded-full transition-all duration-300 bg-black';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.add('active');
+
+            prevBtn.style.opacity = currentSlide === 0 ? '0.2' : '1';
+            prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+            nextBtn.style.opacity = currentSlide === slides.length - 1 ? '0.2' : '1';
+            nextBtn.style.pointerEvents = currentSlide === slides.length - 1 ? 'none' : 'auto';
+        }
+
+        function closeSidebar() {
+            navSidebar.classList.remove('open');
+            navOverlay.classList.remove('open');
+            hamburgerBtn.classList.remove('active');
+        }
+
+        hamburgerBtn.onclick = () => {
+            hamburgerBtn.classList.toggle('active');
+            navSidebar.classList.toggle('open');
+            navOverlay.classList.toggle('open');
+        };
+        navOverlay.onclick = closeSidebar;
+
+        prevBtn.onclick = () => updateSlide(currentSlide - 1);
+        nextBtn.onclick = () => updateSlide(currentSlide + 1);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                updateSlide(currentSlide - 1);
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                updateSlide(currentSlide + 1);
+            }
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const deck = document.getElementById('deck');
+        deck.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        deck.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                updateSlide(currentSlide + 1);
+            }
+            if (touchEndX > touchStartX + 50) {
+                updateSlide(currentSlide - 1);
+            }
+        }
+
+        function copyCode(button, code) {
+            const textarea = document.createElement('textarea');
+            textarea.value = code;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                const originalContent = button.innerHTML;
+                button.innerHTML = '<i class="fa-solid fa-check text-[#8A9A86]"></i> Copied';
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                }, 2000);
+            } catch (err) {
+                console.error('Copy failed:', err);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        updateSlide(0);
+    </script>
+</body>
+</html>

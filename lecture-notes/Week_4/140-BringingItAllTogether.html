@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>講義スライド：動的配列と数学関数によるスターフィールド (p5.js)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --color-bg-outer: #D1CFCA;      
+            --color-bg-slide:  #F7F6F4;     
+            --color-surface-1: #F2EFEA;    
+            --color-surface-2: #FFFFFF;    
+            --color-border: #DDDAD5;       
+            --color-text-main: #222222;    
+            --color-text-muted: #555555;   
+            --color-text-light: #999999;   
+            --color-accent-temp: #8C7A6B;  
+            --navy: #344D61;               
+            --terracotta: #994F60;         
+            --gold-muted: #C4B298;         
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--color-bg-outer);
+            color: var(--color-text-main);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+        }
+
+        h1, h2, h3, .font-serif {
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-weight: 400;
+        }
+
+        .presentation-viewport {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .slide-deck {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--color-bg-slide);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            padding: 5% 7% 7% 7%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transform: translateY(10px);
+            background: var(--color-bg-slide);
+            overflow-y: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        h1 {
+            color: var(--color-text-main);
+            font-size: 1.85rem; 
+            font-weight: 400;
+            line-height: 1.4;
+            margin-bottom: 1.25rem;
+            letter-spacing: 0.05em;
+        }
+
+        h2 {
+            color: var(--color-accent-temp);
+            font-size: 0.65rem; 
+            font-weight: 500;
+            letter-spacing: 0.4em;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .main-text {
+            font-size: 1.05rem; 
+            line-height: 1.8;
+            color: var(--color-text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        .highlight {
+            background: linear-gradient(transparent 70%, #E2DDD5 70%);
+            font-weight: 500;
+            padding: 0 0.15em;
+        }
+
+        code {
+            background: var(--color-surface-1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 2px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--terracotta);
+            font-weight: bold;
+            font-size: 0.85em;
+            border: 1px solid var(--color-border);
+        }
+
+        .code-preview {
+            background: #252423;
+            color: #E2DDD5;
+            padding: 0.85rem;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            border: 1px solid #3A3835;
+        }
+
+        .minimal-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .minimal-list li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.6rem;
+            font-size: 0.95rem; 
+            color: var(--color-text-muted);
+            display: block;
+            line-height: 1.6;
+        }
+        .minimal-list li::before {
+            content: "・";
+            position: absolute;
+            left: 0;
+            color: var(--color-accent-temp);
+            font-weight: bold;
+        }
+
+        .slide-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: var(--color-text-light);
+            border-top: 1px solid var(--color-border);
+            padding-top: 0.75rem;
+            margin-top: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .nav-btn {
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            color: var(--color-text-main);
+            opacity: 1 !important;
+        }
+
+        .hamburger-btn {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            z-index: 50;
+            background: rgba(247, 246, 244, 0.9);
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 0;
+            width: 48px;
+            height: 48px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+
+        .hamburger-btn:hover {
+            background: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .hamburger-btn span {
+            width: 18px;
+            height: 2px;
+            background-color: var(--color-text-main);
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+
+        .nav-sidebar {
+            position: fixed;
+            left: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background-color: var(--color-bg-slide);
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
+            z-index: 40;
+            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            border-right: 1px solid var(--color-border);
+        }
+
+        .nav-sidebar.open {
+            left: 0;
+        }
+
+        .nav-sidebar-content {
+            padding: 100px 24px 40px 24px;
+        }
+
+        .nav-sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--color-text-light);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .nav-item {
+            padding: 10px 0;
+            font-size: 12px;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            padding-left: 12px;
+            line-height: 1.4;
+        }
+
+        .nav-item:hover {
+            color: var(--color-text-main);
+            border-left-color: var(--color-accent-temp);
+            background: rgba(0,0,0,0.01);
+        }
+
+        .nav-item.active {
+            color: var(--color-accent-temp);
+            font-weight: 600;
+            border-left-color: var(--color-accent-temp);
+        }
+
+        .nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0);
+            z-index: 30;
+            transition: background-color 0.3s ease;
+            pointer-events: none;
+        }
+
+        .nav-overlay.open {
+            background-color: rgba(0, 0, 0, 0.3);
+            pointer-events: auto;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .dot-active { 
+            background-color: var(--color-text-main); 
+            width: 6px;
+            height: 6px;
+        }
+        .dot-inactive { 
+            background-color: var(--color-border); 
+            width: 4px;
+            height: 4px;
+        }
+
+        @media (max-width: 1320px) {
+            .slide-deck { transform: scale(0.9); }
+        }
+        @media (max-width: 1150px) {
+            .slide-deck { transform: scale(0.8); }
+        }
+        @media (max-width: 980px) {
+            .slide-deck { transform: scale(0.7); }
+        }
+        @media (max-width: 768px) {
+            .presentation-viewport { padding: 10px; height: auto; }
+            .slide-deck { aspect-ratio: auto; height: 560px; transform: none; }
+            .slide { padding: 32px 24px; }
+            h1 { font-size: 1.5rem; }
+            .main-text, .minimal-list li { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-btn" id="hamburgerBtn" title="目次を開く">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Navigation Sidebar -->
+    <div class="nav-sidebar" id="navSidebar">
+        <div class="nav-sidebar-content">
+            <div class="nav-sidebar-title">講義スライド一覧</div>
+            <div id="navMenu"></div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <div class="presentation-viewport">
+        <div class="slide-deck" id="deck">
+
+            <!-- Slide 1: イントロダクション：スターフィールドの構築 -->
+            <section class="slide active">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Animated Star Field</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Synthesis of Techniques</h2>
+                    <h1 class="font-serif text-main mb-4">配列と数学関数を統合した<br><span class="highlight">「星空のワープアニメーション（Star Field）」</span></h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-4">
+                            <p class="main-text text-xs text-muted leading-relaxed">
+                                これまで学習してきた「動的配列」「forループ」「距離計算（<code>dist</code>）」「乱数（<code>random</code>）」のすべてを結集し、宇宙空間を光速で突き進むような<span class="highlight">3Dパースペクティブ錯覚</span>を2D画面上に再現します。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                1,000個の星それぞれの位置と運動方向を並行配列で管理し、数学的な距離制御によって奥行きと加速を創出します。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <!-- 抽象図解: 中心から外側へ放射する星のベクトル -->
+                            <svg viewBox="0 0 200 120" class="w-48 h-32 bg-[#252423] rounded-sm p-2">
+                                <circle cx="100" cy="60" r="2" fill="#E2DDD5"/>
+                                <line x1="100" y1="60" x2="30" y2="20" stroke="#7f8c8d" stroke-width="0.8" stroke-dasharray="2 2"/>
+                                <circle cx="45" cy="28" r="4.5" fill="#E2DDD5"/>
+                                <line x1="100" y1="60" x2="160" y2="25" stroke="#7f8c8d" stroke-width="0.8" stroke-dasharray="2 2"/>
+                                <circle cx="145" cy="33" r="4" fill="#E2DDD5"/>
+                                <line x1="100" y1="60" x2="40" y2="95" stroke="#7f8c8d" stroke-width="0.8" stroke-dasharray="2 2"/>
+                                <circle cx="55" cy="86" r="3.5" fill="#E2DDD5"/>
+                                <line x1="100" y1="60" x2="170" y2="100" stroke="#7f8c8d" stroke-width="0.8" stroke-dasharray="2 2"/>
+                                <circle cx="152" cy="90" r="5" fill="#E2DDD5"/>
+                                <circle cx="85" cy="52" r="1.5" fill="#E2DDD5"/>
+                                <circle cx="115" cy="68" r="2" fill="#E2DDD5"/>
+                                <text x="100" y="112" font-size="7" font-family="monospace" text-anchor="middle" fill="#888">Radial Outward Motion</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Animated Star Field (p5.js)</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 2: 1,000個の星の初期化（push ループ） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Dynamic Initialization</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Setup &amp; Arrays</h2>
+                    <h1 class="font-serif text-main mb-3">1,000個の空の器に乱数座標を詰める</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                星の総数を定数 <code>numStars = 1000</code> として設定し、X座標とY座標を保持する2つの空配列を用意します。
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1">
+                                <li><code>setup()</code> 内の <code>for</code> ループで 1,000 回反復</li>
+                                <li><code>starPositionsX.push(random(0, width))</code></li>
+                                <li><code>starPositionsY.push(random(0, height))</code></li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9.5px] leading-relaxed shadow-sm">
+                                <div class="flex justify-between items-center text-[10px] text-slate-400 mb-1 pb-1 border-b border-[#3A3835]">
+                                    <span>setup() 内での大量要素追加</span>
+                                    <button onclick="copyCode(this, 'var starPositionsX = [];\nvar starPositionsY = [];\nvar numStars = 1000;\n\nfunction setup() {\n  createCanvas(800, 600);\n  for (var i = 0; i < numStars; i++) {\n    starPositionsX.push(random(0, width));\n    starPositionsY.push(random(0, height));\n  }\n}')" class="hover:text-white transition-colors cursor-pointer flex items-center gap-1">
+                                        <i class="fa-regular fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <span class="text-[#c678dd]">var</span> starPositionsX = [];<br>
+                                <span class="text-[#c678dd]">var</span> starPositionsY = [];<br>
+                                <span class="text-[#c678dd]">var</span> numStars = <span class="text-[#d19a66]">1000</span>;<br><br>
+                                <span class="text-[#c678dd]">for</span> (<span class="text-[#c678dd]">var</span> i = <span class="text-[#d19a66]">0</span>; i &lt; numStars; i++) {<br>
+                                &nbsp;&nbsp;starPositionsX.<span class="text-[#61afef]">push</span>(<span class="text-[#61afef]">random</span>(<span class="text-[#d19a66]">0</span>, width));<br>
+                                &nbsp;&nbsp;starPositionsY.<span class="text-[#61afef]">push</span>(<span class="text-[#61afef]">random</span>(<span class="text-[#d19a66]">0</span>, height));<br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Animated Star Field (p5.js)</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 3: 中心距離に応じたサイズスケーリング（遠近感の錯覚） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Perspective Scaling</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Distance Modulation</h2>
+                    <h1 class="font-serif text-main mb-3">中心距離 <code>d</code> による星のサイズ制御</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mt-2">
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-navy border-b border-border pb-1">3Dパースペクティブの数学的再現</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                画面中央にある星は「遠く」にあるため小さく、外側へ広がるほど「近く」を通過するため大きく見せる必要があります。
+                            </p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                <code>dist(width/2, height/2, x, y)</code> で画面中央からの距離 <code>d</code> を求め、サイズ <code>r</code> に反映します。
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-terracotta border-b border-border pb-1">除算によるスケール調整</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                距離 <code>d</code> をそのまま半径に使うと画面が巨大な円で埋め尽くされてしまいます。
+                            </p>
+                            <div class="code-preview font-mono text-[9px]">
+                                <span class="text-[#c678dd]">var</span> d = <span class="text-[#61afef]">dist</span>(width/<span class="text-[#d19a66]">2</span>, height/<span class="text-[#d19a66]">2</span>, starPositionsX[i], starPositionsY[i]);<br>
+                                <span class="text-[#c678dd]">var</span> r = d / <span class="text-[#d19a66]">25</span>; &nbsp;<span class="text-[#7f8c8d]// 適切なサイズ比に圧縮</span><br>
+                                <span class="text-[#61afef]">ellipse</span>(starPositionsX[i], starPositionsY[i], r, r);
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Animated Star Field (p5.js)</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 4: 方向配列（starDirectionsX / Y）の導入 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Direction Vectors</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Movement Arrays</h2>
+                    <h1 class="font-serif text-main mb-3">各星の移動方向を定める 2つの方向配列</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                星ごとに固有の移動ベクトルを与えるため、<code>starDirectionsX</code> と <code>starDirectionsY</code> の配列を追加します。
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1">
+                                <li><code>random(-1, 1)</code> でプラス・マイナスのランダムな数値を格納</li>
+                                <li><code>-1</code> ➔ 左（または上）方向への移動</li>
+                                <li><code>+1</code> ➔ 右（または下）方向への移動</li>
+                                <li>毎フレーム <code>starPositionsX[i] += starDirectionsX[i]</code> で座標を更新</li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9px] leading-relaxed shadow-sm">
+                                <span class="text-[#7f8c8d]// setup() で方向ベクトルを初期化</span><br>
+                                starDirectionsX.<span class="text-[#61afef]">push</span>(<span class="text-[#61afef]">random</span>(-<span class="text-[#d19a66]">1</span>, <span class="text-[#d19a66]">1</span>));<br>
+                                starDirectionsY.<span class="text-[#61afef]">push</span>(<span class="text-[#61afef]">random</span>(-<span class="text-[#d19a66]">1</span>, <span class="text-[#d19a66]">1</span>));<br><br>
+                                <span class="text-[#7f8c8d]// draw() 内での座標更新</span><br>
+                                starPositionsX[i] += starDirectionsX[i];<br>
+                                starPositionsY[i] += starDirectionsY[i];
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Animated Star Field (p5.js)</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 5: 外側拡散のトリック（森のメタファー） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Outward Illusion</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Geometric Cleverness</h2>
+                    <h1 class="font-serif text-main mb-3">全天体を「中央一点」から発進させる発想の転換</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                画面全体に散らばった星にランダムな方向を与えると、単なるブラウン運動（乱雑な揺らぎ）に見えてしまいます。
+                            </p>
+                            <div class="p-3 bg-surface-2 border border-border rounded-sm text-[11px] text-slate-700 space-y-1">
+                                <span class="font-bold text-navy">「森の中心」のメタファー：</span><br>
+                                森のど真ん中に立っているとき、どの方向へ歩き出しても必ず「森の外側」へと向かいます。
+                            </div>
+                            <p class="text-[11px] text-slate-600">
+                                ➔ 初期座標をすべて <code>(width/2, height/2)</code> に固定するだけで、あらゆるランダムベクトルが自然と「外側への放射」へと化けます！
+                            </p>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9.5px] leading-relaxed shadow-sm">
+                                <span class="text-[#7f8c8d]// 乱数配置を廃止し、すべて画面中央を始点にする</span><br>
+                                <span class="text-[#c678dd]">for</span> (<span class="text-[#c678dd]">var</span> i = <span class="text-[#d19a66]">0</span>; i &lt; numStars; i++) {<br>
+                                &nbsp;&nbsp;starPositionsX.<span class="text-[#61afef]">push</span>(width / <span class="text-[#d19a66]">2</span>);<br>
+                                &nbsp;&nbsp;starPositionsY.<span class="text-[#61afef]">push</span>(height / <span class="text-[#d19a66]">2</span>);<br>
+                                &nbsp;&nbsp;<span class="text-[#7f8c8d]// 方向だけをランダムにする</span><br>
+                                &nbsp;&nbsp;starDirectionsX.<span class="text-[#61afef]">push</span>(<span class="text-[#61afef]">random</span>(-<span class="text-[#d19a66]">1</span>, <span class="text-[#d19a66]">1</span>));<br>
+                                &nbsp;&nbsp;starDirectionsY.<span class="text-[#61afef]">push</span>(<span class="text-[#61afef]">random</span>(-<span class="text-[#d19a66]">1</span>, <span class="text-[#d19a66]">1</span>));<br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Animated Star Field (p5.js)</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 6: 距離比例の加速と正規化（maxDist） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Speed Modulation</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Perspective Acceleration</h2>
+                    <h1 class="font-serif text-main mb-3">遠くは遅く、近くは速く：<code>maxDist</code> による速度制御</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mt-2">
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-navy border-b border-border pb-1">最大対角距離の事前計算</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                画面中央から隅 <code>(0,0)</code> までの最長距離を <code>maxDist = dist(0, 0, width/2, height/2);</code> として算出します。
+                            </p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                <code>d / maxDist</code> と割ることで、中心（0.0）から外端（1.0）への滑らかな正規化スケールを作ります。
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-terracotta border-b border-border pb-1">初動オフセットと速度の乗算</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                中心点では <code>d = 0</code> のため、そのままでは静止してしまいます。微小値 <code>0.1</code> を足して初動を与えます。
+                            </p>
+                            <div class="code-preview font-mono text-[9px]">
+                                <span class="text-[#c678dd]">var</span> speed = (d / maxDist) * <span class="text-[#d19a66]">2</span> + <span class="text-[#d19a66]">0.1</span>;<br>
+                                starPositionsX[i] += starDirectionsX[i] * speed;<br>
+                                starPositionsY[i] += starDirectionsY[i] * speed;
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Animated Star Field (p5.js)</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 7: 星のリサイクル（無限ループの実現） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Continuous Space Loop</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Recycling Elements</h2>
+                    <h1 class="font-serif text-main mb-3">画面端に消えた星を「中央へリセット」する</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                星が画面外へ突き抜けると、やがて宇宙空間は空っぽになってしまいます。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                距離 <code>d</code> が最大距離 <code>maxDist</code> を超えた瞬間に、その星の座標を再び <span class="highlight"><code>(width/2, height/2)</code></span> に巻き戻します。
+                            </p>
+                            <div class="p-3 bg-surface-2 border border-border rounded-sm text-[11px] text-slate-600">
+                                これにより、1,000個の要素が永遠に循環し続け、途切れることのない無限の宇宙旅行が完成します。
+                            </div>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9.5px] leading-relaxed shadow-sm">
+                                <div class="flex justify-between items-center text-[10px] text-slate-400 mb-1 pb-1 border-b border-[#3A3835]">
+                                    <span>端でのリセット判定</span>
+                                </div>
+                                <span class="text-[#7f8c8d]// 星が画面外端に到達したか判定</span><br>
+                                <span class="text-[#c678dd]">if</span> (d &gt; maxDist) {<br>
+                                &nbsp;&nbsp;<span class="text-[#7f8c8d]// 再び中心から再発進させる</span><br>
+                                &nbsp;&nbsp;starPositionsX[i] = width / <span class="text-[#d19a66]">2</span>;<br>
+                                &nbsp;&nbsp;starPositionsY[i] = height / <span class="text-[#d19a66]">2</span>;<br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Animated Star Field (p5.js)</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 8: まとめと自律的チャレンジ -->
+            <section class="slide text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Summary &amp; Inspiration</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content max-w-2xl py-4">
+                    <h2>Summary &amp; Next Challenge</h2>
+                    <h1 class="font-serif text-main mb-4">配列と数式が織りなす空間イリュージョン</h1>
+                    
+                    <p class="text-xs text-muted leading-relaxed max-w-lg mx-auto mb-6">
+                        動的配列による大量データ管理、幾何学的発想の転換、そして距離場を利用した速度とサイズのスケーリングを完璧に統合しました。
+                    </p>
+
+                    <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-left text-xs space-y-1.5 max-w-md mx-auto mb-4">
+                        <p class="font-bold text-navy border-b border-border pb-1">マスターのチェックリスト</p>
+                        <ul class="minimal-list">
+                            <li><strong>大量要素の追加：</strong> <code>push()</code> で1,000個の座標と方向を配列に格納</li>
+                            <li><strong>遠近感の錯覚：</strong> <code>dist()</code> を使って中心からの距離でサイズを変調</li>
+                            <li><strong>放射の幾何学：</strong> 全ての星を中央 <code>(width/2, height/2)</code> から放つ</li>
+                            <li><strong>速度の正規化：</strong> <code>maxDist</code> で割ることで外側ほど急加速させる</li>
+                            <li><strong>無限ループ：</strong> 画面端に到達した要素を中心へ巻き戻す（リサイクル）</li>
+                        </ul>
+                    </div>
+
+                    <p class="text-[11px] text-slate-500 italic mt-3">
+                        発展課題：最初から星が宇宙全体に散らばっているように見せたり、マウスの位置を消失点にして操る拡張に挑戦してください！
+                    </p>
+                </div>
+                <div class="slide-footer">
+                    <span>Animated Star Field (p5.js)</span><span class="page-num"></span>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Minimalist Navigation Controls Footer overlay inside the slide deck -->
+    <div class="absolute bottom-6 left-10 right-10 flex justify-between items-center pointer-events-auto z-30">
+        <div class="flex gap-6">
+            <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
+            </button>
+            <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
+            </button>
+        </div>
+
+        <!-- Dynamic Step Indicators Container -->
+        <div class="flex gap-1.5 overflow-x-auto max-w-xs justify-center px-2 no-scrollbar" id="dots-container"></div>
+    </div>
+
+    <!-- Script for interactive presentation features -->
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsContainer = document.getElementById('dots-container');
+        const pageNumDisplays = document.querySelectorAll('.page-num');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const navSidebar = document.getElementById('navSidebar');
+        const navOverlay = document.getElementById('navOverlay');
+        const navMenu = document.getElementById('navMenu');
+        
+        let currentSlide = 0;
+        let indicators = [];
+
+        slides.forEach((_, index) => {
+            const dot = document.createElement('span');
+            dot.className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 ' + (index === 0 ? 'dot-active' : 'dot-inactive');
+            dotsContainer.appendChild(dot);
+            indicators.push(dot);
+            
+            if(pageNumDisplays[index]) {
+                pageNumDisplays[index].textContent = `Slide ${index + 1} / ${slides.length}`;
+            }
+
+            const title = slides[index].querySelector('h1')?.innerText.replace(/\n/g, ' ') || `Slide ${index + 1}`;
+            const navItem = document.createElement('div');
+            navItem.className = `nav-item ${index === 0 ? 'active' : ''}`;
+            navItem.textContent = `${index + 1}. ${title}`;
+            navItem.onclick = () => { updateSlide(index); closeSidebar(); };
+            navMenu.appendChild(navItem);
+        });
+
+        function updateSlide(index) {
+            // Strict boundary guard - prevent looping back to start or past end
+            if (index < 0) {
+                currentSlide = 0;
+                return;
+            }
+            if (index >= slides.length) {
+                currentSlide = slides.length - 1;
+                return;
+            }
+
+            slides[currentSlide].classList.remove('active');
+            indicators[currentSlide].className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 bg-gray-300';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.remove('active');
+
+            currentSlide = index;
+            
+            slides[currentSlide].classList.add('active');
+            indicators[currentSlide].className = 'w-1.5 h-1.5 rounded-full transition-all duration-300 bg-black';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.add('active');
+
+            prevBtn.style.opacity = currentSlide === 0 ? '0.2' : '1';
+            prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+            nextBtn.style.opacity = currentSlide === slides.length - 1 ? '0.2' : '1';
+            nextBtn.style.pointerEvents = currentSlide === slides.length - 1 ? 'none' : 'auto';
+        }
+
+        function closeSidebar() {
+            navSidebar.classList.remove('open');
+            navOverlay.classList.remove('open');
+            hamburgerBtn.classList.remove('active');
+        }
+
+        hamburgerBtn.onclick = () => {
+            hamburgerBtn.classList.toggle('active');
+            navSidebar.classList.toggle('open');
+            navOverlay.classList.toggle('open');
+        };
+        navOverlay.onclick = closeSidebar;
+
+        prevBtn.onclick = () => updateSlide(currentSlide - 1);
+        nextBtn.onclick = () => updateSlide(currentSlide + 1);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                updateSlide(currentSlide - 1);
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                updateSlide(currentSlide + 1);
+            }
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const deck = document.getElementById('deck');
+        deck.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        deck.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                updateSlide(currentSlide + 1);
+            }
+            if (touchEndX > touchStartX + 50) {
+                updateSlide(currentSlide - 1);
+            }
+        }
+
+        function copyCode(button, code) {
+            const textarea = document.createElement('textarea');
+            textarea.value = code;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                const originalContent = button.innerHTML;
+                button.innerHTML = '<i class="fa-solid fa-check text-[#8A9A86]"></i> Copied';
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                }, 2000);
+            } catch (err) {
+                console.error('Copy failed:', err);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        updateSlide(0);
+    </script>
+</body>
+</html>

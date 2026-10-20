@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>講義スライド：配列の基本構文と操作 (p5.js / JavaScript)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --color-bg-outer: #D1CFCA;      
+            --color-bg-slide:  #F7F6F4;     
+            --color-surface-1: #F2EFEA;    
+            --color-surface-2: #FFFFFF;    
+            --color-border: #DDDAD5;       
+            --color-text-main: #222222;    
+            --color-text-muted: #555555;   
+            --color-text-light: #999999;   
+            --color-accent-temp: #8C7A6B;  
+            --navy: #344D61;               
+            --terracotta: #994F60;         
+            --gold-muted: #C4B298;         
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--color-bg-outer);
+            color: var(--color-text-main);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+        }
+
+        h1, h2, h3, .font-serif {
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-weight: 400;
+        }
+
+        .presentation-viewport {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .slide-deck {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--color-bg-slide);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            padding: 5% 7% 7% 7%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transform: translateY(10px);
+            background: var(--color-bg-slide);
+            overflow-y: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        h1 {
+            color: var(--color-text-main);
+            font-size: 1.85rem; 
+            font-weight: 400;
+            line-height: 1.4;
+            margin-bottom: 1.25rem;
+            letter-spacing: 0.05em;
+        }
+
+        h2 {
+            color: var(--color-accent-temp);
+            font-size: 0.65rem; 
+            font-weight: 500;
+            letter-spacing: 0.4em;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .main-text {
+            font-size: 1.05rem; 
+            line-height: 1.8;
+            color: var(--color-text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        .highlight {
+            background: linear-gradient(transparent 70%, #E2DDD5 70%);
+            font-weight: 500;
+            padding: 0 0.15em;
+        }
+
+        code {
+            background: var(--color-surface-1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 2px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--terracotta);
+            font-weight: bold;
+            font-size: 0.85em;
+            border: 1px solid var(--color-border);
+        }
+
+        .code-preview {
+            background: #252423;
+            color: #E2DDD5;
+            padding: 0.85rem;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            border: 1px solid #3A3835;
+        }
+
+        .minimal-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .minimal-list li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.6rem;
+            font-size: 0.95rem; 
+            color: var(--color-text-muted);
+            display: block;
+            line-height: 1.6;
+        }
+        .minimal-list li::before {
+            content: "・";
+            position: absolute;
+            left: 0;
+            color: var(--color-accent-temp);
+            font-weight: bold;
+        }
+
+        .slide-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: var(--color-text-light);
+            border-top: 1px solid var(--color-border);
+            padding-top: 0.75rem;
+            margin-top: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .nav-btn {
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            color: var(--color-text-main);
+            opacity: 1 !important;
+        }
+
+        .hamburger-btn {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            z-index: 50;
+            background: rgba(247, 246, 244, 0.9);
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 0;
+            width: 48px;
+            height: 48px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+
+        .hamburger-btn:hover {
+            background: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .hamburger-btn span {
+            width: 18px;
+            height: 2px;
+            background-color: var(--color-text-main);
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+
+        .nav-sidebar {
+            position: fixed;
+            left: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background-color: var(--color-bg-slide);
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
+            z-index: 40;
+            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            border-right: 1px solid var(--color-border);
+        }
+
+        .nav-sidebar.open {
+            left: 0;
+        }
+
+        .nav-sidebar-content {
+            padding: 100px 24px 40px 24px;
+        }
+
+        .nav-sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--color-text-light);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .nav-item {
+            padding: 10px 0;
+            font-size: 12px;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            padding-left: 12px;
+            line-height: 1.4;
+        }
+
+        .nav-item:hover {
+            color: var(--color-text-main);
+            border-left-color: var(--color-accent-temp);
+            background: rgba(0,0,0,0.01);
+        }
+
+        .nav-item.active {
+            color: var(--color-accent-temp);
+            font-weight: 600;
+            border-left-color: var(--color-accent-temp);
+        }
+
+        .nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0);
+            z-index: 30;
+            transition: background-color 0.3s ease;
+            pointer-events: none;
+        }
+
+        .nav-overlay.open {
+            background-color: rgba(0, 0, 0, 0.3);
+            pointer-events: auto;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .dot-active { 
+            background-color: var(--color-text-main); 
+            width: 6px;
+            height: 6px;
+        }
+        .dot-inactive { 
+            background-color: var(--color-border); 
+            width: 4px;
+            height: 4px;
+        }
+
+        @media (max-width: 1320px) {
+            .slide-deck { transform: scale(0.9); }
+        }
+        @media (max-width: 1150px) {
+            .slide-deck { transform: scale(0.8); }
+        }
+        @media (max-width: 980px) {
+            .slide-deck { transform: scale(0.7); }
+        }
+        @media (max-width: 768px) {
+            .presentation-viewport { padding: 10px; height: auto; }
+            .slide-deck { aspect-ratio: auto; height: 560px; transform: none; }
+            .slide { padding: 32px 24px; }
+            h1 { font-size: 1.5rem; }
+            .main-text, .minimal-list li { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-btn" id="hamburgerBtn" title="目次を開く">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Navigation Sidebar -->
+    <div class="nav-sidebar" id="navSidebar">
+        <div class="nav-sidebar-content">
+            <div class="nav-sidebar-title">講義スライド一覧</div>
+            <div id="navMenu"></div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <div class="presentation-viewport">
+        <div class="slide-deck" id="deck">
+
+            <!-- Slide 1: 配列の宣言と角括弧記法 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Array Syntax &amp; Declaration</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Square Bracket Notation</h2>
+                    <h1 class="font-serif text-main mb-4">配列を宣言する：<br><span class="highlight">「角括弧 [ ]（Square Brackets）」の世界</span></h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-4">
+                            <p class="main-text text-xs text-muted leading-relaxed">
+                                配列を宣言するフォーマットは、通常の変数宣言と非常によく似ています。<code>var</code> キーワードに続けて変数名を書き、代入演算子 <code>=</code> を置きます。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                ここで登場する新しい武器が<span class="highlight">「角括弧 <code>[ ]</code>」</span>です。リストに含めたい値を角括弧の中に並べ、値同士を<strong>カンマ（<code>,</code>）</strong>で区切って記述します。
+                            </p>
+                            <div class="code-preview font-mono text-[10px] leading-relaxed shadow-sm">
+                                <div class="flex justify-between items-center text-[10px] text-slate-400 mb-1 pb-1 border-b border-[#3A3835]">
+                                    <span>数値配列の宣言と初期化</span>
+                                    <button onclick="copyCode(this, 'var myArray = [1, 2, 3, 4, 5, 6, 7, 8];')" class="hover:text-white transition-colors cursor-pointer flex items-center gap-1">
+                                        <i class="fa-regular fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <span class="text-[#c678dd]">var</span> <span class="text-[#e06c75]">myArray</span> = [<span class="text-[#d19a66]">1, 2, 3, 4, 5, 6, 7, 8</span>];
+                            </div>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <!-- ビットマップ調：角括弧と要素リストの抽象図 -->
+                            <svg viewBox="0 0 180 120" class="w-44 h-32 bg-[#F2EFEA] rounded-sm p-2">
+                                <!-- 開き角括弧 [ -->
+                                <path d="M 22 25 L 12 25 L 12 95 L 22 95" fill="none" stroke="var(--navy)" stroke-width="2.5" stroke-linecap="round"/>
+                                
+                                <!-- データ要素の小箱 -->
+                                <rect x="26" y="42" width="16" height="26" rx="2" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="34" y="59" font-size="9" font-family="monospace" text-anchor="middle" fill="var(--navy)">1</text>
+                                <text x="45" y="66" font-size="9" font-family="monospace" fill="var(--color-text-light)">,</text>
+
+                                <rect x="51" y="42" width="16" height="26" rx="2" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="59" y="59" font-size="9" font-family="monospace" text-anchor="middle" fill="var(--navy)">2</text>
+                                <text x="70" y="66" font-size="9" font-family="monospace" fill="var(--color-text-light)">,</text>
+
+                                <rect x="76" y="42" width="16" height="26" rx="2" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="84" y="59" font-size="9" font-family="monospace" text-anchor="middle" fill="var(--navy)">3</text>
+                                <text x="95" y="66" font-size="9" font-family="monospace" fill="var(--color-text-light)">,</text>
+
+                                <text x="110" y="59" font-size="10" font-family="monospace" text-anchor="middle" fill="var(--color-text-light)">...</text>
+
+                                <rect x="126" y="42" width="16" height="26" rx="2" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="134" y="59" font-size="9" font-family="monospace" text-anchor="middle" fill="var(--navy)">8</text>
+
+                                <!-- 閉じ角括弧 ] -->
+                                <path d="M 148 25 L 158 25 L 158 95 L 148 95" fill="none" stroke="var(--navy)" stroke-width="2.5" stroke-linecap="round"/>
+
+                                <text x="85" y="108" font-size="7" font-family="sans-serif" text-anchor="middle" fill="var(--navy)" font-weight="bold">カンマで区切られた値のリスト</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Array Syntax &amp; Usage</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 2: さまざまな型の配列と「空の配列」 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Diverse Types &amp; Empty Array</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Data Type Variations</h2>
+                    <h1 class="font-serif text-main mb-3">文字列配列・混在型・そして「空の配列」</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mt-2">
+                        <!-- 文字列配列 & 混在配列 -->
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-navy border-b border-border pb-1">① 文字列の配列と型の混在</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                文字列の配列も全く同じ記法で作成できます。各要素をシングルまたはダブルクォーテーションで囲みます。
+                            </p>
+                            <div class="code-preview font-mono text-[9.5px]">
+                                <span class="text-[#c678dd]">var</span> names = [<span class="text-[#98c379]">"Alice"</span>, <span class="text-[#98c379]">"Bob"</span>, <span class="text-[#98c379]">"Charlie"</span>];<br>
+                                <span class="text-[#7f8c8d]// 型を混在させることも文法上は可能（非推奨）</span><br>
+                                <span class="text-[#c678dd]">var</span> mixed = [<span class="text-[#d19a66]">42</span>, <span class="text-[#98c379]">"Hello"</span>, <span class="text-[#56b6c2]">true</span>];
+                            </div>
+                            <p class="text-[10px] text-slate-500">
+                                ⚠️ 異なるデータ型を混ぜるとプログラムが混乱しバグの原因になるため、原則として同種の型を並べます。
+                            </p>
+                        </div>
+
+                        <!-- 空の配列 -->
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-terracotta border-b border-border pb-1">② 空の配列（Empty Array）の重要性</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                値を何も入れずに角括弧だけを書くと、<span class="highlight font-bold">空の配列</span>が作られます。
+                            </p>
+                            <div class="code-preview font-mono text-[9.5px]">
+                                <span class="text-[#7f8c8d]// 中身が空っぽのリストを用意</span><br>
+                                <span class="text-[#c678dd]">var</span> emptyList = [];
+                            </div>
+                            <p class="text-slate-600 leading-relaxed text-[10.5px]">
+                                「最初から値が分かっている」場合よりも、プログラムの実行中（ユーザーのクリックやループ）に後から動的にデータを詰め込むための<strong>空の器</strong>として頻繁に使用されます。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Array Syntax &amp; Usage</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 3: 要素へのアクセス（角括弧とインデックス番号） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Element Access &amp; Index</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Reading Elements</h2>
+                    <h1 class="font-serif text-main mb-3">要素を取り出す：<code>配列名[インデックス]</code></h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                配列の中に入っている特定の値を取り出すときも、再び<span class="highlight">角括弧 <code>[ ]</code></span> を使います。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                配列の名前の後ろに角括弧を置き、その中に取り出したい部屋の<strong>インデックス番号</strong>を書き込みます。
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1">
+                                <li><code>myArray[0]</code> ➔ <strong>1番目</strong>の要素を取り出す（値: <code>1</code>）</li>
+                                <li><code>myArray[5]</code> ➔ <strong>6番目</strong>の要素を取り出す（値: <code>6</code>）</li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9.5px] leading-relaxed shadow-sm">
+                                <div class="flex justify-between items-center text-[10px] text-slate-400 mb-1 pb-1 border-b border-[#3A3835]">
+                                    <span>要素のコンソール出力</span>
+                                    <button onclick="copyCode(this, 'var myArray = [1, 2, 3, 4, 5, 6, 7, 8];\nconsole.log(myArray[0]); // 1\nconsole.log(myArray[5]); // 6')" class="hover:text-white transition-colors cursor-pointer flex items-center gap-1">
+                                        <i class="fa-regular fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <span class="text-[#c678dd]">var</span> myArray = [<span class="text-[#d19a66]">1, 2, 3, 4, 5, 6, 7, 8</span>];<br><br>
+                                <span class="text-[#7f8c8d]// 先頭（1番目）の要素を出力</span><br>
+                                <span class="text-[#61afef]">console</span>.<span class="text-[#61afef]">log</span>(myArray[<span class="text-[#d19a66]">0</span>]); <span class="text-[#7f8c8d]// 出力: 1</span><br><br>
+                                <span class="text-[#7f8c8d]// 6番目の要素（インデックス 5）を出力</span><br>
+                                <span class="text-[#61afef]">console</span>.<span class="text-[#61afef]">log</span>(myArray[<span class="text-[#d19a66]">5</span>]); <span class="text-[#7f8c8d]// 出力: 6</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Array Syntax &amp; Usage</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 4: 要素の更新・書き換え（値の再代入） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Updating Array Elements</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Modifying Values</h2>
+                    <h1 class="font-serif text-main mb-3">配列の値を書き換える（要素の更新）</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                配列の特定の要素を別の新しい値に上書き更新したい場合も、通常の変数への再代入と全く同じ感覚で行えます。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                左辺に <span class="highlight"><code>myArray[5]</code></span> のように対象の部屋を指定し、代入演算子 <code>=</code> で新しい値を流し込みます。
+                            </p>
+                            <div class="p-3 bg-surface-2 border border-border rounded-sm text-[11px] text-slate-600">
+                                ほかの要素（0〜4番目や6番目以降）には一切影響を与えず、指定したピンポイントの部屋だけを綺麗に書き換えることができます。
+                            </div>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9.5px] leading-relaxed shadow-sm">
+                                <div class="flex justify-between items-center text-[10px] text-slate-400 mb-1 pb-1 border-b border-[#3A3835]">
+                                    <span>要素の書き換え</span>
+                                    <button onclick="copyCode(this, 'var myArray = [1, 2, 3, 4, 5, 6, 7, 8];\nmyArray[5] = 100;\nconsole.log(myArray[5]); // 100')" class="hover:text-white transition-colors cursor-pointer flex items-center gap-1">
+                                        <i class="fa-regular fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <span class="text-[#c678dd]">var</span> myArray = [<span class="text-[#d19a66]">1, 2, 3, 4, 5, 6, 7, 8</span>];<br><br>
+                                <span class="text-[#7f8c8d]// インデックス 5（6番目）の値を 100 に更新</span><br>
+                                myArray[<span class="text-[#d19a66]">5</span>] = <span class="text-[#d19a66]">100</span>;<br><br>
+                                <span class="text-[#7f8c8d]// 確認出力</span><br>
+                                <span class="text-[#61afef]">console</span>.<span class="text-[#61afef]">log</span>(myArray[<span class="text-[#d19a66]">5</span>]); <span class="text-[#7f8c8d]// 出力: 100</span><br>
+                                <span class="text-[#7f8c8d]// 配列の中身: [1, 2, 3, 4, 5, 100, 7, 8]</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Array Syntax &amp; Usage</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 5: 範囲外アクセスの落とし穴（undefined の謎） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Out of Bounds Trap</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Out of Bounds</h2>
+                    <h1 class="font-serif text-main mb-3">存在しない部屋を開けると何が起きるか？</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mt-2">
+                        <div class="p-4 bg-surface-2 border-2 border-terracotta rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-terracotta border-b border-border pb-1">⚠️ 魔の返り値：undefined（未定義）</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                要素が8個しかない配列（インデックス 0〜7）に対して、<code>myArray[8]</code> や <code>myArray[100]</code> のように範囲外へアクセスすると、JavaScriptは <span class="highlight font-bold text-terracotta">undefined</span> を返します。
+                            </p>
+                            <div class="code-preview font-mono text-[9.5px]">
+                                <span class="text-[#c678dd]">var</span> myArray = [<span class="text-[#d19a66]">1, 2, 3, 4, 5, 6, 7, 8</span>];<br>
+                                <span class="text-[#61afef]">console</span>.<span class="text-[#61afef]">log</span>(myArray[<span class="text-[#d19a66]">8</span>]); &nbsp;<span class="text-[#e06c75]">// => undefined</span><br>
+                                <span class="text-[#61afef]">console</span>.<span class="text-[#61afef]">log</span>(myArray[<span class="text-[#d19a66]">100</span>]); <span class="text-[#e06c75]">// => undefined</span>
+                            </div>
+                        </div>
+
+                        <div class="p-4 bg-surface-2 border-2 border-navy rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-navy border-b border-border pb-1">💡 なぜサイレントバグになるのか？</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                他のプログラミング言語（JavaやC++など）では、範囲外アクセスをすると即座にプログラムがクラッシュして停止します。
+                            </p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                しかしJavaScriptは<span class="highlight">エラーを出さずに静かに undefined を代入して処理を続けてしまう</span>ため、座標計算で <code>NaN</code> になったり、画面から図形が消える原因になります！
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Array Syntax &amp; Usage</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 6: 配列操作の「4大アクション」まとめ -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Core Operations Cheat Sheet</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Core Operations</h2>
+                    <h1 class="font-serif text-main mb-3">配列を操る「4つの基本アクション」</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs mt-2">
+                        <!-- Action 1 -->
+                        <div class="p-3 bg-surface-2 border border-border rounded-sm shadow-sm space-y-1.5">
+                            <p class="font-serif font-bold text-navy border-b border-border pb-1">① 宣言と初期化（リストを作る）</p>
+                            <p class="text-slate-600 text-[10.5px]">角括弧で囲み、カンマで区切って初期データを並べる。</p>
+                            <div class="code-preview font-mono text-[9px]">
+                                <span class="text-[#c678dd]">var</span> scores = [<span class="text-[#d19a66]">80, 95, 60</span>];
+                            </div>
+                        </div>
+
+                        <!-- Action 2 -->
+                        <div class="p-3 bg-surface-2 border border-border rounded-sm shadow-sm space-y-1.5">
+                            <p class="font-serif font-bold text-navy border-b border-border pb-1">② 参照（値を取り出して使う）</p>
+                            <p class="text-slate-600 text-[10.5px]">0から始まるインデックス番号を指定して呼び出す。</p>
+                            <div class="code-preview font-mono text-[9px]">
+                                <span class="text-[#c678dd]">var</span> topScore = scores[<span class="text-[#d19a66]">1</span>]; <span class="text-[#7f8c8d]// 95</span>
+                            </div>
+                        </div>
+
+                        <!-- Action 3 -->
+                        <div class="p-3 bg-surface-2 border border-border rounded-sm shadow-sm space-y-1.5">
+                            <p class="font-serif font-bold text-terracotta border-b border-border pb-1">③ 更新（値を書き換える）</p>
+                            <p class="text-slate-600 text-[10.5px]">指定したインデックスの部屋に新しい値を代入する。</p>
+                            <div class="code-preview font-mono text-[9px]">
+                                scores[<span class="text-[#d19a66]">0</span>] = <span class="text-[#d19a66]">85</span>; <span class="text-[#7f8c8d]// 80 から 85 に上書き</span>
+                            </div>
+                        </div>
+
+                        <!-- Action 4 -->
+                        <div class="p-3 bg-surface-2 border border-border rounded-sm shadow-sm space-y-1.5">
+                            <p class="font-serif font-bold text-terracotta border-b border-border pb-1">④ 空配列の準備（動的追加の土台）</p>
+                            <p class="text-slate-600 text-[10.5px]">中身のない器を用意し、後から要素を詰め込めるようにする。</p>
+                            <div class="code-preview font-mono text-[9px]">
+                                <span class="text-[#c678dd]">var</span> enemies = [];
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Array Syntax &amp; Usage</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 7: まとめと実践演習へのステップ -->
+            <section class="slide text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Summary &amp; Hands-on Practice</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content max-w-2xl py-4">
+                    <h2>Summary &amp; Next Stage</h2>
+                    <h1 class="font-serif text-main mb-4">さあ、エディタを開いて配列を操ろう</h1>
+                    
+                    <p class="text-xs text-muted leading-relaxed max-w-lg mx-auto mb-6">
+                        角括弧 <code>[ ]</code> という強力な記法を手に入れたことで、大量のデータを自在に扱える準備が整いました。
+                    </p>
+
+                    <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-left text-xs space-y-1.5 max-w-md mx-auto mb-4">
+                        <p class="font-bold text-navy border-b border-border pb-1">配列構文のマスターチェック</p>
+                        <ul class="minimal-list">
+                            <li><strong>作成：</strong> <code>var arr = [1, 2, 3];</code>（角括弧とカンマ区切り）</li>
+                            <li><strong>呼出：</strong> <code>arr[0]</code>（先頭は必ずインデックス <code>0</code>）</li>
+                            <li><strong>更新：</strong> <code>arr[5] = 100;</code>（指定位置だけを上書き）</li>
+                            <li><strong>注意：</strong> 範囲外にアクセスすると <code>undefined</code> になる</li>
+                        </ul>
+                    </div>
+
+                    <p class="text-[11px] text-slate-500 italic mt-3">
+                        まずはコンソールに出力して値の変化を観察し、次回はいよいよ <code>for</code> ループと合体させて画面いっぱいに図形を描いてみましょう！
+                    </p>
+                </div>
+                <div class="slide-footer">
+                    <span>Array Syntax &amp; Usage</span><span class="page-num"></span>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Minimalist Navigation Controls Footer overlay inside the slide deck -->
+    <div class="absolute bottom-6 left-10 right-10 flex justify-between items-center pointer-events-auto z-30">
+        <div class="flex gap-6">
+            <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
+            </button>
+            <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
+            </button>
+        </div>
+
+        <!-- Dynamic Step Indicators Container -->
+        <div class="flex gap-1.5 overflow-x-auto max-w-xs justify-center px-2 no-scrollbar" id="dots-container"></div>
+    </div>
+
+    <!-- Script for interactive presentation features -->
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsContainer = document.getElementById('dots-container');
+        const pageNumDisplays = document.querySelectorAll('.page-num');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const navSidebar = document.getElementById('navSidebar');
+        const navOverlay = document.getElementById('navOverlay');
+        const navMenu = document.getElementById('navMenu');
+        
+        let currentSlide = 0;
+        let indicators = [];
+
+        slides.forEach((_, index) => {
+            const dot = document.createElement('span');
+            dot.className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 ' + (index === 0 ? 'dot-active' : 'dot-inactive');
+            dotsContainer.appendChild(dot);
+            indicators.push(dot);
+            
+            if(pageNumDisplays[index]) {
+                pageNumDisplays[index].textContent = `Slide ${index + 1} / ${slides.length}`;
+            }
+
+            const title = slides[index].querySelector('h1')?.innerText.replace(/\n/g, ' ') || `Slide ${index + 1}`;
+            const navItem = document.createElement('div');
+            navItem.className = `nav-item ${index === 0 ? 'active' : ''}`;
+            navItem.textContent = `${index + 1}. ${title}`;
+            navItem.onclick = () => { updateSlide(index); closeSidebar(); };
+            navMenu.appendChild(navItem);
+        });
+
+        function updateSlide(index) {
+            // Strict boundary guard - prevent looping back to start or past end
+            if (index < 0) {
+                currentSlide = 0;
+                return;
+            }
+            if (index >= slides.length) {
+                currentSlide = slides.length - 1;
+                return;
+            }
+
+            slides[currentSlide].classList.remove('active');
+            indicators[currentSlide].className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 bg-gray-300';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.remove('active');
+
+            currentSlide = index;
+            
+            slides[currentSlide].classList.add('active');
+            indicators[currentSlide].className = 'w-1.5 h-1.5 rounded-full transition-all duration-300 bg-black';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.add('active');
+
+            prevBtn.style.opacity = currentSlide === 0 ? '0.2' : '1';
+            prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+            nextBtn.style.opacity = currentSlide === slides.length - 1 ? '0.2' : '1';
+            nextBtn.style.pointerEvents = currentSlide === slides.length - 1 ? 'none' : 'auto';
+        }
+
+        function closeSidebar() {
+            navSidebar.classList.remove('open');
+            navOverlay.classList.remove('open');
+            hamburgerBtn.classList.remove('active');
+        }
+
+        hamburgerBtn.onclick = () => {
+            hamburgerBtn.classList.toggle('active');
+            navSidebar.classList.toggle('open');
+            navOverlay.classList.toggle('open');
+        };
+        navOverlay.onclick = closeSidebar;
+
+        prevBtn.onclick = () => updateSlide(currentSlide - 1);
+        nextBtn.onclick = () => updateSlide(currentSlide + 1);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                updateSlide(currentSlide - 1);
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                updateSlide(currentSlide + 1);
+            }
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const deck = document.getElementById('deck');
+        deck.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        deck.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                updateSlide(currentSlide + 1);
+            }
+            if (touchEndX > touchStartX + 50) {
+                updateSlide(currentSlide - 1);
+            }
+        }
+
+        function copyCode(button, code) {
+            const textarea = document.createElement('textarea');
+            textarea.value = code;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                const originalContent = button.innerHTML;
+                button.innerHTML = '<i class="fa-solid fa-check text-[#8A9A86]"></i> Copied';
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                }, 2000);
+            } catch (err) {
+                console.error('Copy failed:', err);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        updateSlide(0);
+    </script>
+</body>
+</html>

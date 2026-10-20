@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>講義スライド：forループと条件分岐の融合・モルナール風幾何学アート (p5.js)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --color-bg-outer: #D1CFCA;      
+            --color-bg-slide:  #F7F6F4;     
+            --color-surface-1: #F2EFEA;    
+            --color-surface-2: #FFFFFF;    
+            --color-border: #DDDAD5;       
+            --color-text-main: #222222;    
+            --color-text-muted: #555555;   
+            --color-text-light: #999999;   
+            --color-accent-temp: #8C7A6B;  
+            --navy: #344D61;               
+            --terracotta: #994F60;         
+            --gold-muted: #C4B298;         
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--color-bg-outer);
+            color: var(--color-text-main);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+        }
+
+        h1, h2, h3, .font-serif {
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-weight: 400;
+        }
+
+        .presentation-viewport {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .slide-deck {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--color-bg-slide);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            padding: 5% 7% 7% 7%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transform: translateY(10px);
+            background: var(--color-bg-slide);
+            overflow-y: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        h1 {
+            color: var(--color-text-main);
+            font-size: 1.85rem; 
+            font-weight: 400;
+            line-height: 1.4;
+            margin-bottom: 1.25rem;
+            letter-spacing: 0.05em;
+        }
+
+        h2 {
+            color: var(--color-accent-temp);
+            font-size: 0.65rem; 
+            font-weight: 500;
+            letter-spacing: 0.4em;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .main-text {
+            font-size: 1.05rem; 
+            line-height: 1.8;
+            color: var(--color-text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        .highlight {
+            background: linear-gradient(transparent 70%, #E2DDD5 70%);
+            font-weight: 500;
+            padding: 0 0.15em;
+        }
+
+        code {
+            background: var(--color-surface-1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 2px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--terracotta);
+            font-weight: bold;
+            font-size: 0.85em;
+            border: 1px solid var(--color-border);
+        }
+
+        .code-preview {
+            background: #252423;
+            color: #E2DDD5;
+            padding: 0.85rem;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            border: 1px solid #3A3835;
+        }
+
+        .minimal-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .minimal-list li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.6rem;
+            font-size: 0.95rem; 
+            color: var(--color-text-muted);
+            display: block;
+            line-height: 1.6;
+        }
+        .minimal-list li::before {
+            content: "・";
+            position: absolute;
+            left: 0;
+            color: var(--color-accent-temp);
+            font-weight: bold;
+        }
+
+        .slide-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: var(--color-text-light);
+            border-top: 1px solid var(--color-border);
+            padding-top: 0.75rem;
+            margin-top: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .nav-btn {
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            color: var(--color-text-main);
+            opacity: 1 !important;
+        }
+
+        .hamburger-btn {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            z-index: 50;
+            background: rgba(247, 246, 244, 0.9);
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 0;
+            width: 48px;
+            height: 48px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+
+        .hamburger-btn:hover {
+            background: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .hamburger-btn span {
+            width: 18px;
+            height: 2px;
+            background-color: var(--color-text-main);
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+
+        .nav-sidebar {
+            position: fixed;
+            left: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background-color: var(--color-bg-slide);
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
+            z-index: 40;
+            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            border-right: 1px solid var(--color-border);
+        }
+
+        .nav-sidebar.open {
+            left: 0;
+        }
+
+        .nav-sidebar-content {
+            padding: 100px 24px 40px 24px;
+        }
+
+        .nav-sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--color-text-light);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .nav-item {
+            padding: 10px 0;
+            font-size: 12px;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            padding-left: 12px;
+            line-height: 1.4;
+        }
+
+        .nav-item:hover {
+            color: var(--color-text-main);
+            border-left-color: var(--color-accent-temp);
+            background: rgba(0,0,0,0.01);
+        }
+
+        .nav-item.active {
+            color: var(--color-accent-temp);
+            font-weight: 600;
+            border-left-color: var(--color-accent-temp);
+        }
+
+        .nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0);
+            z-index: 30;
+            transition: background-color 0.3s ease;
+            pointer-events: none;
+        }
+
+        .nav-overlay.open {
+            background-color: rgba(0, 0, 0, 0.3);
+            pointer-events: auto;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .dot-active { 
+            background-color: var(--color-text-main); 
+            width: 6px;
+            height: 6px;
+        }
+        .dot-inactive { 
+            background-color: var(--color-border); 
+            width: 4px;
+            height: 4px;
+        }
+
+        @media (max-width: 1320px) {
+            .slide-deck { transform: scale(0.9); }
+        }
+        @media (max-width: 1150px) {
+            .slide-deck { transform: scale(0.8); }
+        }
+        @media (max-width: 980px) {
+            .slide-deck { transform: scale(0.7); }
+        }
+        @media (max-width: 768px) {
+            .presentation-viewport { padding: 10px; height: auto; }
+            .slide-deck { aspect-ratio: auto; height: 560px; transform: none; }
+            .slide { padding: 32px 24px; }
+            h1 { font-size: 1.5rem; }
+            .main-text, .minimal-list li { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-btn" id="hamburgerBtn" title="目次を開く">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Navigation Sidebar -->
+    <div class="nav-sidebar" id="navSidebar">
+        <div class="nav-sidebar-content">
+            <div class="nav-sidebar-title">講義スライド一覧</div>
+            <div id="navMenu"></div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <div class="presentation-viewport">
+        <div class="slide-deck" id="deck">
+
+            <!-- Slide 1: ヴェラ・モルナールと反復×分岐の美学 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Generative Art &amp; Logic</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Repetition Meets Decision</h2>
+                    <h1 class="font-serif text-main mb-4">規則と偶然が織り成す幾何学アート<br><span class="highlight">「for ループ × 条件分岐の融合」</span></h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-4">
+                            <p class="main-text text-xs text-muted leading-relaxed">
+                                コンピュータ・アートの先駆者<strong>ヴェラ・モルナール（Vera Molnar）</strong>は、厳格な幾何学格子に「秩序の乱れ（ディスプレイスメント）」や「色彩の変化」を組み込む作風で知られます。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                単に同じ形を並べるだけでなく、<span class="highlight">「カウンタ変数 i の値に応じて色や揺らぎを条件分岐させる」</span>ことで、生命感のある美しいパターンを生み出す手法を学びます。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <!-- ビットマップ調：モルナール風の規則と揺らぎのSVG -->
+                            <svg viewBox="0 0 170 120" class="w-40 h-28 bg-[#F2EFEA] rounded-sm p-2">
+                                <!-- 行1: 整然としたグレー四角 -->
+                                <rect x="15" y="20" width="12" height="12" fill="none" stroke="#888" stroke-width="1.5" />
+                                <rect x="35" y="20" width="12" height="12" fill="none" stroke="#888" stroke-width="1.5" />
+                                <rect x="55" y="20" width="12" height="12" fill="none" stroke="var(--navy)" stroke-width="1.5" />
+                                <rect x="75" y="19" width="12" height="12" fill="none" stroke="var(--navy)" stroke-width="1.5" transform="rotate(3 81 25)" />
+                                <rect x="95" y="18" width="12" height="12" fill="none" stroke="#D97706" stroke-width="1.5" transform="rotate(-6 101 24)" />
+                                <rect x="115" y="22" width="12" height="12" fill="none" stroke="#D97706" stroke-width="1.5" transform="rotate(8 121 28)" />
+                                <rect x="135" y="20" width="12" height="12" fill="none" stroke="var(--terracotta)" stroke-width="1.5" />
+                                
+                                <!-- 行2: 乱れと色彩が変化した四角 -->
+                                <rect x="15" y="65" width="12" height="12" fill="none" stroke="#888" stroke-width="1.5" />
+                                <rect x="35" y="66" width="12" height="12" fill="none" stroke="var(--navy)" stroke-width="1.5" transform="rotate(-4 41 72)" />
+                                <rect x="55" y="62" width="12" height="12" fill="none" stroke="var(--navy)" stroke-width="1.5" transform="rotate(7 61 68)" />
+                                <rect x="75" y="68" width="12" height="12" fill="none" stroke="#D97706" stroke-width="1.5" transform="rotate(-12 81 74)" />
+                                <rect x="95" y="60" width="12" height="12" fill="none" stroke="#D97706" stroke-width="1.5" transform="rotate(10 101 66)" />
+                                <rect x="115" y="67" width="12" height="12" fill="none" stroke="var(--terracotta)" stroke-width="1.5" transform="rotate(-5 121 73)" />
+                                <rect x="135" y="65" width="12" height="12" fill="none" stroke="var(--terracotta)" stroke-width="1.5" />
+                                <text x="85" y="105" font-size="6" font-family="monospace" text-anchor="middle" fill="var(--color-text-muted)">Order ➔ Controlled Disorder</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Vera Molnar &amp; Conditionals</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 2: ループインデックス i に応じた色のゾーン分け -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Color Transitions</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Color Segmentation</h2>
+                    <h1 class="font-serif text-main mb-3">インデックス <code>i</code> で図形の色を切り替える</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                9個の四角形を並べるとき、全体のパレットを一色にするのではなく、<code>i</code> の範囲に応じて <span class="highlight">グレー ➔ パープル ➔ オレンジ ➔ モーブ（薄紫）</span> と色相を切り替えます。
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1.5">
+                                <li><code>i &lt;= 1</code>（0, 1番目）：基調のグレー</li>
+                                <li><code>i &gt; 1</code>（2番目以降）：ダークパープル</li>
+                                <li>さらに条件を追加して多色グラデーションへ展開</li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9.5px] leading-relaxed shadow-sm">
+                                <div class="flex justify-between items-center text-[10px] text-slate-400 mb-1 pb-1 border-b border-[#3A3835]">
+                                    <span>i の値でストローク色を変更</span>
+                                    <button onclick="copyCode(this, 'for (var i = 0; i < 9; i++) {\n  if (i > 1) {\n    stroke(75, 0, 130); // パープル\n  } else {\n    stroke(150);        // グレー\n  }\n  rect(40 + i * 40, 80, 25, 25);\n}')" class="hover:text-white transition-colors cursor-pointer flex items-center gap-1">
+                                        <i class="fa-regular fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <span class="text-[#c678dd]">for</span> (<span class="text-[#c678dd]">var</span> i = <span class="text-[#d19a66]">0</span>; i &lt; <span class="text-[#d19a66]">9</span>; i++) {<br>
+                                &nbsp;&nbsp;<span class="text-[#c678dd]">if</span> (i &gt; <span class="text-[#d19a66]">1</span>) {<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#61afef]">stroke</span>(<span class="text-[#d19a66]">75, 0, 130</span>); <span class="text-[#7f8c8d]// 2番目以降はパープル</span><br>
+                                &nbsp;&nbsp;} <span class="text-[#c678dd]">else</span> {<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#61afef]">stroke</span>(<span class="text-[#d19a66]">150</span>); &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#7f8c8d]// 最初の2個はグレー</span><br>
+                                &nbsp;&nbsp;}<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">rect</span>(<span class="text-[#d19a66]">40</span> + i * <span class="text-[#d19a66]">40, 80, 25, 25</span>);<br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Vera Molnar &amp; Conditionals</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 3: 描画ステート持ち越しの罠（色の引き継ぎ） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">State Pollution</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Drawing State Trap</h2>
+                    <h1 class="font-serif text-main mb-3">画面全体が染まる「ステート持ち越し」の罠</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mt-2">
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-terracotta border-b border-border pb-1">⚠️ なぜ全図形がパープルになるのか？</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                <code>else { stroke(150); }</code> を書かずに <code>if (i > 1) { stroke(purple); }</code> だけを書くと、ループ終盤にパープルになった絵筆が、次のフレームの冒頭（<code>i = 0</code>）まで引き継がれてしまいます。
+                            </p>
+                            <p class="text-[10px] text-slate-500">
+                                ※p5.jsは明示的に色を戻さない限り、前回の最後の色で描き続けます。
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-navy border-b border-border pb-1">💡 解決策：ループ直前または else でリセット</p>
+                            <div class="code-preview font-mono text-[10px] leading-relaxed">
+                                <span class="text-[#7f8c8d]// 対策A：ループ直前にデフォルト色を明示</span><br>
+                                <span class="text-[#61afef]">stroke</span>(<span class="text-[#d19a66]">150</span>);<br>
+                                <span class="text-[#c678dd]">for</span> (<span class="text-[#c678dd]">var</span> i = <span class="text-[#d19a66]">0</span>; i &lt; <span class="text-[#d19a66]">9</span>; i++) { ... }<br><br>
+                                <span class="text-[#7f8c8d]// 対策B：else 節で確実にデフォルトに戻す</span><br>
+                                <span class="text-[#c678dd]">if</span> (i &gt; <span class="text-[#d19a66]">1</span>) { <span class="text-[#61afef]">stroke</span>(purple); }<br>
+                                <span class="text-[#c678dd]">else</span> { <span class="text-[#61afef]">stroke</span>(<span class="text-[#d19a66]">150</span>); }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Vera Molnar &amp; Conditionals</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 4: 条件判定の順序の落とし穴 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Evaluation Order</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Order Precedence Bug</h2>
+                    <h1 class="font-serif text-main mb-3"><code>else if</code> の罠：条件は「大きい順」に書く</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mt-2">
+                        <div class="p-4 bg-surface-2 border-2 border-terracotta rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-terracotta border-b border-border pb-1">❌ 失敗例：小さい条件を先に書いた場合</p>
+                            <div class="code-preview font-mono text-[9.5px]">
+                                <span class="text-[#c678dd]">if</span> (i &gt; <span class="text-[#d19a66]">1</span>) { stroke(purple); }<br>
+                                <span class="text-[#c678dd]">else if</span> (i &gt; <span class="text-[#d19a66]">3</span>) { stroke(orange); }<br>
+                                <span class="text-[#c678dd]">else if</span> (i &gt; <span class="text-[#d19a66]">7</span>) { stroke(mauve); }
+                            </div>
+                            <p class="text-[10.5px] text-slate-600 leading-relaxed">
+                                <code>i = 4</code> や <code>8</code> のとき、最初の <code>i > 1</code> が先に <code>true</code> になって成立するため、後続の <code>else if</code> は<strong>一切テストされずスキップ</strong>されます。
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-surface-2 border-2 border-navy rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-navy border-b border-border pb-1">⭕ 正解：最も限定的な大値から降順に判定</p>
+                            <div class="code-preview font-mono text-[9.5px]">
+                                <span class="text-[#c678dd]">if</span> (i &gt; <span class="text-[#d19a66]">7</span>) { stroke(mauve); }<br>
+                                <span class="text-[#c678dd]">else if</span> (i &gt; <span class="text-[#d19a66]">3</span>) { stroke(orange); }<br>
+                                <span class="text-[#c678dd]">else if</span> (i &gt; <span class="text-[#d19a66]">1</span>) { stroke(purple); }<br>
+                                <span class="text-[#c678dd]">else</span> { stroke(gray); }
+                            </div>
+                            <p class="text-[10.5px] text-slate-600 leading-relaxed">
+                                大きい値（7超、3超、1超...）から順に評価することで、各ゾーンが意図通りの色彩に染まります。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Vera Molnar &amp; Conditionals</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 5: 秩序から混沌へ：変数 r による揺らぎの制御 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Controlled Chaos</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Controlled Displacement</h2>
+                    <h1 class="font-serif text-main mb-3">変数 <code>r</code> で「揺らぎの激しさ」をゾーン別に制御</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                モルナールの絵画の魅力は、全体が一様に崩れるのではなく、<strong>特定の中間ゾーンだけが激しく震え、両端は整然としている</strong>グラデーションにあります。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                揺れ幅を保持する変数 <span class="highlight"><code>r</code></span> を用意し、条件分岐で <code>r = 0</code>（無揺れ）、<code>r = 5</code>（微動）、<code>r = 20</code>（激動）と割り当てます。
+                            </p>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9.5px] leading-relaxed shadow-sm">
+                                <div class="flex justify-between items-center text-[10px] text-slate-400 mb-1 pb-1 border-b border-[#3A3835]">
+                                    <span>r の値をゾーン別に設定</span>
+                                    <button onclick="copyCode(this, 'var r = 0;\nif (i > 7) {\n  r = 0;  // 右端は静止\n} else if (i > 3) {\n  r = 20; // 中央は激しく崩れる\n} else if (i > 1) {\n  r = 5;  // 少しだけ揺れる\n} else {\n  r = 0;  // 左端は静止\n}')" class="hover:text-white transition-colors cursor-pointer flex items-center gap-1">
+                                        <i class="fa-regular fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <span class="text-[#c678dd]">var</span> <span class="text-[#e06c75]">r</span> = <span class="text-[#d19a66]">0</span>;<br>
+                                <span class="text-[#c678dd]">if</span> (i &gt; <span class="text-[#d19a66]">7</span>) {<br>
+                                &nbsp;&nbsp;<span class="text-[#e06c75]">r</span> = <span class="text-[#d19a66]">0</span>; &nbsp;<span class="text-[#7f8c8d]// 右端：揺れなし</span><br>
+                                } <span class="text-[#c678dd]">else if</span> (i &gt; <span class="text-[#d19a66]">3</span>) {<br>
+                                &nbsp;&nbsp;<span class="text-[#e06c75]">r</span> = <span class="text-[#d19a66]">20</span>; <span class="text-[#7f8c8d]// 中央ゾーン：激しい揺れ（±20px）</span><br>
+                                } <span class="text-[#c678dd]">else if</span> (i &gt; <span class="text-[#d19a66]">1</span>) {<br>
+                                &nbsp;&nbsp;<span class="text-[#e06c75]">r</span> = <span class="text-[#d19a66]">5</span>; &nbsp;<span class="text-[#7f8c8d]// 中間：少しの揺れ（±5px）</span><br>
+                                } <span class="text-[#c678dd]">else</span> {<br>
+                                &nbsp;&nbsp;<span class="text-[#e06c75]">r</span> = <span class="text-[#d19a66]">0</span>; &nbsp;<span class="text-[#7f8c8d]// 左端：揺れなし</span><br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Vera Molnar &amp; Conditionals</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 6: 揺らぎの数式：random(-r, r) による中心対称の振動 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Jitter Formula</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Coordinate Jitter</h2>
+                    <h1 class="font-serif text-main mb-3">中心対称に揺らす：<code>random(-r, r)</code></h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                単に <code>+ random(r)</code> と書くと、常に正方向（右・下）に偏ってズレてしまいます。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                <span class="highlight"><code>random(-r, r)</code></span> と指定することで、元の基準位置を中心に前後・上下均等に散らばり、自然な「揺らぎ・崩れ」が表現できます。
+                            </p>
+                            <div class="p-3 bg-surface-2 border border-border rounded-sm text-[11px] text-slate-600">
+                                <code>r = 0</code> のときは <code>random(0, 0) ➔ 0</code> となり、一切ブレずにピタリと静止します。
+                            </div>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9.5px] leading-relaxed shadow-sm">
+                                <div class="flex justify-between items-center text-[10px] text-slate-400 mb-1 pb-1 border-b border-[#3A3835]">
+                                    <span>X・Y座標に揺らぎを合成</span>
+                                    <button onclick="copyCode(this, 'rect(\n  40 + i * 40 + random(-r, r),\n  80 + random(-r, r),\n  25, 25\n);')" class="hover:text-white transition-colors cursor-pointer flex items-center gap-1">
+                                        <i class="fa-regular fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <span class="text-[#61afef]">rect</span>(<br>
+                                &nbsp;&nbsp;<span class="text-[#d19a66]">40</span> + i * <span class="text-[#d19a66]">40</span> + <span class="text-[#61afef]">random</span>(<span class="text-[#e06c75]">-r, r</span>), &nbsp;<span class="text-[#7f8c8d]// X座標の揺れ</span><br>
+                                &nbsp;&nbsp;<span class="text-[#d19a66]">80</span> + <span class="text-[#61afef]">random</span>(<span class="text-[#e06c75]">-r, r</span>), &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#7f8c8d]// Y座標の揺れ</span><br>
+                                &nbsp;&nbsp;<span class="text-[#d19a66]">25, 25</span><br>
+                                );
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Vera Molnar &amp; Conditionals</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 7: 複数行への展開と行ごとの個性 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Row Duplication</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Grid Expansion</h2>
+                    <h1 class="font-serif text-main mb-3">複数行の配置とパラメータのバリエーション</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                完成した1行分の <code>for</code> ループ全体を複製（コピペ）し、基準となるY座標（例: <code>80 ➔ 160 ➔ 240...</code>）を変えることで2行目、3行目を展開できます。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                各行で条件分岐の境界値（<code>i > 6</code>, <code>i > 4</code> など）や <code>r</code> の値を少しずつ変えることで、モルナールの版画のような豊かなテクスチャが立ち現れます。
+                            </p>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9px] leading-relaxed shadow-sm">
+                                <span class="text-[#7f8c8d]// 1行目 (Y = 80)</span><br>
+                                <span class="text-[#c678dd]">for</span> (<span class="text-[#c678dd]">var</span> i = <span class="text-[#d19a66]">0</span>; i &lt; <span class="text-[#d19a66]">9</span>; i++) {<br>
+                                &nbsp;&nbsp;<span class="text-[#7f8c8d]// 色と r の判定 ...</span><br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">rect</span>(<span class="text-[#d19a66]">40</span> + i * <span class="text-[#d19a66]">40</span> + <span class="text-[#61afef]">random</span>(-r, r), <span class="text-[#d19a66]">80</span> + <span class="text-[#61afef]">random</span>(-r, r), <span class="text-[#d19a66]">25, 25</span>);<br>
+                                }<br><br>
+                                <span class="text-[#7f8c8d]// 2行目 (Y = 160, パラメータ変更)</span><br>
+                                <span class="text-[#c678dd]">for</span> (<span class="text-[#c678dd]">var</span> i = <span class="text-[#d19a66]">0</span>; i &lt; <span class="text-[#d19a66]">9</span>; i++) {<br>
+                                &nbsp;&nbsp;<span class="text-[#7f8c8d]// 行ごとに異なる閾値（i > 6 や r = 25）を適用</span><br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">rect</span>(<span class="text-[#d19a66]">40</span> + i * <span class="text-[#d19a66]">40</span> + <span class="text-[#61afef]">random</span>(-r, r), <span class="text-[#d19a66]">160</span> + <span class="text-[#61afef]">random</span>(-r, r), <span class="text-[#d19a66]">25, 25</span>);<br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Vera Molnar &amp; Conditionals</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 8: まとめと創造的実験への招待 -->
+            <section class="slide text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Summary &amp; Inspiration</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content max-w-2xl py-4">
+                    <h2>Summary</h2>
+                    <h1 class="font-serif text-main mb-4">アルゴリズムが織りなす「秩序と崩壊の美」</h1>
+                    
+                    <p class="text-xs text-muted leading-relaxed max-w-lg mx-auto mb-6">
+                        反復（for）に判断（if）と揺らぎ（random）を掛け合わせることで、冷たい計算機が有機的で詩的な芸術表現の道具へと変貌しました。
+                    </p>
+
+                    <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-left text-xs space-y-1.5 max-w-md mx-auto mb-4">
+                        <p class="font-bold text-navy border-b border-border pb-1">マスターのポイント</p>
+                        <ul class="minimal-list">
+                            <li><strong>ステートリセット：</strong> 描画ループ前に基本色を設定し持ち越し事故を防ぐ</li>
+                            <li><strong>判定順序の鉄則：</strong> <code>else if</code> は必ず「大きい閾値」から降順に書く</li>
+                            <li><strong>中心対称の乱数：</strong> <code>random(-r, r)</code> で偏りのない自然な揺らぎを作る</li>
+                            <li><strong>パラメータの探求：</strong> 閾値や色相を変えて、自分だけの作品へ昇華させよう</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Vera Molnar &amp; Conditionals</span><span class="page-num"></span>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Minimalist Navigation Controls Footer overlay inside the slide deck -->
+    <div class="absolute bottom-6 left-10 right-10 flex justify-between items-center pointer-events-auto z-30">
+        <div class="flex gap-6">
+            <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
+            </button>
+            <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
+            </button>
+        </div>
+
+        <!-- Dynamic Step Indicators Container -->
+        <div class="flex gap-1.5 overflow-x-auto max-w-xs justify-center px-2 no-scrollbar" id="dots-container"></div>
+    </div>
+
+    <!-- Script for interactive presentation features -->
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsContainer = document.getElementById('dots-container');
+        const pageNumDisplays = document.querySelectorAll('.page-num');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const navSidebar = document.getElementById('navSidebar');
+        const navOverlay = document.getElementById('navOverlay');
+        const navMenu = document.getElementById('navMenu');
+        
+        let currentSlide = 0;
+        let indicators = [];
+
+        slides.forEach((_, index) => {
+            const dot = document.createElement('span');
+            dot.className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 ' + (index === 0 ? 'dot-active' : 'dot-inactive');
+            dotsContainer.appendChild(dot);
+            indicators.push(dot);
+            
+            if(pageNumDisplays[index]) {
+                pageNumDisplays[index].textContent = `Slide ${index + 1} / ${slides.length}`;
+            }
+
+            const title = slides[index].querySelector('h1')?.innerText.replace(/\n/g, ' ') || `Slide ${index + 1}`;
+            const navItem = document.createElement('div');
+            navItem.className = `nav-item ${index === 0 ? 'active' : ''}`;
+            navItem.textContent = `${index + 1}. ${title}`;
+            navItem.onclick = () => { updateSlide(index); closeSidebar(); };
+            navMenu.appendChild(navItem);
+        });
+
+        function updateSlide(index) {
+            // Strict boundary guard - prevent looping back to start or past end
+            if (index < 0) {
+                currentSlide = 0;
+                return;
+            }
+            if (index >= slides.length) {
+                currentSlide = slides.length - 1;
+                return;
+            }
+
+            slides[currentSlide].classList.remove('active');
+            indicators[currentSlide].className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 bg-gray-300';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.remove('active');
+
+            currentSlide = index;
+            
+            slides[currentSlide].classList.add('active');
+            indicators[currentSlide].className = 'w-1.5 h-1.5 rounded-full transition-all duration-300 bg-black';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.add('active');
+
+            prevBtn.style.opacity = currentSlide === 0 ? '0.2' : '1';
+            prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+            nextBtn.style.opacity = currentSlide === slides.length - 1 ? '0.2' : '1';
+            nextBtn.style.pointerEvents = currentSlide === slides.length - 1 ? 'none' : 'auto';
+        }
+
+        function closeSidebar() {
+            navSidebar.classList.remove('open');
+            navOverlay.classList.remove('open');
+            hamburgerBtn.classList.remove('active');
+        }
+
+        hamburgerBtn.onclick = () => {
+            hamburgerBtn.classList.toggle('active');
+            navSidebar.classList.toggle('open');
+            navOverlay.classList.toggle('open');
+        };
+        navOverlay.onclick = closeSidebar;
+
+        prevBtn.onclick = () => updateSlide(currentSlide - 1);
+        nextBtn.onclick = () => updateSlide(currentSlide + 1);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                updateSlide(currentSlide - 1);
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                updateSlide(currentSlide + 1);
+            }
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const deck = document.getElementById('deck');
+        deck.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        deck.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                updateSlide(currentSlide + 1);
+            }
+            if (touchEndX > touchStartX + 50) {
+                updateSlide(currentSlide - 1);
+            }
+        }
+
+        function copyCode(button, code) {
+            const textarea = document.createElement('textarea');
+            textarea.value = code;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                const originalContent = button.innerHTML;
+                button.innerHTML = '<i class="fa-solid fa-check text-[#8A9A86]"></i> Copied';
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                }, 2000);
+            } catch (err) {
+                console.error('Copy failed:', err);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        updateSlide(0);
+    </script>
+</body>
+</html>

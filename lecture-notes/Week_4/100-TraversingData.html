@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>講義スライド：forループによる配列の走査と応用 (p5.js)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --color-bg-outer: #D1CFCA;      
+            --color-bg-slide:  #F7F6F4;     
+            --color-surface-1: #F2EFEA;    
+            --color-surface-2: #FFFFFF;    
+            --color-border: #DDDAD5;       
+            --color-text-main: #222222;    
+            --color-text-muted: #555555;   
+            --color-text-light: #999999;   
+            --color-accent-temp: #8C7A6B;  
+            --navy: #344D61;               
+            --terracotta: #994F60;         
+            --gold-muted: #C4B298;         
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--color-bg-outer);
+            color: var(--color-text-main);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+        }
+
+        h1, h2, h3, .font-serif {
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-weight: 400;
+        }
+
+        .presentation-viewport {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .slide-deck {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--color-bg-slide);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            padding: 5% 7% 7% 7%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transform: translateY(10px);
+            background: var(--color-bg-slide);
+            overflow-y: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        h1 {
+            color: var(--color-text-main);
+            font-size: 1.85rem; 
+            font-weight: 400;
+            line-height: 1.4;
+            margin-bottom: 1.25rem;
+            letter-spacing: 0.05em;
+        }
+
+        h2 {
+            color: var(--color-accent-temp);
+            font-size: 0.65rem; 
+            font-weight: 500;
+            letter-spacing: 0.4em;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .main-text {
+            font-size: 1.05rem; 
+            line-height: 1.8;
+            color: var(--color-text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        .highlight {
+            background: linear-gradient(transparent 70%, #E2DDD5 70%);
+            font-weight: 500;
+            padding: 0 0.15em;
+        }
+
+        code {
+            background: var(--color-surface-1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 2px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--terracotta);
+            font-weight: bold;
+            font-size: 0.85em;
+            border: 1px solid var(--color-border);
+        }
+
+        .code-preview {
+            background: #252423;
+            color: #E2DDD5;
+            padding: 0.85rem;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            border: 1px solid #3A3835;
+        }
+
+        .minimal-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .minimal-list li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.6rem;
+            font-size: 0.95rem; 
+            color: var(--color-text-muted);
+            display: block;
+            line-height: 1.6;
+        }
+        .minimal-list li::before {
+            content: "・";
+            position: absolute;
+            left: 0;
+            color: var(--color-accent-temp);
+            font-weight: bold;
+        }
+
+        .slide-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: var(--color-text-light);
+            border-top: 1px solid var(--color-border);
+            padding-top: 0.75rem;
+            margin-top: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .nav-btn {
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            color: var(--color-text-main);
+            opacity: 1 !important;
+        }
+
+        .hamburger-btn {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            z-index: 50;
+            background: rgba(247, 246, 244, 0.9);
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 0;
+            width: 48px;
+            height: 48px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+
+        .hamburger-btn:hover {
+            background: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .hamburger-btn span {
+            width: 18px;
+            height: 2px;
+            background-color: var(--color-text-main);
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+
+        .nav-sidebar {
+            position: fixed;
+            left: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background-color: var(--color-bg-slide);
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
+            z-index: 40;
+            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            border-right: 1px solid var(--color-border);
+        }
+
+        .nav-sidebar.open {
+            left: 0;
+        }
+
+        .nav-sidebar-content {
+            padding: 100px 24px 40px 24px;
+        }
+
+        .nav-sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--color-text-light);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .nav-item {
+            padding: 10px 0;
+            font-size: 12px;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            padding-left: 12px;
+            line-height: 1.4;
+        }
+
+        .nav-item:hover {
+            color: var(--color-text-main);
+            border-left-color: var(--color-accent-temp);
+            background: rgba(0,0,0,0.01);
+        }
+
+        .nav-item.active {
+            color: var(--color-accent-temp);
+            font-weight: 600;
+            border-left-color: var(--color-accent-temp);
+        }
+
+        .nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0);
+            z-index: 30;
+            transition: background-color 0.3s ease;
+            pointer-events: none;
+        }
+
+        .nav-overlay.open {
+            background-color: rgba(0, 0, 0, 0.3);
+            pointer-events: auto;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .dot-active { 
+            background-color: var(--color-text-main); 
+            width: 6px;
+            height: 6px;
+        }
+        .dot-inactive { 
+            background-color: var(--color-border); 
+            width: 4px;
+            height: 4px;
+        }
+
+        @media (max-width: 1320px) {
+            .slide-deck { transform: scale(0.9); }
+        }
+        @media (max-width: 1150px) {
+            .slide-deck { transform: scale(0.8); }
+        }
+        @media (max-width: 980px) {
+            .slide-deck { transform: scale(0.7); }
+        }
+        @media (max-width: 768px) {
+            .presentation-viewport { padding: 10px; height: auto; }
+            .slide-deck { aspect-ratio: auto; height: 560px; transform: none; }
+            .slide { padding: 32px 24px; }
+            h1 { font-size: 1.5rem; }
+            .main-text, .minimal-list li { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-btn" id="hamburgerBtn" title="目次を開く">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Navigation Sidebar -->
+    <div class="nav-sidebar" id="navSidebar">
+        <div class="nav-sidebar-content">
+            <div class="nav-sidebar-title">講義スライド一覧</div>
+            <div id="navMenu"></div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <div class="presentation-viewport">
+        <div class="slide-deck" id="deck">
+
+            <!-- Slide 1: イントロダクション：配列の走査（Traversing Arrays） -->
+            <section class="slide active">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Traversing Arrays</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Array Traversal</h2>
+                    <h1 class="font-serif text-main mb-4">forループによる配列の走査<br><span class="highlight">「リストの全要素を自動で処理する」</span></h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-4">
+                            <p class="main-text text-xs text-muted leading-relaxed">
+                                前トピックでは配列とforループの基本を別々に学びました。本講義では、これらを統合し、<span class="highlight">「forループのカウンタ変数 <code>i</code> を配列のインデックスとして直接利用する」</span>強力なテクニックを学びます。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                例えば、数百語のテキストデータや多数の天体データを手動で1つずつ処理するのではなく、ループを使って一瞬ですべて走査できるようになります。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <!-- 抽象図解: ループ変数iが配列を巡回する様子 -->
+                            <svg viewBox="0 0 200 120" class="w-48 h-32 bg-[#F2EFEA] rounded-sm p-2">
+                                <rect x="15" y="45" width="24" height="30" fill="white" stroke="var(--navy)" stroke-width="1.5"/>
+                                <rect x="45" y="45" width="24" height="30" fill="white" stroke="var(--navy)" stroke-width="1.5"/>
+                                <rect x="75" y="45" width="24" height="30" fill="white" stroke="var(--navy)" stroke-width="1.5"/>
+                                <rect x="105" y="45" width="24" height="30" fill="white" stroke="var(--navy)" stroke-width="1.5"/>
+                                <text x="27" y="64" font-size="9" font-family="monospace" text-anchor="middle" fill="var(--navy)">[0]</text>
+                                <text x="57" y="64" font-size="9" font-family="monospace" text-anchor="middle" fill="var(--navy)">[1]</text>
+                                <text x="87" y="64" font-size="9" font-family="monospace" text-anchor="middle" fill="var(--navy)">[2]</text>
+                                <text x="117" y="64" font-size="9" font-family="monospace" text-anchor="middle" fill="var(--navy)">[3]</text>
+                                <path d="M 27 28 L 27 40" stroke="var(--terracotta)" stroke-width="2"/>
+                                <polygon points="27,42 24,36 30,36" fill="var(--terracotta)"/>
+                                <text x="27" y="20" font-size="8" font-family="monospace" text-anchor="middle" fill="var(--terracotta)" font-weight="bold">i = 0, 1, 2...</text>
+                                <text x="100" y="108" font-size="7" font-family="monospace" text-anchor="middle" fill="var(--color-text-muted)">Automatic Array Traversal via Loop</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Traversing Arrays with For Loops</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 2: テキストデータの走査（コンソール出力） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Console Traversal</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Traversing Large Arrays</h2>
+                    <h1 class="font-serif text-main mb-3">199語のテキストデータをコンソールに一括出力する</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                カフカの『変身』の冒頭199語が格納された巨大な文字列配列 <code>metamorphosis</code> を例にします。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                固定値の代わりにカウンタ変数 <span class="highlight"><code>i</code></span> を用いて <span class="text-terracotta font-bold"><code>metamorphosis[i]</code></span> と指定することで、199回分の <code>console.log()</code> をたった数行のループで実現できます。
+                            </p>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9.5px] leading-relaxed shadow-sm">
+                                <div class="flex justify-between items-center text-[10px] text-slate-400 mb-1 pb-1 border-b border-[#3A3835]">
+                                    <span>ループによる文字列配列の順次出力</span>
+                                    <button onclick="copyCode(this, 'for (var i = 0; i < 199; i++) {\n  console.log(metamorphosis[i]);\n}')" class="hover:text-white transition-colors cursor-pointer flex items-center gap-1">
+                                        <i class="fa-regular fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <span class="text-[#7f8c8d]// i が 0 から 198 まで自動で変化</span><br>
+                                <span class="text-[#c678dd]">for</span> (<span class="text-[#c678dd]">var</span> i = <span class="text-[#d19a66]">0</span>; i &lt; <span class="text-[#d19a66]">199</span>; i++) {<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">console</span>.<span class="text-[#61afef]">log</span>(<span class="text-[#e06c75]">metamorphosis[i]</span>);<br>
+                                }<br>
+                                <span class="text-[#7f8c8d] // ➔ コンソールに199語が順次表示される</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Traversing Arrays with For Loops</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 3: テキストのキャンバス描画とカーソル制御 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Canvas Text Layout</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Formatting Text Output</h2>
+                    <h1 class="font-serif text-main mb-3">キャンバス上での文字列の整列と自動折り返し</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mt-2">
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-navy border-b border-border pb-1">① 文字幅に応じたカーソル進行（<code>textWidth</code>）</p>
+                            <p class="text-slate-600 leading-relaxed text-[11.5px]">
+                                単語ごとに文字数が異なるため、<code>textWidth()</code> 関数を使って描画した直後の単語の長さを測り、<code>cursorX</code> を右へ進めます。また、単語同士がくっつかないよう <code>+ " "</code> でスペースを挟みます。
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-terracotta border-b border-border pb-1">② 画面端での改行処理（<code>cursorY</code>）</p>
+                            <p class="text-slate-600 leading-relaxed text-[11.5px]">
+                                <code>cursorX</code> がキャンバスの <code>width</code> を超えたら、X座標を <code>0</code> に戻し、Y座標（<code>cursorY</code>）を一行分（例: <code>40px</code>）下へ移動させます。
+                            </p>
+                            <div class="code-preview font-mono text-[9px]">
+                                <span class="text-[#c678dd]">if</span> (cursorX &gt; width) {<br>
+                                &nbsp;&nbsp;cursorX = <span class="text-[#d19a66]">0</span>;<br>
+                                &nbsp;&nbsp;cursorY += <span class="text-[#d19a66]">40</span>;<br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Traversing Arrays with For Loops</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 4: 太陽系モデルのコード劇的短縮（リファクタリング） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Refactoring Code</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Code Reduction</h2>
+                    <h1 class="font-serif text-main mb-3">太陽系モデルをforループで65行から26行へ短縮</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                以前のスライドで手書きした8回分の重複描画コードを、<code>for (var i = 0; i &lt; 8; i++)</code> によるループに置き換えます。
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1">
+                                <li>X座標：<code>50 + i * 125</code></li>
+                                <li>サイズ：<code>sizes[i]</code></li>
+                                <li>カラー：<code>colours[i]</code></li>
+                                <li>ラベル：<code>names[i]</code></li>
+                            </ul>
+                            <p class="text-[11px] text-slate-500">
+                                ➔ コード量が劇的に減り、保守性が飛躍的に向上します！
+                            </p>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9.5px] leading-relaxed shadow-sm">
+                                <span class="text-[#c678dd]">for</span> (<span class="text-[#c678dd]">var</span> i = <span class="text-[#d19a66]">0</span>; i &lt; <span class="text-[#d19a66]">8</span>; i++) {<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">fill</span>(colours[<span class="text-[#e06c75]">i</span>]);<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">ellipse</span>(<span class="text-[#d19a66]">50</span> + <span class="text-[#e06c75]">i</span> * <span class="text-[#d19a66]">125</span>, height / <span class="text-[#d19a66]">2</span>, sizes[<span class="text-[#e06c75]">i</span>], sizes[<span class="text-[#e06c75]">i</span>]);<br><br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">fill</span>(<span class="text-[#d19a66]">255</span>);<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">text</span>(names[<span class="text-[#e06c75]">i</span>], <span class="text-[#d19a66]">50</span> + <span class="text-[#e06c75]">i</span> * <span class="text-[#d19a66]">125</span>, height / <span class="text-[#d19a66]">2</span> + <span class="text-[#d19a66]">150</span>);<br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Traversing Arrays with For Loops</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 5: プリミティブ配列から「オブジェクトの配列」への進化 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Array of Objects Architecture</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Advanced Array Architecture</h2>
+                    <h1 class="font-serif text-main mb-3">バラバラの配列を「オブジェクトの配列」へ統合する</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mt-2">
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-terracotta border-b border-border pb-1">パラレル配列（個別管理）の限界</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                <code>sizes[i]</code>, <code>names[i]</code>, <code>colours[i]</code> のように別々の配列で管理すると、要素の並び順がズレたときにバグの追跡が困難になります。
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-navy border-b border-border pb-1">オブジェクトの配列（統合管理）</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                1つの惑星の属性（名前、サイズ、色）を1つのオブジェクトにまとめ、それを配列に格納します。
+                            </p>
+                            <div class="code-preview font-mono text-[9px]">
+                                <span class="text-[#c678dd]">var</span> planets = [<br>
+                                &nbsp;&nbsp;{ size: <span class="text-[#d19a66]">8</span>, name: <span class="text-[#98c379]">"Mercury"</span>, color: <span class="text-[#98c379]">"gray"</span> },<br>
+                                &nbsp;&nbsp;{ size: <span class="text-[#d19a66]">18</span>, name: <span class="text-[#98c379]">"Venus"</span>, color: <span class="text-[#98c379]">"brown"</span> }<br>
+                                ];
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Traversing Arrays with For Loops</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 6: ドット記法と拡張性（冥王星の追加） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Dot Notation &amp; Scalability</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Dot Notation &amp; Extensibility</h2>
+                    <h1 class="font-serif text-main mb-3">ドット記法による参照と、データの容易な拡張</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                ループ内では <span class="highlight"><code>planets[i].size</code></span>, <span class="highlight"><code>planets[i].name</code></span>, <span class="highlight"><code>planets[i].color</code></span> とドット記法で直感的にプロパティにアクセスできます。
+                            </p>
+                            <div class="p-3 bg-surface-2 border border-border rounded-sm text-[11px] text-slate-700 space-y-1">
+                                <span class="font-bold text-navy">データ構造の拡張性：</span><br>
+                                科学の進歩やルールの変更で「冥王星（Pluto）」を再び追加したくなっても、配列の末尾にオブジェクトを1つ追加し、ループ条件を <code>i &lt; 9</code> に変えるだけで完結します！
+                            </div>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9.5px] leading-relaxed shadow-sm">
+                                <span class="text-[#7f8c8d]// ループ内でのドット記法アクセス</span><br>
+                                <span class="text-[#c678dd]">for</span> (<span class="text-[#c678dd]">var</span> i = <span class="text-[#d19a66]">0</span>; i &lt; planets.<span class="text-[#e06c75]">length</span>; i++) {<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">fill</span>(planets[<span class="text-[#e06c75]">i</span>].<span class="text-[#98c379]">color</span>);<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">ellipse</span>(50 + i * 125, height / 2, planets[<span class="text-[#e06c75]">i</span>].<span class="text-[#98c379]">size</span>);<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">text</span>(planets[<span class="text-[#e06c75]">i</span>].<span class="text-[#98c379]">name</span>, 50 + i * 125, height / 2 + 150);<br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Traversing Arrays with For Loops</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 7: まとめと次ステージへの展望 -->
+            <section class="slide text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Summary &amp; Next Stage</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content max-w-2xl py-4">
+                    <h2>Summary &amp; Next Horizons</h2>
+                    <h1 class="font-serif text-main mb-4">配列とループが切り拓く表現のフロンティア</h1>
+                    
+                    <p class="text-xs text-muted leading-relaxed max-w-lg mx-auto mb-6">
+                        配列の走査、テキストの自動折り返しレイアウト、そしてオブジェクトの配列化によるカプセル化を学びました。
+                    </p>
+
+                    <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-left text-xs space-y-1.5 max-w-md mx-auto mb-4">
+                        <p class="font-bold text-navy border-b border-border pb-1">マスターのチェックリスト</p>
+                        <ul class="minimal-list">
+                            <li><strong>配列の走査：</strong> <code>array[i]</code> と forループの結合</li>
+                            <li><strong>テキスト整列：</strong> <code>textWidth()</code> によるカーソル計算と自動改行</li>
+                            <li><strong>オブジェクトの配列：</strong> <code>array[i].property</code> による構造化データ管理</li>
+                        </ul>
+                    </div>
+
+                    <p class="text-[11px] text-slate-500 italic mt-3">
+                        今後のスライドでは、さらに高度な「二重forループ」や複雑なデータ構造の操作へと歩みを進めます！
+                    </p>
+                </div>
+                <div class="slide-footer">
+                    <span>Traversing Arrays with For Loops</span><span class="page-num"></span>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Minimalist Navigation Controls Footer overlay inside the slide deck -->
+    <div class="absolute bottom-6 left-10 right-10 flex justify-between items-center pointer-events-auto z-30">
+        <div class="flex gap-6">
+            <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
+            </button>
+            <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
+            </button>
+        </div>
+
+        <!-- Dynamic Step Indicators Container -->
+        <div class="flex gap-1.5 overflow-x-auto max-w-xs justify-center px-2 no-scrollbar" id="dots-container"></div>
+    </div>
+
+    <!-- Script for interactive presentation features -->
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsContainer = document.getElementById('dots-container');
+        const pageNumDisplays = document.querySelectorAll('.page-num');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const navSidebar = document.getElementById('navSidebar');
+        const navOverlay = document.getElementById('navOverlay');
+        const navMenu = document.getElementById('navMenu');
+        
+        let currentSlide = 0;
+        let indicators = [];
+
+        slides.forEach((_, index) => {
+            const dot = document.createElement('span');
+            dot.className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 ' + (index === 0 ? 'dot-active' : 'dot-inactive');
+            dotsContainer.appendChild(dot);
+            indicators.push(dot);
+            
+            if(pageNumDisplays[index]) {
+                pageNumDisplays[index].textContent = `Slide ${index + 1} / ${slides.length}`;
+            }
+
+            const title = slides[index].querySelector('h1')?.innerText.replace(/\n/g, ' ') || `Slide ${index + 1}`;
+            const navItem = document.createElement('div');
+            navItem.className = `nav-item ${index === 0 ? 'active' : ''}`;
+            navItem.textContent = `${index + 1}. ${title}`;
+            navItem.onclick = () => { updateSlide(index); closeSidebar(); };
+            navMenu.appendChild(navItem);
+        });
+
+        function updateSlide(index) {
+            // Strict boundary guard - prevent looping back to start or past end
+            if (index < 0) {
+                currentSlide = 0;
+                return;
+            }
+            if (index >= slides.length) {
+                currentSlide = slides.length - 1;
+                return;
+            }
+
+            slides[currentSlide].classList.remove('active');
+            indicators[currentSlide].className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 bg-gray-300';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.remove('active');
+
+            currentSlide = index;
+            
+            slides[currentSlide].classList.add('active');
+            indicators[currentSlide].className = 'w-1.5 h-1.5 rounded-full transition-all duration-300 bg-black';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.add('active');
+
+            prevBtn.style.opacity = currentSlide === 0 ? '0.2' : '1';
+            prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+            nextBtn.style.opacity = currentSlide === slides.length - 1 ? '0.2' : '1';
+            nextBtn.style.pointerEvents = currentSlide === slides.length - 1 ? 'none' : 'auto';
+        }
+
+        function closeSidebar() {
+            navSidebar.classList.remove('open');
+            navOverlay.classList.remove('open');
+            hamburgerBtn.classList.remove('active');
+        }
+
+        hamburgerBtn.onclick = () => {
+            hamburgerBtn.classList.toggle('active');
+            navSidebar.classList.toggle('open');
+            navOverlay.classList.toggle('open');
+        };
+        navOverlay.onclick = closeSidebar;
+
+        prevBtn.onclick = () => updateSlide(currentSlide - 1);
+        nextBtn.onclick = () => updateSlide(currentSlide + 1);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                updateSlide(currentSlide - 1);
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                updateSlide(currentSlide + 1);
+            }
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const deck = document.getElementById('deck');
+        deck.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        deck.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                updateSlide(currentSlide + 1);
+            }
+            if (touchEndX > touchStartX + 50) {
+                updateSlide(currentSlide - 1);
+            }
+        }
+
+        function copyCode(button, code) {
+            const textarea = document.createElement('textarea');
+            textarea.value = code;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                const originalContent = button.innerHTML;
+                button.innerHTML = '<i class="fa-solid fa-check text-[#8A9A86]"></i> Copied';
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                }, 2000);
+            } catch (err) {
+                console.error('Copy failed:', err);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        updateSlide(0);
+    </script>
+</body>
+</html>

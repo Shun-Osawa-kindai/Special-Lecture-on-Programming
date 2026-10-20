@@ -1,1 +1,64 @@
-<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Week 4 講義ノート | プログラミング特講</title><style>:root{--bg:#d1cfca;--card:#f7f6f4;--surface:#fff;--border:#dddad5;--text:#222;--muted:#666;--light:#9b9b9b;--accent:#8c7a6b}*{box-sizing:border-box}body{margin:0;font-family:Inter,"Noto Sans JP",sans-serif;background:var(--bg);color:var(--text);line-height:1.7}.v{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 20px}.c{width:100%;max-width:980px;background:var(--card);border:1px solid var(--border);border-radius:8px;box-shadow:0 26px 55px -20px rgba(0,0,0,.16);padding:42px 52px 24px}.t,.b{display:flex;justify-content:space-between;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--light)}.t{margin-bottom:24px}.e{margin:0 0 8px 0;font-size:10px;letter-spacing:.34em;text-transform:uppercase;color:var(--accent)}h1{margin:0 0 10px 0;font-family:"Playfair Display","Noto Serif JP",serif;font-weight:400;font-size:clamp(1.72rem,2.6vw,2.18rem)}p{margin:0}.lead{color:var(--muted);font-size:.94rem}.box{margin-top:24px;border:1px solid var(--border);background:var(--surface);padding:16px 18px;color:var(--muted);font-size:.88rem}.m{margin-top:14px;color:var(--muted);font-size:.78rem}.b{margin-top:20px;padding-top:12px;border-top:1px solid var(--border)}a{text-decoration:none;color:inherit}a:hover{color:var(--accent)}</style></head><body><div class="v"><main class="c"><div class="t"><a href="../../index.html">← Course Hub</a><span>Week 4 / Hub</span></div><p class="e">Special Lecture on Programming</p><h1>Organising programs with arrays and functions</h1><p class="lead">Arrays と index による loops、functions を使い、基本的な code organisation を身につけます。</p><section class="box">Week 4 のハブページです。個別スライドは準備中です。公開後はここから各資料へ移動できます。</section><p class="m">授業形式: 演習を含む講義 / 予習 90分 / 復習 90分</p><div class="b"><span>Kindai University</span><a href="../../index.html">Back to Week List</a></div></main></div></body></html>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 4 講義ノート | プログラミング特講</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg:#d1cfca; --card:#f7f6f4; --surface:#fff; --border:#dddad5; --text:#222; --muted:#666; --light:#9b9b9b; --navy:#344d61; --accent:#8c7a6b; }
+        * { box-sizing: border-box; }
+        body { margin:0; font-family:"Inter","Noto Sans JP",sans-serif; background:var(--bg); color:var(--text); line-height:1.7; }
+        h1,h2,.serif { font-family:"Playfair Display","Noto Serif JP",serif; font-weight:400; }
+        .viewport { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:32px 20px; }
+        .card { width:100%; max-width:980px; background:var(--card); border:1px solid var(--border); border-radius:8px; box-shadow:0 26px 55px -20px rgba(0,0,0,.16); padding:44px 52px 24px; }
+        .top { display:flex; justify-content:space-between; font-size:10px; letter-spacing:.28em; text-transform:uppercase; color:var(--light); margin-bottom:28px; }
+        .top a,.bottom a { text-decoration:none; color:inherit; }
+        .top a:hover,.bottom a:hover { color:var(--accent); }
+        .eyebrow { margin:0 0 8px 0; font-size:10px; letter-spacing:.34em; text-transform:uppercase; color:var(--accent); }
+        h1 { margin:0 0 10px 0; font-size:clamp(1.75rem,2.7vw,2.2rem); }
+        .lead { margin:0; color:var(--muted); font-size:.94rem; }
+        .slide-list { margin-top:28px; border-top:1px solid var(--border); }
+        .slide-item { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:20px; align-items:center; padding:16px 0; border-bottom:1px solid var(--border); text-decoration:none; color:inherit; transition:background-color .18s ease, padding-left .18s ease; }
+        .slide-item:hover { background:rgba(255,255,255,.5); padding-left:10px; }
+        .slide-label { margin:0; color:var(--light); font-size:10px; letter-spacing:.2em; text-transform:uppercase; }
+        .slide-title { margin:4px 0 3px; font-size:1.02rem; color:var(--navy); }
+        .slide-desc { margin:0; font-size:.85rem; color:var(--muted); }
+        .action { display:inline-flex; align-items:center; gap:10px; font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--navy); white-space:nowrap; }
+        .action i { font-size:.62rem; }
+        .meta { margin-top:18px; font-size:.78rem; color:var(--muted); }
+        .bottom { margin-top:20px; border-top:1px solid var(--border); padding-top:12px; display:flex; justify-content:space-between; font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--light); }
+        @media (max-width: 840px) { .card { padding:28px 20px 18px; } .slide-item { grid-template-columns:1fr; } }
+    </style>
+</head>
+<body>
+<div class="viewport"><main class="card">
+    <div class="top"><a href="../../index.html">← Course Hub</a><span>Week 4 / Hub</span></div>
+    <p class="eyebrow">Special Lecture on Programming</p>
+    <h1 class="serif">Arrays・loops・functions でコードを整理する</h1>
+    <p class="lead">第4回では、Arrays とデータの集合、index を用いた loops、functions、基本的な code organisation を学びます。</p>
+    <section class="slide-list" aria-label="Week 4 スライド一覧">
+        <a class="slide-item" href="./10-IntroducingTheForLoop.html"><div><p class="slide-label">10 / Ready</p><h2 class="slide-title serif">Introducing the for loop</h2><p class="slide-desc">for ループの基本を使い、反復処理の考え方を学びます。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        <a class="slide-item" href="./20-ForLoopsUsingVariableIncrementationAndTheIndexVariable.html"><div><p class="slide-label">20 / Ready</p><h2 class="slide-title serif">For loop index</h2><p class="slide-desc">インデックス変数と更新処理で整列や配置をコントロールします。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        <a class="slide-item" href="./30-CombiningForLoopsWithConditionalStatements.html"><div><p class="slide-label">30 / Ready</p><h2 class="slide-title serif">Loops + conditions</h2><p class="slide-desc">for ループと条件分岐を組み合わせて複雑な模様を作ります。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        <a class="slide-item" href="./40-WhatAreArrays_WhyDoWeNeedThem.html"><div><p class="slide-label">40 / Ready</p><h2 class="slide-title serif">Arrays</h2><p class="slide-desc">配列の概念と、データをまとめて扱う理由を学びます。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        <a class="slide-item" href="./50-CodingWithArrays.html"><div><p class="slide-label">50 / Ready</p><h2 class="slide-title serif">Coding with arrays</h2><p class="slide-desc">配列の基本構文と取得・更新の方法を確認します。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        <a class="slide-item" href="./60-CodingWithArrays-example.html"><div><p class="slide-label">60 / Ready</p><h2 class="slide-title serif">Array example</h2><p class="slide-desc">配列を使った太陽系モデルやオブジェクトの描画例を見ます。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        <a class="slide-item" href="./70-CommonBugsWithForLoopsAndArrays.html"><div><p class="slide-label">70 / Ready</p><h2 class="slide-title serif">Common bugs</h2><p class="slide-desc">配列やループで起きやすいミスとデバッグのコツを扱います。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        <a class="slide-item" href="./80-CodePhilosophy-codingWorkflow.html"><div><p class="slide-label">80 / Ready</p><h2 class="slide-title serif">Coding workflow</h2><p class="slide-desc">良いコーディング手順と作業の進め方を整理します。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        <a class="slide-item" href="./90-Game_Project_4_sideScrolling.html"><div><p class="slide-label">90 / Ready</p><h2 class="slide-title serif">Game Project Part 4</h2><p class="slide-desc">サイドスクロールの実装を通じて複雑な動きを再構成します。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        <a class="slide-item" href="./100-TraversingData.html"><div><p class="slide-label">100 / Ready</p><h2 class="slide-title serif">Traversing data</h2><p class="slide-desc">for ループで配列を走査し、データを処理するテクニックを学びます。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        <a class="slide-item" href="./110-NestedIterationToDrawGrids.html"><div><p class="slide-label">110 / Ready</p><h2 class="slide-title serif">Nested iteration</h2><p class="slide-desc">二重ループを使ってグリッド状のパターンや配置を描画します。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        <a class="slide-item" href="./120-BeingCreativeWithNestedIteration.html"><div><p class="slide-label">120 / Ready</p><h2 class="slide-title serif">Creative nested loops</h2><p class="slide-desc">高度なグリッドパターンと距離場の考え方へ発展させます。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        <a class="slide-item" href="./130-DynamicAddingItemsToArraysWith.push_and_.length.html"><div><p class="slide-label">130 / Ready</p><h2 class="slide-title serif">Dynamic arrays</h2><p class="slide-desc">push と length を使って配列を動的に変化させる演習です。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        <a class="slide-item" href="./140-BringingItAllTogether.html"><div><p class="slide-label">140 / Ready</p><h2 class="slide-title serif">Bringing it all together（オプショナル：発展課題）</h2><p class="slide-desc">動的配列と数学関数を組み合わせた完成度の高い作品を見ます。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        <a class="slide-item" href="./150-CommonErrorsWithTraversingAndNestedIteration.html"><div><p class="slide-label">150 / Ready</p><h2 class="slide-title serif">Common errors</h2><p class="slide-desc">走査と二重ループの典型的な失敗例と対処法を整理します。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        <a class="slide-item" href="./160-Game_Project_5_bringItAllTogether.html"><div><p class="slide-label">160 / Ready</p><h2 class="slide-title serif">Game Project Part 5</h2><p class="slide-desc">関数によるリファクタリングと構造化でゲームを完成させます。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+    </section>
+    <p class="meta">授業形式: 演習を含む講義 / 予習 90分 / 復習 90分</p>
+    <div class="bottom"><span>Kindai University</span><a href="../../index.html">Back to Week List</a></div>
+</main></div>
+</body>
+</html>

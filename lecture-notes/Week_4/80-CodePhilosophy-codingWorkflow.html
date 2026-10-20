@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>講義スライド：コーディング・ワークフローの作法 (Code Philosophy)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --color-bg-outer: #D1CFCA;      
+            --color-bg-slide:  #F7F6F4;     
+            --color-surface-1: #F2EFEA;    
+            --color-surface-2: #FFFFFF;    
+            --color-border: #DDDAD5;       
+            --color-text-main: #222222;    
+            --color-text-muted: #555555;   
+            --color-text-light: #999999;   
+            --color-accent-temp: #8C7A6B;  
+            --navy: #344D61;               
+            --terracotta: #994F60;         
+            --gold-muted: #C4B298;         
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--color-bg-outer);
+            color: var(--color-text-main);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+        }
+
+        h1, h2, h3, .font-serif {
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-weight: 400;
+        }
+
+        .presentation-viewport {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .slide-deck {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--color-bg-slide);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            padding: 5% 7% 7% 7%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transform: translateY(10px);
+            background: var(--color-bg-slide);
+            overflow-y: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        h1 {
+            color: var(--color-text-main);
+            font-size: 1.85rem; 
+            font-weight: 400;
+            line-height: 1.4;
+            margin-bottom: 1.25rem;
+            letter-spacing: 0.05em;
+        }
+
+        h2 {
+            color: var(--color-accent-temp);
+            font-size: 0.65rem; 
+            font-weight: 500;
+            letter-spacing: 0.4em;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .main-text {
+            font-size: 1.05rem; 
+            line-height: 1.8;
+            color: var(--color-text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        .highlight {
+            background: linear-gradient(transparent 70%, #E2DDD5 70%);
+            font-weight: 500;
+            padding: 0 0.15em;
+        }
+
+        code {
+            background: var(--color-surface-1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 2px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--terracotta);
+            font-weight: bold;
+            font-size: 0.85em;
+            border: 1px solid var(--color-border);
+        }
+
+        .code-preview {
+            background: #252423;
+            color: #E2DDD5;
+            padding: 0.85rem;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            border: 1px solid #3A3835;
+        }
+
+        .minimal-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .minimal-list li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.6rem;
+            font-size: 0.95rem; 
+            color: var(--color-text-muted);
+            display: block;
+            line-height: 1.6;
+        }
+        .minimal-list li::before {
+            content: "・";
+            position: absolute;
+            left: 0;
+            color: var(--color-accent-temp);
+            font-weight: bold;
+        }
+
+        .slide-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: var(--color-text-light);
+            border-top: 1px solid var(--color-border);
+            padding-top: 0.75rem;
+            margin-top: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .nav-btn {
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            color: var(--color-text-main);
+            opacity: 1 !important;
+        }
+
+        .hamburger-btn {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            z-index: 50;
+            background: rgba(247, 246, 244, 0.9);
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 0;
+            width: 48px;
+            height: 48px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+
+        .hamburger-btn:hover {
+            background: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .hamburger-btn span {
+            width: 18px;
+            height: 2px;
+            background-color: var(--color-text-main);
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+
+        .nav-sidebar {
+            position: fixed;
+            left: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background-color: var(--color-bg-slide);
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
+            z-index: 40;
+            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            border-right: 1px solid var(--color-border);
+        }
+
+        .nav-sidebar.open {
+            left: 0;
+        }
+
+        .nav-sidebar-content {
+            padding: 100px 24px 40px 24px;
+        }
+
+        .nav-sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--color-text-light);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .nav-item {
+            padding: 10px 0;
+            font-size: 12px;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            padding-left: 12px;
+            line-height: 1.4;
+        }
+
+        .nav-item:hover {
+            color: var(--color-text-main);
+            border-left-color: var(--color-accent-temp);
+            background: rgba(0,0,0,0.01);
+        }
+
+        .nav-item.active {
+            color: var(--color-accent-temp);
+            font-weight: 600;
+            border-left-color: var(--color-accent-temp);
+        }
+
+        .nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0);
+            z-index: 30;
+            transition: background-color 0.3s ease;
+            pointer-events: none;
+        }
+
+        .nav-overlay.open {
+            background-color: rgba(0, 0, 0, 0.3);
+            pointer-events: auto;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .dot-active { 
+            background-color: var(--color-text-main); 
+            width: 6px;
+            height: 6px;
+        }
+        .dot-inactive { 
+            background-color: var(--color-border); 
+            width: 4px;
+            height: 4px;
+        }
+
+        @media (max-width: 1320px) {
+            .slide-deck { transform: scale(0.9); }
+        }
+        @media (max-width: 1150px) {
+            .slide-deck { transform: scale(0.8); }
+        }
+        @media (max-width: 980px) {
+            .slide-deck { transform: scale(0.7); }
+        }
+        @media (max-width: 768px) {
+            .presentation-viewport { padding: 10px; height: auto; }
+            .slide-deck { aspect-ratio: auto; height: 560px; transform: none; }
+            .slide { padding: 32px 24px; }
+            h1 { font-size: 1.5rem; }
+            .main-text, .minimal-list li { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-btn" id="hamburgerBtn" title="目次を開く">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Navigation Sidebar -->
+    <div class="nav-sidebar" id="navSidebar">
+        <div class="nav-sidebar-content">
+            <div class="nav-sidebar-title">講義スライド一覧</div>
+            <div id="navMenu"></div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <div class="presentation-viewport">
+        <div class="slide-deck" id="deck">
+
+            <!-- Slide 1: コーディング・ワークフローの導入 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Code Philosophy</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Weekly Philosophy</h2>
+                    <h1 class="font-serif text-main mb-4">コーディング・ワークフローの作法<br><span class="highlight">「反復動作を整え、生産性を解き放つ」</span></h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-4">
+                            <p class="main-text text-xs text-muted leading-relaxed">
+                                プログラミングを行う際、私たちは同じ一連の動作を1日に何十回、何百回と繰り返しています。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                コードの保存、ブラウザの更新、コンソールの確認、エディタとの往復。<br>
+                                これらを<span class="highlight">「コーディング・ワークフロー」</span>と呼びます。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                自分の作業手順を少し意識して最適化するだけで、無駄なエラーやフラストレーションが劇的に減り、開発速度は飛躍的に向上します。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <!-- 幾何学的・反復動作ループの抽象SVG -->
+                            <svg viewBox="0 0 200 120" class="w-48 h-32 bg-[#F2EFEA] rounded-sm p-2">
+                                <rect x="25" y="25" width="45" height="30" rx="2" fill="none" stroke="var(--navy)" stroke-width="1.5"/>
+                                <text x="47" y="43" font-size="7" font-family="monospace" text-anchor="middle" fill="var(--navy)">Editor</text>
+                                
+                                <path d="M 75 40 L 125 40" fill="none" stroke="var(--color-accent-temp)" stroke-width="1.5" stroke-dasharray="3 2"/>
+                                <polygon points="125,37 131,40 125,43" fill="var(--color-accent-temp)"/>
+                                
+                                <rect x="130" y="25" width="45" height="30" rx="2" fill="none" stroke="var(--terracotta)" stroke-width="1.5"/>
+                                <text x="152" y="43" font-size="7" font-family="monospace" text-anchor="middle" fill="var(--terracotta)">Browser</text>
+                                
+                                <path d="M 152 60 L 152 75 L 135 75" fill="none" stroke="var(--color-accent-temp)" stroke-width="1.5"/>
+                                <rect x="65" y="65" width="70" height="25" rx="2" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="100" y="80" font-size="7" font-family="monospace" text-anchor="middle" fill="var(--navy)">Console</text>
+                                <polygon points="135,72 129,75 135,78" fill="var(--color-accent-temp)"/>
+                                
+                                <path d="M 65 77 L 47 77 L 47 60" fill="none" stroke="var(--color-accent-temp)" stroke-width="1.5"/>
+                                <polygon points="44,60 47,54 50,60" fill="var(--color-accent-temp)"/>
+                                
+                                <text x="100" y="108" font-size="6.5" font-family="sans-serif" text-anchor="middle" fill="var(--color-text-muted)">Feedback Loop Cycle</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Coding Workflow Philosophy</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 2: 画面スペースの設計（黄金の3要素） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Workspace Layout</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Screen Architecture</h2>
+                    <h1 class="font-serif text-main mb-3">画面スペースを整理し「視覚の迷子」を防ぐ</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                コーディング中、最低限同時に見えていなければならないのは<span class="highlight">「コード（エディタ）」「実行画面（ブラウザ）」「コンソール」</span>の3つです。
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1.5">
+                                <li><strong>画面の分割：</strong> ウィンドウを重なり合わせず、左右に整列配置してワンクリックで視認できるようにする</li>
+                                <li><strong>資料の確保：</strong> チュートリアルやリファレンスを迷わず参照できる領域を確保する</li>
+                                <li><strong>セカンドスクリーンの検討：</strong> 多くのプログラマーが2画面（マルチディスプレイ）で開発する理由は、この往復摩擦をゼロにするため</li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-6">
+                            <!-- 画面分割レイアウトの抽象図 -->
+                            <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                                <div class="text-[10px] font-mono text-slate-500 mb-2 border-b border-border pb-1">推奨される配置レイアウト例</div>
+                                <div class="grid grid-cols-12 gap-2 h-36 font-mono text-[9px] text-center">
+                                    <div class="col-span-7 bg-[#252423] text-slate-300 rounded-sm p-2 flex flex-col justify-center border border-slate-700">
+                                        <span class="font-bold text-white mb-1">Code Editor</span>
+                                        <span class="text-[8px] text-slate-400">エディタ画面 (左半分)</span>
+                                    </div>
+                                    <div class="col-span-5 flex flex-col gap-2">
+                                        <div class="bg-white text-navy rounded-sm p-2 flex-1 flex flex-col justify-center border border-navy">
+                                            <span class="font-bold">Output</span>
+                                            <span class="text-[8px] text-slate-500">実行結果</span>
+                                        </div>
+                                        <div class="bg-[#F2EFEA] text-terracotta rounded-sm p-1.5 h-12 flex flex-col justify-center border border-border">
+                                            <span class="font-bold">Console</span>
+                                            <span class="text-[7.5px] text-slate-500">エラー検知</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Coding Workflow Philosophy</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 3: ブラウザ管理と「起動は1回だけ」の鉄則 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Browser Discipline</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Launch Once Principle</h2>
+                    <h1 class="font-serif text-main mb-3">ブラウザを整理し「コードの起動は1回だけ」にする</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mt-2">
+                        <div class="p-4 bg-surface-2 border-2 border-terracotta rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-terracotta border-b border-border pb-1">初心者が陥る「タブ乱立」の罠</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                コードを書き換えるたびにエディタの「ライブプレビュー」ボタンを連打したり、タブを開き直していませんか？
+                            </p>
+                            <ul class="minimal-list text-slate-600 text-[10.5px] space-y-1">
+                                <li>ブラウザは大量のCPUとRAM（メモリ）を消費し、PC全体が激しく重くなる</li>
+                                <li>「古いバージョンの出力画面」を見ながら必死にデバッグしてしまう重大な混乱を招く</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-4 bg-surface-2 border-2 border-navy rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-navy border-b border-border pb-1">プロの鉄則：起動は最初の一度きり</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                ブラウザタブは<strong>「起動したら閉じない」「余計なタブは全て閉じる」</strong>が基本です。
+                            </p>
+                            <ul class="minimal-list text-slate-600 text-[10.5px] space-y-1">
+                                <li>コードを更新したら、自動リロードに任せるか「再読み込みボタン（F5 / Ctrl+R）」を1度押すだけ</li>
+                                <li>常に1つのアクティブな画面だけを見つめ、CPU負荷と混乱を根絶する</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Coding Workflow Philosophy</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 4: 編集の流儀：慎重なコピペと「検索・置換」 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Editing Tactics</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Precision Editing</h2>
+                    <h1 class="font-serif text-main mb-3">慎重なコピペと「検索・置換」の活用</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mt-2">
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-terracotta border-b border-border pb-1">コピペは「1ブロックずつ」テストする</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                大量のコードを一気にコピー＆ペーストすると、どの行でエラーが発生したのか追跡不能になります。
+                            </p>
+                            <ul class="minimal-list text-slate-600 text-[10.5px] space-y-1">
+                                <li>必ず1つの関数・1つのブロックごとに貼り付ける</li>
+                                <li>貼り付けたら直後に一度実行し、カッコ（<code>{}</code>）が対応しているか確認する</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-4 bg-surface-2 border border-navy rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-navy border-b border-border pb-1">変数名のリネームは「検索・置換」で行う</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                変数名を変えるとき、手作業で1箇所ずつ打ち直すのはタイポ（入力ミス）の最大の温床です。
+                            </p>
+                            <div class="code-preview font-mono text-[9px] leading-tight">
+                                <span class="text-[#7f8c8d]// ショートカットキーを活用</span><br>
+                                Win: Ctrl + H &nbsp;|&nbsp; Mac: Cmd + Option + F<br>
+                                <span class="text-[#98c379]">// 一括置換で綴りミスを根絶！</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Coding Workflow Philosophy</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 5: 「Undo（元に戻す）」は友達ではない -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Version Safety</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Undo Is Not Your Friend</h2>
+                    <h1 class="font-serif text-main mb-3">「Undo（元に戻す）」ボタンに依存してはならない</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                エディタの <code>Ctrl + Z</code>（元に戻す）や <code>Ctrl + Y</code>（やり直す）を、過去のバージョンを行き来するタイムマシンとして使っていませんか？
+                            </p>
+                            <div class="p-3 bg-surface-2 border border-terracotta rounded-sm text-[11px] text-slate-700 space-y-1">
+                                <span class="font-bold text-terracotta">なぜ危険なのか？</span><br>
+                                コーディング中はクラッシュや誤操作が日常茶飯事です。誤って1文字入力しただけで履歴の分岐が消え去り、数時間分のコードが一瞬で失われる事故が多発します。
+                            </div>
+                        </div>
+                        <div class="md:col-span-6">
+                            <!-- 壊れるアンドゥ履歴の抽象図 -->
+                            <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm space-y-3 text-center">
+                                <div class="font-mono text-[10px] text-navy font-bold border-b border-border pb-1">アンドゥ履歴の断絶リスク</div>
+                                <svg viewBox="0 0 200 65" class="w-full h-16 bg-[#F2EFEA] rounded-sm p-1">
+                                    <circle cx="30" cy="32" r="8" fill="var(--navy)"/>
+                                    <line x1="38" y1="32" x2="65" y2="32" stroke="var(--navy)" stroke-width="1.5"/>
+                                    <circle cx="75" cy="32" r="8" fill="var(--navy)"/>
+                                    <line x1="83" y1="32" x2="110" y2="32" stroke="var(--navy)" stroke-width="1.5"/>
+                                    <circle cx="120" cy="32" r="8" fill="var(--navy)"/>
+                                    <path d="M 128 32 L 155 32" stroke="var(--terracotta)" stroke-width="1.5" stroke-dasharray="3 2"/>
+                                    <line x1="145" y1="22" x2="165" y2="42" stroke="var(--terracotta)" stroke-width="2"/>
+                                    <line x1="165" y1="22" x2="145" y2="42" stroke="var(--terracotta)" stroke-width="2"/>
+                                    <text x="160" y="55" font-size="7" font-family="monospace" fill="var(--terracotta)">Lost History</text>
+                                </svg>
+                                <p class="text-[10px] text-slate-600 leading-relaxed text-left">
+                                    大きな変更を加えるときは、アンドゥに頼らず<strong>「ファイルを別名で複製（ドラフト保存）」</strong>するのが鉄則です。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Coding Workflow Philosophy</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 6: ファイル命名と世代管理の作法 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Naming &amp; Versions</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Sensible File Naming</h2>
+                    <h1 class="font-serif text-main mb-3">「final_new_v2」の悲劇を防ぐ命名規則</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mt-2">
+                        <div class="p-4 bg-surface-2 border-2 border-terracotta rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-terracotta border-b border-border pb-1">やってはいけない命名パターン</p>
+                            <div class="code-preview font-mono text-[9px] leading-relaxed text-red-300">
+                                sketch_new.js<br>
+                                sketch_final.js<br>
+                                sketch_final_new.js<br>
+                                sketch_draft_final_old_v2.js
+                            </div>
+                            <p class="text-slate-600 text-[10.5px] leading-relaxed">
+                                どれが最新で、どこで動いていたのか誰にも分からなくなり、最終的に動かない過去コードを提出する悲劇を生みます。
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-surface-2 border-2 border-navy rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-navy border-b border-border pb-1">推奨される世代管理の型</p>
+                            <div class="code-preview font-mono text-[9px] leading-relaxed text-green-300">
+                                project_v01/<br>
+                                project_v02_jump_added/<br>
+                                project_v03_collision_fixed/
+                            </div>
+                            <ul class="minimal-list text-slate-600 text-[10.5px] space-y-1">
+                                <li>プロジェクトごとに独立した親フォルダを用意する</li>
+                                <li>連番（v01, v02...）と簡単な変更内容を付与して保存する</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Coding Workflow Philosophy</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 7: ストレージの75%ルールと作業環境の整頓 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">System Hygiene</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Storage &amp; Desktop Hygiene</h2>
+                    <h1 class="font-serif text-main mb-3">ストレージの「75%ルール」とデスクトップの整頓</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mt-2">
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-navy border-b border-border pb-1">ハードディスクの「75%ルール」</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                ストレージの使用量が75%を超えると、OSのスワップ処理が滞り、PCの動作速度が急激に低下し始めます。
+                            </p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                <span class="highlight">重いマシンで快適なコーディングは絶対にできません。</span>定期的に不要な大容量ファイルやキャッシュを削除しましょう。
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-terracotta border-b border-border pb-1">散らかったデスクトップの解決法</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                デスクトップが一面のアイコンで埋め尽くされている状態は思考のノイズです。
+                            </p>
+                            <ul class="minimal-list text-slate-600 text-[10.5px] space-y-1">
+                                <li><strong>NG：</strong> 全ファイルを「デスクトップ整理」フォルダに丸ごと放り込むだけ（問題の先送りにすぎない）</li>
+                                <li><strong>正解：</strong> 古すぎる過去ドラフトは思い切って削除し、直近2〜3バージョンだけを残して体系的に分類する</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Coding Workflow Philosophy</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 8: まとめと今週のマントラ -->
+            <section class="slide text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Summary &amp; Mantra</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content max-w-2xl py-4">
+                    <h2>Summary &amp; Habit</h2>
+                    <h1 class="font-serif text-main mb-4">優れたワークフローこそ最高の生産性</h1>
+                    
+                    <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-left text-xs space-y-1.5 max-w-md mx-auto mb-4">
+                        <p class="font-bold text-navy border-b border-border pb-1">ワークフロー改善チェックリスト</p>
+                        <ul class="minimal-list">
+                            <li><strong>画面配置：</strong> エディタ・プレビュー・コンソールが常に見えているか</li>
+                            <li><strong>ブラウザ：</strong> タブを乱立させず、起動は最初の一度きりにしているか</li>
+                            <li><strong>編集作法：</strong> コピペは小分けにし、変数リネームは「置換」で行っているか</li>
+                            <li><strong>安全管理：</strong> Undoに頼らず、大きな変更前にフォルダごと複製しているか</li>
+                            <li><strong>環境保全：</strong> ストレージ空き容量を保ち、デスクトップを整頓しているか</li>
+                        </ul>
+                    </div>
+
+                    <div class="p-4 bg-surface-1 border border-border rounded-sm shadow-sm text-center max-w-md mx-auto mb-3">
+                        <p class="text-[10px] font-mono text-light uppercase tracking-widest mb-1">This Week's Mantra</p>
+                        <p class="font-serif text-lg font-bold text-terracotta leading-relaxed">
+                            "Always code with a good workflow."
+                        </p>
+                        <p class="text-[11px] text-slate-600 mt-1">
+                            （常に優れたワークフローでコードを書こう）
+                        </p>
+                    </div>
+
+                    <p class="text-[11px] text-slate-500 italic">
+                        作業中の小さな無駄を見直し、快適で淀みのないコーディング環境を育てていきましょう。
+                    </p>
+                </div>
+                <div class="slide-footer">
+                    <span>Coding Workflow Philosophy</span><span class="page-num"></span>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Minimalist Navigation Controls Footer overlay inside the slide deck -->
+    <div class="absolute bottom-6 left-10 right-10 flex justify-between items-center pointer-events-auto z-30">
+        <div class="flex gap-6">
+            <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
+            </button>
+            <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
+            </button>
+        </div>
+
+        <!-- Dynamic Step Indicators Container -->
+        <div class="flex gap-1.5 overflow-x-auto max-w-xs justify-center px-2 no-scrollbar" id="dots-container"></div>
+    </div>
+
+    <!-- Script for interactive presentation features -->
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsContainer = document.getElementById('dots-container');
+        const pageNumDisplays = document.querySelectorAll('.page-num');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const navSidebar = document.getElementById('navSidebar');
+        const navOverlay = document.getElementById('navOverlay');
+        const navMenu = document.getElementById('navMenu');
+        
+        let currentSlide = 0;
+        let indicators = [];
+
+        slides.forEach((_, index) => {
+            const dot = document.createElement('span');
+            dot.className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 ' + (index === 0 ? 'dot-active' : 'dot-inactive');
+            dotsContainer.appendChild(dot);
+            indicators.push(dot);
+            
+            if(pageNumDisplays[index]) {
+                pageNumDisplays[index].textContent = `Slide ${index + 1} / ${slides.length}`;
+            }
+
+            const title = slides[index].querySelector('h1')?.innerText.replace(/\n/g, ' ') || `Slide ${index + 1}`;
+            const navItem = document.createElement('div');
+            navItem.className = `nav-item ${index === 0 ? 'active' : ''}`;
+            navItem.textContent = `${index + 1}. ${title}`;
+            navItem.onclick = () => { updateSlide(index); closeSidebar(); };
+            navMenu.appendChild(navItem);
+        });
+
+        function updateSlide(index) {
+            // Strict boundary guard - prevent looping back to start or past end
+            if (index < 0) {
+                currentSlide = 0;
+                return;
+            }
+            if (index >= slides.length) {
+                currentSlide = slides.length - 1;
+                return;
+            }
+
+            slides[currentSlide].classList.remove('active');
+            indicators[currentSlide].className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 bg-gray-300';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.remove('active');
+
+            currentSlide = index;
+            
+            slides[currentSlide].classList.add('active');
+            indicators[currentSlide].className = 'w-1.5 h-1.5 rounded-full transition-all duration-300 bg-black';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.add('active');
+
+            prevBtn.style.opacity = currentSlide === 0 ? '0.2' : '1';
+            prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+            nextBtn.style.opacity = currentSlide === slides.length - 1 ? '0.2' : '1';
+            nextBtn.style.pointerEvents = currentSlide === slides.length - 1 ? 'none' : 'auto';
+        }
+
+        function closeSidebar() {
+            navSidebar.classList.remove('open');
+            navOverlay.classList.remove('open');
+            hamburgerBtn.classList.remove('active');
+        }
+
+        hamburgerBtn.onclick = () => {
+            hamburgerBtn.classList.toggle('active');
+            navSidebar.classList.toggle('open');
+            navOverlay.classList.toggle('open');
+        };
+        navOverlay.onclick = closeSidebar;
+
+        prevBtn.onclick = () => updateSlide(currentSlide - 1);
+        nextBtn.onclick = () => updateSlide(currentSlide + 1);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                updateSlide(currentSlide - 1);
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                updateSlide(currentSlide + 1);
+            }
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const deck = document.getElementById('deck');
+        deck.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        deck.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                updateSlide(currentSlide + 1);
+            }
+            if (touchEndX > touchStartX + 50) {
+                updateSlide(currentSlide - 1);
+            }
+        }
+
+        updateSlide(0);
+    </script>
+</body>
+</html>

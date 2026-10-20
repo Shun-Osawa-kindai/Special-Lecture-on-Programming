@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>講義スライド：配列走査と二重ループの落とし穴 (p5.js)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --color-bg-outer: #D1CFCA;      
+            --color-bg-slide:  #F7F6F4;     
+            --color-surface-1: #F2EFEA;    
+            --color-surface-2: #FFFFFF;    
+            --color-border: #DDDAD5;       
+            --color-text-main: #222222;    
+            --color-text-muted: #555555;   
+            --color-text-light: #999999;   
+            --color-accent-temp: #8C7A6B;  
+            --navy: #344D61;               
+            --terracotta: #994F60;         
+            --gold-muted: #C4B298;         
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--color-bg-outer);
+            color: var(--color-text-main);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+        }
+
+        h1, h2, h3, .font-serif {
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-weight: 400;
+        }
+
+        .presentation-viewport {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .slide-deck {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--color-bg-slide);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            padding: 5% 7% 7% 7%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transform: translateY(10px);
+            background: var(--color-bg-slide);
+            overflow-y: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        h1 {
+            color: var(--color-text-main);
+            font-size: 1.85rem; 
+            font-weight: 400;
+            line-height: 1.4;
+            margin-bottom: 1.25rem;
+            letter-spacing: 0.05em;
+        }
+
+        h2 {
+            color: var(--color-accent-temp);
+            font-size: 0.65rem; 
+            font-weight: 500;
+            letter-spacing: 0.4em;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .main-text {
+            font-size: 1.05rem; 
+            line-height: 1.8;
+            color: var(--color-text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        .highlight {
+            background: linear-gradient(transparent 70%, #E2DDD5 70%);
+            font-weight: 500;
+            padding: 0 0.15em;
+        }
+
+        code {
+            background: var(--color-surface-1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 2px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--terracotta);
+            font-weight: bold;
+            font-size: 0.85em;
+            border: 1px solid var(--color-border);
+        }
+
+        .code-preview {
+            background: #252423;
+            color: #E2DDD5;
+            padding: 0.85rem;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            border: 1px solid #3A3835;
+        }
+
+        .minimal-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .minimal-list li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.6rem;
+            font-size: 0.95rem; 
+            color: var(--color-text-muted);
+            display: block;
+            line-height: 1.6;
+        }
+        .minimal-list li::before {
+            content: "・";
+            position: absolute;
+            left: 0;
+            color: var(--color-accent-temp);
+            font-weight: bold;
+        }
+
+        .slide-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: var(--color-text-light);
+            border-top: 1px solid var(--color-border);
+            padding-top: 0.75rem;
+            margin-top: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .nav-btn {
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            color: var(--color-text-main);
+            opacity: 1 !important;
+        }
+
+        .hamburger-btn {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            z-index: 50;
+            background: rgba(247, 246, 244, 0.9);
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 0;
+            width: 48px;
+            height: 48px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+
+        .hamburger-btn:hover {
+            background: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .hamburger-btn span {
+            width: 18px;
+            height: 2px;
+            background-color: var(--color-text-main);
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+
+        .nav-sidebar {
+            position: fixed;
+            left: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background-color: var(--color-bg-slide);
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
+            z-index: 40;
+            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            border-right: 1px solid var(--color-border);
+        }
+
+        .nav-sidebar.open {
+            left: 0;
+        }
+
+        .nav-sidebar-content {
+            padding: 100px 24px 40px 24px;
+        }
+
+        .nav-sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--color-text-light);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .nav-item {
+            padding: 10px 0;
+            font-size: 12px;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            padding-left: 12px;
+            line-height: 1.4;
+        }
+
+        .nav-item:hover {
+            color: var(--color-text-main);
+            border-left-color: var(--color-accent-temp);
+            background: rgba(0,0,0,0.01);
+        }
+
+        .nav-item.active {
+            color: var(--color-accent-temp);
+            font-weight: 600;
+            border-left-color: var(--color-accent-temp);
+        }
+
+        .nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0);
+            z-index: 30;
+            transition: background-color 0.3s ease;
+            pointer-events: none;
+        }
+
+        .nav-overlay.open {
+            background-color: rgba(0, 0, 0, 0.3);
+            pointer-events: auto;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .dot-active { 
+            background-color: var(--color-text-main); 
+            width: 6px;
+            height: 6px;
+        }
+        .dot-inactive { 
+            background-color: var(--color-border); 
+            width: 4px;
+            height: 4px;
+        }
+
+        @media (max-width: 1320px) {
+            .slide-deck { transform: scale(0.9); }
+        }
+        @media (max-width: 1150px) {
+            .slide-deck { transform: scale(0.8); }
+        }
+        @media (max-width: 980px) {
+            .slide-deck { transform: scale(0.7); }
+        }
+        @media (max-width: 768px) {
+            .presentation-viewport { padding: 10px; height: auto; }
+            .slide-deck { aspect-ratio: auto; height: 560px; transform: none; }
+            .slide { padding: 32px 24px; }
+            h1 { font-size: 1.5rem; }
+            .main-text, .minimal-list li { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-btn" id="hamburgerBtn" title="目次を開く">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Navigation Sidebar -->
+    <div class="nav-sidebar" id="navSidebar">
+        <div class="nav-sidebar-content">
+            <div class="nav-sidebar-title">講義スライド一覧</div>
+            <div id="navMenu"></div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <div class="presentation-viewport">
+        <div class="slide-deck" id="deck">
+
+            <!-- Slide 1: イントロダクション：走査とネストループの典型トラブル -->
+            <section class="slide active">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Troubleshooting Core</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Common Pitfalls &amp; Traps</h2>
+                    <h1 class="font-serif text-main mb-4">配列走査と二重ループの落とし穴<br><span class="highlight">「境界の逸脱と無限ループの回避」</span></h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-4">
+                            <p class="main-text text-xs text-muted leading-relaxed">
+                                配列のデータを順番に読み取る「データ走査（Traversal）」や、グリッドを描く「二重forループ」では、初学者が必ず直面する特有のエラーが存在します。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                配列外へのアクセスによる <span class="highlight"><code>undefined</code> エラー</span>、変数の書き換え忘れによるブラウザフリーズ、そしてカッコの対応ズレまで、原因の究明法と安全な実装パターンを学びます。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <!-- 抽象図解: インデックス逸脱とループの衝突 -->
+                            <svg viewBox="0 0 200 120" class="w-48 h-32 bg-[#F2EFEA] rounded-sm p-2">
+                                <rect x="20" y="30" width="24" height="24" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <rect x="48" y="30" width="24" height="24" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <rect x="76" y="30" width="24" height="24" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <rect x="104" y="30" width="24" height="24" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <rect x="132" y="30" width="24" height="24" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <rect x="160" y="30" width="24" height="24" fill="none" stroke="var(--terracotta)" stroke-width="1.5" stroke-dasharray="2 2"/>
+                                
+                                <text x="32" y="46" font-size="8" font-family="monospace" text-anchor="middle" fill="var(--navy)">0</text>
+                                <text x="60" y="46" font-size="8" font-family="monospace" text-anchor="middle" fill="var(--navy)">1</text>
+                                <text x="88" y="46" font-size="8" font-family="monospace" text-anchor="middle" fill="var(--navy)">2</text>
+                                <text x="116" y="46" font-size="8" font-family="monospace" text-anchor="middle" fill="var(--navy)">3</text>
+                                <text x="144" y="46" font-size="8" font-family="monospace" text-anchor="middle" fill="var(--navy)">4</text>
+                                <text x="172" y="46" font-size="8" font-family="monospace" text-anchor="middle" fill="var(--terracotta)">5!?</text>
+
+                                <path d="M 144 65 L 172 65" stroke="var(--terracotta)" stroke-width="1.5" stroke-dasharray="2 2"/>
+                                <polygon points="172,62 178,65 172,68" fill="var(--terracotta)"/>
+                                <text x="100" y="105" font-size="7" font-family="monospace" text-anchor="middle" fill="var(--color-text-muted)">Array Bounds &amp; Scope Overflow</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Array Traversal &amp; Nested Loops</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 2: 配列走査の罠①：末尾超過による undefined -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Traversal Pitfall 01</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Out of Bounds</h2>
+                    <h1 class="font-serif text-main mb-3">クリックで色を変える処理で起きる突然のエラー</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                クリックのたびに <code>currentIndex++</code> して配列 <code>colours</code> の色を切り替えるプログラムを考えます。
+                            </p>
+                            <div class="p-3 bg-surface-2 border border-terracotta rounded-sm text-[10.5px] text-slate-700 space-y-1">
+                                <span class="font-bold text-terracotta">エラーの発生：</span><br>
+                                最後の色（cyan等）を過ぎた瞬間にプログラムが停止し、コンソールに次のエラーが出力されます。<br>
+                                <code>Uncaught Error: ... is not a valid color</code>
+                            </div>
+                            <p class="text-[11px] text-slate-600">
+                                ➔ 存在しないインデックスへアクセスしたため、値が <span class="highlight"><code>undefined</code></span> に化けてしまいました。
+                            </p>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9px] leading-relaxed shadow-sm">
+                                <span class="text-[#c678dd]">var</span> colours = [<span class="text-[#98c379]">"red"</span>, <span class="text-[#98c379]">"green"</span>, <span class="text-[#98c379]">"blue"</span>, <span class="text-[#98c379]">"yellow"</span>, <span class="text-[#98c379]">"purple"</span>, <span class="text-[#98c379]">"cyan"</span>];<br>
+                                <span class="text-[#c678dd]">var</span> currentIndex = <span class="text-[#d19a66]">0</span>;<br><br>
+                                <span class="text-[#c678dd]">function</span> <span class="text-[#61afef]">draw</span>() {<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">fill</span>(colours[currentIndex]); <span class="text-[#7f8c8d]// 6番目で停止！</span><br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">rect</span>(<span class="text-[#d19a66]">100, 100, 200, 200</span>);<br>
+                                }<br><br>
+                                <span class="text-[#c678dd]">function</span> <span class="text-[#61afef]">mousePressed</span>() {<br>
+                                &nbsp;&nbsp;currentIndex++; <span class="text-[#e06c75]">// 限界を超えて増加し続ける</span><br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Array Traversal &amp; Nested Loops</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 3: length と length - 1 の境界のズレ -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Boundary Logic</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Index vs. Length</h2>
+                    <h1 class="font-serif text-main mb-3"><code>colours.length</code> と <code>length - 1</code> の決定的な違い</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mt-2">
+                        <div class="p-4 bg-surface-2 border-2 border-terracotta rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-terracotta border-b border-border pb-1">失敗例：length で直接リセット判定</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                要素が6個ある配列のインデックスは <code>0, 1, 2, 3, 4, 5</code> です。
+                            </p>
+                            <div class="code-preview font-mono text-[9px]">
+                                <span class="text-[#c678dd]">if</span> (currentIndex == colours.<span class="text-[#e06c75]">length</span>) {<br>
+                                &nbsp;&nbsp;currentIndex = <span class="text-[#d19a66]">0</span>;<br>
+                                }
+                            </div>
+                            <p class="text-slate-600 leading-relaxed text-[10.5px]">
+                                <code>currentIndex</code> が <code>6</code> に到達したフレームで描画（<code>draw</code>）が先に走り、未定義エラーでクラッシュしてしまいます。
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-surface-2 border-2 border-navy rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-navy border-b border-border pb-1">成功例：末尾インデックス（length - 1）で判定</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                最後の有効要素 <code>length - 1</code>（インデックス 5）に達した瞬間に、次のクリックで <code>0</code> へ巻き戻します。
+                            </p>
+                            <div class="code-preview font-mono text-[9px]">
+                                <span class="text-[#c678dd]">if</span> (currentIndex == colours.<span class="text-[#98c379]">length - 1</span>) {<br>
+                                &nbsp;&nbsp;currentIndex = <span class="text-[#d19a66]">0</span>;<br>
+                                } <span class="text-[#c678dd]">else</span> {<br>
+                                &nbsp;&nbsp;currentIndex++;<br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Array Traversal &amp; Nested Loops</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 4: 循環トラバーサル（モジュロ演算子によるスマート解法） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Modulo Reset Technique</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Cyclic Traversal</h2>
+                    <h1 class="font-serif text-main mb-3">モジュロ演算子（<code>%</code>）による美しい循環制御</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                <code>if / else</code> の条件判定を使わずに、余りを求めるモジュロ演算子（<code>%</code>）を使うと、たった1行で完璧なループバックを実現できます。
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1">
+                                <li><code>(currentIndex + 1) % colours.length</code></li>
+                                <li>0 ➔ 1 ➔ 2 ➔ 3 ➔ 4 ➔ 5 と進み、6で割った余りは再び <code>0</code> に戻る</li>
+                                <li>配列の要素数が増減してもコードを書き換える必要がない</li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9.5px] leading-relaxed shadow-sm">
+                                <div class="flex justify-between items-center text-[10px] text-slate-400 mb-1 pb-1 border-b border-[#3A3835]">
+                                    <span>モジュロによる循環</span>
+                                    <button onclick="copyCode(this, 'let currentIndex = 0;\nconst colours = [\"赤\", \"青\", \"黄\", \"緑\", \"紫\", \"橙\"]; // 長さは 6\n\nfunction mousePressed() {\n  console.log(colours[currentIndex]);\n  currentIndex = (currentIndex + 1) % colours.length;\n}')" class="hover:text-white transition-colors cursor-pointer flex items-center gap-1">
+                                        <i class="fa-regular fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <span class="text-[#c678dd]">let</span> currentIndex = <span class="text-[#d19a66]">0</span>;<br>
+                                <span class="text-[#c678dd]">const</span> colours = [<span class="text-[#98c379]">"赤"</span>, <span class="text-[#98c379]">"青"</span>, <span class="text-[#98c379]">"黄"</span>, <span class="text-[#98c379]">"緑"</span>, <span class="text-[#98c379]">"紫"</span>, <span class="text-[#98c379]">"橙"</span>]; <span class="text-[#7f8c8d]">// 長さは 6</span><br><br>
+                                <span class="text-[#c678dd]">function</span> <span class="text-[#61afef]">mousePressed</span>() {<br>
+                                &nbsp;&nbsp;<span class="text-[#7f8c8d]">// 現在の色を表示（初回クリックは先頭要素）</span><br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">console</span>.<span class="text-[#61afef]">log</span>(colours[currentIndex]);<br>
+                                &nbsp;&nbsp;<span class="text-[#7f8c8d]">// 1行で配列末尾から先頭へ自動ループ</span><br>
+                                &nbsp;&nbsp;currentIndex = (currentIndex + <span class="text-[#d19a66]">1</span>) % colours.<span class="text-[#61afef]">length</span>;<br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Array Traversal &amp; Nested Loops</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 5: 二重forループの罠①：インデックス変数の書き換え忘れ -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Nested Loop Pitfall 01</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Variable Collision</h2>
+                    <h1 class="font-serif text-main mb-3">コピペ時に起きる「<code>i</code> から <code>j</code> への変更漏れ」</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                外側のループ（行: <code>i</code>）をコピーして内側のループ（列: <code>j</code>）を作るとき、3つの構成要素のうち1つだけ書き換えを忘れてしまう事故が頻発します。
+                            </p>
+                            <div class="p-3 bg-surface-2 border border-terracotta rounded-sm text-[11px] text-slate-700 space-y-1">
+                                <span class="font-bold text-terracotta">危険な記述パターン：</span><br>
+                                <code>for (var j = 0; j &lt; height; i++)</code><br>
+                                ➔ <code>j</code> を進めるはずが、外側のカウンタ <code>i</code> を増やしてしまっている！
+                            </div>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9px] leading-relaxed shadow-sm">
+                                <span class="text-[#7f8c8d]// 致命的なバグ：後処理だけ i++ のまま</span><br>
+                                <span class="text-[#c678dd]">for</span> (<span class="text-[#c678dd]">var</span> i = <span class="text-[#d19a66]">0</span>; i &lt; width; i++) {<br>
+                                &nbsp;&nbsp;<span class="text-[#c678dd]">for</span> (<span class="text-[#c678dd]">var</span> j = <span class="text-[#d19a66]">0</span>; j &lt; height; <span class="text-[#e06c75] font-bold">i++</span>) { <span class="text-[#7f8c8d]// ★ここが i のまま！</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#61afef]">rect</span>(i * cellWidth, j * cellHeight, cellWidth, cellHeight);<br>
+                                &nbsp;&nbsp;}<br>
+                                }<br>
+                                <span class="text-[#e06c75]">// => j は永遠に 0 のまま増えず無限ループに！</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Array Traversal &amp; Nested Loops</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 6: 無限ループの物理的恐怖とブラウザフリーズ -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Freeze &amp; Hardware Crash</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Browser Freezing</h2>
+                    <h1 class="font-serif text-main mb-3">ファンが唸り声をあげ、インスペクタすら開けない</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mt-2">
+                        <div class="p-4 bg-surface-2 border-2 border-terracotta rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-terracotta border-b border-border pb-1">なぜブラウザが完全停止するのか？</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                JavaScriptはシングルスレッドで動作するため、無限ループに入るとCPUを100%占有してしまいます。
+                            </p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                画面の描画更新はもちろん、F12キーや右クリックによる開発者ツール（デベロッパーツール）の起動すら一切受け付けなくなります。
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-surface-2 border-2 border-navy rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-navy border-b border-border pb-1">安全な対処プロトコル</p>
+                            <ul class="minimal-list text-slate-600 text-[11px] space-y-1">
+                                <li><strong>1. タブを強制終了：</strong> ブラウザのタスクマネージャ等で該当タブを閉じる。</li>
+                                <li><strong>2. エディタを確認：</strong> 内側ループの変数（初期化・条件・後処理）がすべて <code>j</code> に統一されているか凝視する。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Array Traversal &amp; Nested Loops</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 7: 二重forループの罠②：波括弧の閉じ忘れとインデント -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Brace Nesting &amp; Indentation</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Matching Braces</h2>
+                    <h1 class="font-serif text-main mb-3">波括弧 <code>{}</code> の閉じ忘れとインデント（字下げ）</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                ループの中にループを入れると、末尾に波括弧が <code>}}</code> と2つ連続して並びます。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                どちらか片方を閉じ忘れると、コードが長くなったときに「どの関数がどこで終わっているのか」見失い、原因不明のエラーに何時間も悩まされることになります。
+                            </p>
+                            <div class="p-3 bg-surface-2 border border-border rounded-sm text-[11px] text-slate-700">
+                                <strong>対策：</strong> 内側のループを書くときは必ず「1段深くインデント」を揃え、対応するペアを目視できるように整頓しましょう。
+                            </div>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9.5px] leading-relaxed shadow-sm">
+                                <span class="text-[#c678dd]">for</span> (<span class="text-[#c678dd]">var</span> i = <span class="text-[#d19a66]">0</span>; i &lt; width; i += cellWidth) { &nbsp;<span class="text-[#7f8c8d]// ① 外側開き</span><br>
+                                &nbsp;&nbsp;<span class="text-[#c678dd]">for</span> (<span class="text-[#c678dd]">var</span> j = <span class="text-[#d19a66]">0</span>; j &lt; height; j += cellHeight) { <span class="text-[#7f8c8d]// ② 内側開き</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#61afef]">rect</span>(i, j, cellWidth, cellHeight);<br>
+                                &nbsp;&nbsp;} &nbsp;<span class="text-[#7f8c8d]// ② 内側閉じ（必須）</span><br>
+                                } &nbsp;&nbsp;&nbsp;<span class="text-[#7f8c8d]// ① 外側閉じ（必須）</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Array Traversal &amp; Nested Loops</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 8: まとめとトラブルシューティングの極意 -->
+            <section class="slide text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Summary &amp; Checkpoints</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content max-w-2xl py-4">
+                    <h2>Summary &amp; Checkpoints</h2>
+                    <h1 class="font-serif text-main mb-4">トラブルを未然に防ぐマスターの作法</h1>
+                    
+                    <p class="text-xs text-muted leading-relaxed max-w-lg mx-auto mb-6">
+                        配列走査とネストループのエラーは、仕組みさえ理解していれば恐れることはありません。
+                    </p>
+
+                    <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-left text-xs space-y-1.5 max-w-md mx-auto mb-4">
+                        <p class="font-bold text-navy border-b border-border pb-1">トラブルシューティング・チェックリスト</p>
+                        <ul class="minimal-list">
+                            <li><strong>配列の末尾：</strong> 最後のインデックスは <code>length - 1</code> であるか</li>
+                            <li><strong>リセット処理：</strong> モジュロ <code>(index + 1) % length</code> で循環させる</li>
+                            <li><strong>変数の統一：</strong> 内側ループの初期化・条件・後処理すべてが <code>j</code> になっているか</li>
+                            <li><strong>括弧の対応：</strong> ループの閉じ括弧 <code>}</code> がネストの深さ分揃っているか</li>
+                        </ul>
+                    </div>
+
+                    <p class="text-[11px] text-slate-500 italic mt-3">
+                        ゲームプロジェクトや今後の制作で予期せぬ挙動に出会ったら、まずはインデックス境界とループ変数を疑ってみましょう！
+                    </p>
+                </div>
+                <div class="slide-footer">
+                    <span>Array Traversal &amp; Nested Loops</span><span class="page-num"></span>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Minimalist Navigation Controls Footer overlay inside the slide deck -->
+    <div class="absolute bottom-6 left-10 right-10 flex justify-between items-center pointer-events-auto z-30">
+        <div class="flex gap-6">
+            <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
+            </button>
+            <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
+            </button>
+        </div>
+
+        <!-- Dynamic Step Indicators Container -->
+        <div class="flex gap-1.5 overflow-x-auto max-w-xs justify-center px-2 no-scrollbar" id="dots-container"></div>
+    </div>
+
+    <!-- Script for interactive presentation features -->
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsContainer = document.getElementById('dots-container');
+        const pageNumDisplays = document.querySelectorAll('.page-num');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const navSidebar = document.getElementById('navSidebar');
+        const navOverlay = document.getElementById('navOverlay');
+        const navMenu = document.getElementById('navMenu');
+        
+        let currentSlide = 0;
+        let indicators = [];
+
+        slides.forEach((_, index) => {
+            const dot = document.createElement('span');
+            dot.className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 ' + (index === 0 ? 'dot-active' : 'dot-inactive');
+            dotsContainer.appendChild(dot);
+            indicators.push(dot);
+            
+            if(pageNumDisplays[index]) {
+                pageNumDisplays[index].textContent = `Slide ${index + 1} / ${slides.length}`;
+            }
+
+            const title = slides[index].querySelector('h1')?.innerText.replace(/\n/g, ' ') || `Slide ${index + 1}`;
+            const navItem = document.createElement('div');
+            navItem.className = `nav-item ${index === 0 ? 'active' : ''}`;
+            navItem.textContent = `${index + 1}. ${title}`;
+            navItem.onclick = () => { updateSlide(index); closeSidebar(); };
+            navMenu.appendChild(navItem);
+        });
+
+        function updateSlide(index) {
+            // Strict boundary guard - prevent looping back to start or past end
+            if (index < 0) {
+                currentSlide = 0;
+                return;
+            }
+            if (index >= slides.length) {
+                currentSlide = slides.length - 1;
+                return;
+            }
+
+            slides[currentSlide].classList.remove('active');
+            indicators[currentSlide].className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 bg-gray-300';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.remove('active');
+
+            currentSlide = index;
+            
+            slides[currentSlide].classList.add('active');
+            indicators[currentSlide].className = 'w-1.5 h-1.5 rounded-full transition-all duration-300 bg-black';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.add('active');
+
+            prevBtn.style.opacity = currentSlide === 0 ? '0.2' : '1';
+            prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+            nextBtn.style.opacity = currentSlide === slides.length - 1 ? '0.2' : '1';
+            nextBtn.style.pointerEvents = currentSlide === slides.length - 1 ? 'none' : 'auto';
+        }
+
+        function closeSidebar() {
+            navSidebar.classList.remove('open');
+            navOverlay.classList.remove('open');
+            hamburgerBtn.classList.remove('active');
+        }
+
+        hamburgerBtn.onclick = () => {
+            hamburgerBtn.classList.toggle('active');
+            navSidebar.classList.toggle('open');
+            navOverlay.classList.toggle('open');
+        };
+        navOverlay.onclick = closeSidebar;
+
+        prevBtn.onclick = () => updateSlide(currentSlide - 1);
+        nextBtn.onclick = () => updateSlide(currentSlide + 1);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                updateSlide(currentSlide - 1);
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                updateSlide(currentSlide + 1);
+            }
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const deck = document.getElementById('deck');
+        deck.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        deck.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                updateSlide(currentSlide + 1);
+            }
+            if (touchEndX > touchStartX + 50) {
+                updateSlide(currentSlide - 1);
+            }
+        }
+
+        function copyCode(button, code) {
+            const textarea = document.createElement('textarea');
+            textarea.value = code;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                const originalContent = button.innerHTML;
+                button.innerHTML = '<i class="fa-solid fa-check text-[#8A9A86]"></i> Copied';
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                }, 2000);
+            } catch (err) {
+                console.error('Copy failed:', err);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        updateSlide(0);
+    </script>
+</body>
+</html>
