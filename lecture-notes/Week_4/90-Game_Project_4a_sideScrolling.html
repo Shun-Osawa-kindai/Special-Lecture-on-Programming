@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>講義スライド：サイドスクロールの実装 (Game Project Part 4a)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --color-bg-outer: #D1CFCA;      
+            --color-bg-slide:  #F7F6F4;     
+            --color-surface-1: #F2EFEA;    
+            --color-surface-2: #FFFFFF;    
+            --color-border: #DDDAD5;       
+            --color-text-main: #222222;    
+            --color-text-muted: #555555;   
+            --color-text-light: #999999;   
+            --color-accent-temp: #8C7A6B;  
+            --navy: #344D61;               
+            --terracotta: #994F60;         
+            --gold-muted: #C4B298;         
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--color-bg-outer);
+            color: var(--color-text-main);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+        }
+
+        h1, h2, h3, .font-serif {
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-weight: 400;
+        }
+
+        .presentation-viewport {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .slide-deck {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--color-bg-slide);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            padding: 4% 6% 64px 6%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transform: translateY(10px);
+            background: var(--color-bg-slide);
+            overflow-y: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        h1 {
+            color: var(--color-text-main);
+            font-size: 1.85rem; 
+            font-weight: 400;
+            line-height: 1.4;
+            margin-bottom: 1.25rem;
+            letter-spacing: 0.05em;
+        }
+
+        h2 {
+            color: var(--color-accent-temp);
+            font-size: 0.65rem; 
+            font-weight: 500;
+            letter-spacing: 0.4em;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .main-text {
+            font-size: 1.05rem; 
+            line-height: 1.8;
+            color: var(--color-text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        .highlight {
+            background: linear-gradient(transparent 70%, #E2DDD5 70%);
+            font-weight: 500;
+            padding: 0 0.15em;
+        }
+
+        code {
+            background: var(--color-surface-1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 2px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--terracotta);
+            font-weight: bold;
+            font-size: 0.85em;
+            border: 1px solid var(--color-border);
+        }
+
+        .code-preview {
+            background: #252423;
+            color: #E2DDD5;
+            padding: 0.85rem;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            border: 1px solid #3A3835;
+        }
+
+        .minimal-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .minimal-list li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.6rem;
+            font-size: 0.95rem; 
+            color: var(--color-text-muted);
+            display: block;
+            line-height: 1.6;
+        }
+        .minimal-list li::before {
+            content: "・";
+            position: absolute;
+            left: 0;
+            color: var(--color-accent-temp);
+            font-weight: bold;
+        }
+
+        .slide-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: var(--color-text-light);
+            border-top: 1px solid var(--color-border);
+            padding-top: 0.75rem;
+            margin-top: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .nav-btn {
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            color: var(--color-text-main);
+            opacity: 1 !important;
+        }
+
+        .hamburger-btn {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            z-index: 50;
+            background: rgba(247, 246, 244, 0.9);
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 0;
+            width: 48px;
+            height: 48px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+
+        .hamburger-btn:hover {
+            background: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .hamburger-btn span {
+            width: 18px;
+            height: 2px;
+            background-color: var(--color-text-main);
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+
+        .nav-sidebar {
+            position: fixed;
+            left: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background-color: var(--color-bg-slide);
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
+            z-index: 40;
+            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            border-right: 1px solid var(--color-border);
+        }
+
+        .nav-sidebar.open {
+            left: 0;
+        }
+
+        .nav-sidebar-content {
+            padding: 100px 24px 40px 24px;
+        }
+
+        .nav-sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--color-text-light);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .nav-item {
+            padding: 10px 0;
+            font-size: 12px;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            padding-left: 12px;
+            line-height: 1.4;
+        }
+
+        .nav-item:hover {
+            color: var(--color-text-main);
+            border-left-color: var(--color-accent-temp);
+            background: rgba(0,0,0,0.01);
+        }
+
+        .nav-item.active {
+            color: var(--color-accent-temp);
+            font-weight: 600;
+            border-left-color: var(--color-accent-temp);
+        }
+
+        .nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0);
+            z-index: 30;
+            transition: background-color 0.3s ease;
+            pointer-events: none;
+        }
+
+        .nav-overlay.open {
+            background-color: rgba(0, 0, 0, 0.3);
+            pointer-events: auto;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .dot-active { 
+            background-color: var(--color-text-main); 
+            width: 6px;
+            height: 6px;
+        }
+        .dot-inactive { 
+            background-color: var(--color-border); 
+            width: 4px;
+            height: 4px;
+        }
+
+        @media (max-width: 1320px) {
+            .slide-deck { transform: scale(0.9); }
+        }
+        @media (max-width: 1150px) {
+            .slide-deck { transform: scale(0.8); }
+        }
+        @media (max-width: 980px) {
+            .slide-deck { transform: scale(0.7); }
+        }
+        @media (max-width: 768px) {
+            .presentation-viewport { padding: 10px; height: auto; }
+            .slide-deck { aspect-ratio: auto; height: 560px; transform: none; }
+            .slide { padding: 32px 24px; }
+            h1 { font-size: 1.5rem; }
+            .main-text, .minimal-list li { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-btn" id="hamburgerBtn" title="目次を開く">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Navigation Sidebar -->
+    <div class="nav-sidebar" id="navSidebar">
+        <div class="nav-sidebar-content">
+            <div class="nav-sidebar-title">講義スライド一覧</div>
+            <div id="navMenu"></div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <div class="presentation-viewport">
+        <div class="slide-deck" id="deck">
+
+            <!-- Slide 1: サイドスクロールの概念と目的 -->
+            <section class="slide active">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Game Project Part 4a</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Expanding the Game World</h2>
+                    <h1 class="font-serif text-main mb-4">サイドスクロールの実装<br><span class="highlight">「広大な世界を旅する錯覚の構築」</span></h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-4">
+                            <p class="main-text text-xs text-muted leading-relaxed">
+                                これまでの画面は1枚のキャンバス幅（例: 800〜1024px）に制限されており、キャラクターが端へ行くと画面外に出てしまっていました。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                本ステージでは、キャラクターが一定位置に達すると静止し、代わりに<strong>背景全体が逆方向に動く</strong>ことで、プレイヤーが長大なステージを前進している錯覚（サイドスクロール効果）を生み出します。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                まずは「正面向き」のキャラクター描画コードを配置し、左右キーで動く土台から始めましょう。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <svg viewBox="0 0 200 120" class="w-48 h-32 bg-[#F2EFEA] rounded-sm p-2">
+                                <rect x="10" y="30" width="180" height="60" fill="none" stroke="var(--navy)" stroke-dasharray="3 3" stroke-width="1.2"/>
+                                <polygon points="35,65 42,45 49,65" fill="var(--color-accent-temp)"/>
+                                <polygon points="75,65 82,45 89,65" fill="var(--color-accent-temp)"/>
+                                <polygon points="150,65 157,45 164,65" fill="var(--color-accent-temp)"/>
+                                <rect x="60" y="22" width="70" height="76" fill="white" fill-opacity="0.6" stroke="var(--terracotta)" stroke-width="2"/>
+                                <circle cx="95" cy="55" r="5" fill="var(--terracotta)"/>
+                                <line x1="95" y1="60" x2="95" y2="72" stroke="var(--terracotta)" stroke-width="1.5"/>
+                                <path d="M 125 18 L 65 18" stroke="var(--navy)" stroke-width="1.5"/>
+                                <polygon points="65,15 58,18 65,21" fill="var(--navy)"/>
+                                <text x="100" y="110" font-size="7" font-family="monospace" text-anchor="middle" fill="var(--color-text-muted)">Camera Viewport &amp; Shifting World</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Side-Scrolling Mechanics</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 2: 背景オブジェクトの配列化①：木の配置 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Array Traversal: Trees</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Multiple Objects with Arrays</h2>
+                    <h1 class="font-serif text-main mb-3">背景の「木」を配列とforループで一括描画する</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                ステージ全体に多数の木を配置するため、X座標を格納する数値配列 <span class="highlight"><code>trees_x</code></span> を用意します。
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1">
+                                <li><code>setup()</code> で <code>trees_x = [100, 300, 500, 1000];</code> と初期化</li>
+                                <li><code>draw()</code> 内で <code>for (var i = 0; i &lt; trees_x.length; i++)</code> で反復</li>
+                                <li>Part 2Bの描画コード内の <code>treePos_x</code> をすべて <span class="text-terracotta font-bold"><code>trees_x[i]</code></span> に置き換える</li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9.5px] leading-relaxed shadow-sm">
+                                <div class="flex justify-between items-center text-[10px] text-slate-400 mb-1 pb-1 border-b border-[#3A3835]">
+                                    <span>trees_x 配列の巡回と描画</span>
+                                    <button onclick="copyCode(this, 'for (var i = 0; i < trees_x.length; i++) {\n  fill(120, 80, 40);\n  rect(trees_x[i], treePos_y, 30, 150);\n  fill(0, 155, 0);\n  triangle(trees_x[i] - 50, treePos_y + 50, trees_x[i] + 15, treePos_y - 50, trees_x[i] + 80, treePos_y + 50);\n}')" class="hover:text-white transition-colors cursor-pointer flex items-center gap-1">
+                                        <i class="fa-regular fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <span class="text-[#7f8c8d]">// setup() 内</span><br>
+                                <span class="text-[#e06c75]">trees_x</span> = [<span class="text-[#d19a66]">100, 300, 500, 1000</span>];<br><br>
+                                <span class="text-[#7f8c8d] // draw() 内のループ描画</span><br>
+                                <span class="text-[#c678dd]">for</span> (<span class="text-[#c678dd]">var</span> i = <span class="text-[#d19a66]">0</span>; i &lt; <span class="text-[#e06c75]">trees_x</span>.<span class="text-[#e06c75]">length</span>; i++) {<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">fill</span>(<span class="text-[#d19a66]">120, 80, 40</span>);<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">rect</span>(<span class="text-[#e06c75]">trees_x[i]</span>, treePos_y, <span class="text-[#d19a66]">30, 150</span>);<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">fill</span>(<span class="text-[#d19a66]">0, 155, 0</span>);<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">triangle</span>(<span class="text-[#e06c75]">trees_x[i]</span> - <span class="text-[#d19a66]">50</span>, treePos_y + <span class="text-[#d19a66]">50</span>, ...);<br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Side-Scrolling Mechanics</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 3: 背景オブジェクトの配列化②：オブジェクト配列（雲） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Array of Objects: Clouds</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Objects inside Arrays</h2>
+                    <h1 class="font-serif text-main mb-3">オブジェクト配列による「雲」の管理</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                「雲」はX座標だけでなくY座標（高さ）も個別に変えたいため、<strong>オブジェクトを要素に持つ配列</strong>にします。
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1">
+                                <li><code>clouds = [{pos_x: 200, pos_y: 100}, {pos_x: 600, pos_y: 80}, ...];</code></li>
+                                <li>反復条件は <code>i &lt; clouds.length</code>（要素数分自動で回る）</li>
+                                <li>描画コードでは <span class="text-navy font-bold"><code>clouds[i].pos_x</code></span>, <span class="text-navy font-bold"><code>clouds[i].pos_y</code></span> と参照</li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="code-preview font-mono text-[9px] leading-relaxed shadow-sm">
+                                <span class="text-[#7f8c8d] // setup() 内でオブジェクトを配列に詰める</span><br>
+                                <span class="text-[#e06c75]">clouds</span> = [<br>
+                                &nbsp;&nbsp;{ pos_x: <span class="text-[#d19a66]">200</span>, pos_y: <span class="text-[#d19a66]">100</span> },<br>
+                                &nbsp;&nbsp;{ pos_x: <span class="text-[#d19a66]">600</span>, pos_y: <span class="text-[#d19a66]">80</span> },<br>
+                                &nbsp;&nbsp;{ pos_x: <span class="text-[#d19a66]">900</span>, pos_y: <span class="text-[#d19a66]">120</span> }<br>
+                                ];<br><br>
+                                <span class="text-[#7f8c8d] // draw() 内の走査</span><br>
+                                <span class="text-[#c678dd]">for</span> (<span class="text-[#c678dd]">var</span> i = <span class="text-[#d19a66]">0</span>; i &lt; <span class="text-[#e06c75]">clouds</span>.<span class="text-[#e06c75]">length</span>; i++) {<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">fill</span>(<span class="text-[#d19a66]">255</span>);<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">ellipse</span>(<span class="text-[#e06c75]">clouds[i].pos_x</span>, <span class="text-[#e06c75]">clouds[i].pos_y</span>, <span class="text-[#d19a66]">80, 50</span>);<br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Side-Scrolling Mechanics</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 4: translate() による座標空間のシフト -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Coordinate Translation</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>The translate() Function</h2>
+                    <h1 class="font-serif text-main mb-3">座標の原点を動かす：<code>translate(x, y)</code></h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mt-2">
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-navy border-b border-border pb-1">「絵筆を置く基準位置」そのものをスライドする</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                <code>translate(500, 0)</code> を呼ぶと、キャンバスの原点 <code>(0, 0)</code> が右へ 500px 移動します。
+                            </p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                以降に描くすべての図形は、自分たちの座標値を変えることなく、<strong>一斉に右へ 500px ズレて描画</strong>されます。
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-terracotta border-b border-border pb-1">⚠️ 意図しない軸ズレの注意点</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                <code>translate(500, 300)</code> のようにY軸まで動かすと、地面や雲まで沈み込んでしまいます。
+                            </p>
+                            <p class="text-[10px] text-slate-500">
+                                水平スクロールでは、Y方向は必ず <code>0</code>（固定）にして、X軸方向のみをシフトさせます。
+                            </p>
+                            <div class="code-preview font-mono text-[9.5px]">
+                                <span class="text-[#61afef]">translate</span>(scrollPos, <span class="text-[#d19a66]">0</span>);
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Side-Scrolling Mechanics</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 5: スクロール変数 scrollPos とキャラクター連動の罠 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Scrolling Paradox</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Dynamic scrollPos</h2>
+                    <h1 class="font-serif text-main mb-3">キャラクターまで流れてしまう「連動の罠」</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                スケッチにあらかじめ用意されている変数 <span class="highlight"><code>scrollPos</code></span> を使って、<code>translate(scrollPos, 0)</code> を実行します。
+                            </p>
+                            <div class="p-3 bg-surface-2 border-2 border-terracotta rounded-sm text-[11px] text-slate-700 space-y-1">
+                                <span class="font-bold text-terracotta">直面する重大な問題：</span><br>
+                                そのまま実行すると、背景オブジェクトだけでなく<strong>操作しているキャラクターまで一緒に画面端へ流れて消えてしまいます。</strong>
+                            </div>
+                            <p class="text-[11px] text-slate-600">
+                                私たちが作りたいのは、「キャラクターは画面内に留まり、背景だけが後方へ滑っていく」視覚効果です。
+                            </p>
+                        </div>
+                        <div class="md:col-span-6 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <svg viewBox="0 0 200 110" class="w-48 h-28 bg-[#F2EFEA] rounded-sm p-2">
+                                <rect x="20" y="20" width="70" height="70" fill="none" stroke="#999" stroke-width="1.2"/>
+                                <text x="55" y="15" font-size="7" font-family="monospace" text-anchor="middle" fill="#999">Screen Window</text>
+                                <circle cx="105" cy="65" r="6" fill="none" stroke="var(--terracotta)" stroke-dasharray="2 2" stroke-width="1.5"/>
+                                <text x="145" y="68" font-size="6.5" font-family="monospace" fill="var(--terracotta)">Char lost!</text>
+                                <polygon points="120,75 125,55 130,75" fill="var(--navy)"/>
+                                <polygon points="60,75 65,55 70,75" fill="var(--navy)"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Side-Scrolling Mechanics</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 6: 状態の保存と復元：push() と pop() -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Isolation: push &amp; pop</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Matrix State Isolation</h2>
+                    <h1 class="font-serif text-main mb-3">座標系を閉じ込める：<code>push()</code> と <code>pop()</code></h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mt-2">
+                        <div class="p-4 bg-surface-2 border-2 border-navy rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-navy border-b border-border pb-1">① push()：現在の座標状態を「記憶」</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                背景を描く直前に <code>push();</code> を呼びます。「現在の画面原点（シフトしていない通常状態）」をメモリに保存します。
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-surface-2 border-2 border-terracotta rounded-sm shadow-sm text-xs space-y-2">
+                            <p class="font-serif font-semibold text-terracotta border-b border-border pb-1">② pop()：記憶した座標状態に「復元」</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px]">
+                                背景を描き終えた直後に <code>pop();</code> を呼びます。シフトされた座標系を破棄し、元の原点へ一瞬で戻します。
+                            </p>
+                            <p class="text-[10px] text-slate-500">
+                                ➔ その直後に描くキャラクターは、スクロールの影響を一切受けずに定位置へ描かれます！
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Side-Scrolling Mechanics</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 7: ロストラム・カメラ（多重レイヤー撮影）のメタファー -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Visual Metaphor</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>The Rostrum Camera Metaphor</h2>
+                    <h1 class="font-serif text-main mb-3">古典アニメーションの「ロストラム・カメラ」</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                ディズニーなどの古典アニメで使われた<strong>「ロストラム・カメラ（マルチプレーン・カメラ）」</strong>をイメージしてください。
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1">
+                                <li>カメラ（画面枠）とセル画（キャラクター）は手前に固定されている</li>
+                                <li>奥にある長い背景の巻き絵（ロール紙）だけをハンドルで回して滑らせる</li>
+                                <li>カメラから覗くと、キャラクターが雄大な大地を走っている完璧な錯覚が生まれる</li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-6 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <svg viewBox="0 0 200 120" class="w-52 h-32 bg-[#F2EFEA] rounded-sm p-2">
+                                <rect x="25" y="20" width="150" height="25" rx="2" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="100" y="36" font-size="7" font-family="monospace" text-anchor="middle" fill="var(--navy)">Foreground: Character (Screen fixed)</text>
+                                <path d="M 100 47 L 100 60" stroke="var(--accent-temp)" stroke-width="1.5" stroke-dasharray="2 2"/>
+                                <rect x="15" y="62" width="170" height="35" rx="2" fill="var(--surface-1)" stroke="var(--terracotta)" stroke-width="1.5"/>
+                                <text x="100" y="78" font-size="7" font-family="monospace" text-anchor="middle" fill="var(--terracotta)">Background: Clouds, Trees, Canyons</text>
+                                <text x="100" y="90" font-size="6.5" font-family="monospace" text-anchor="middle" fill="var(--color-text-muted)">[ Shifted by translate(scrollPos, 0) ]</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Side-Scrolling Mechanics</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 8: スクロール描画ブロックの全体構造コード -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Implementation Blueprint</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Code Architecture</h2>
+                    <h1 class="font-serif text-main mb-3"><code>draw()</code> 内におけるスクロールブロックの骨格</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-12">
+                            <div class="code-preview font-mono text-[9px] leading-relaxed shadow-sm">
+                                <div class="flex justify-between items-center text-[10px] text-slate-400 mb-1 pb-1 border-b border-[#3A3835]">
+                                    <span>push(), translate(), pop() の配置順序</span>
+                                    <button onclick="copyCode(this, 'function draw() {\n  background(100, 155, 255);\n  push();\n  translate(scrollPos, 0);\n  drawClouds();\n  drawTrees();\n  pop();\n  drawGameCharacter();\n}')" class="hover:text-white transition-colors cursor-pointer flex items-center gap-1">
+                                        <i class="fa-regular fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <span class="text-[#c678dd]">function</span> <span class="text-[#61afef]">draw</span>() {<br>
+                                &nbsp;&nbsp;<span class="text-[#61afef]">background</span>(<span class="text-[#d19a66]">100, 155, 255</span>); <span class="text-[#7f8c8d]// 1. 静止する空の背景</span><br><br>
+                                &nbsp;&nbsp;<span class="text-[#e06c75] font-bold">push</span>(); &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#7f8c8d]// ★座標状態を保存</span><br>
+                                &nbsp;&nbsp;<span class="text-[#61afef] font-bold">translate</span>(<span class="text-[#e06c75]">scrollPos</span>, <span class="text-[#d19a66]">0</span>); &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#7f8c8d]// ★背景全体を scrollPos 分シフト</span><br><br>
+                                &nbsp;&nbsp;<span class="text-[#7f8c8d]// 2. スクロール空間内に描画される背景群</span><br>
+                                &nbsp;&nbsp;drawClouds(); drawTrees(); drawCanyons();<br><br>
+                                &nbsp;&nbsp;<span class="text-[#e06c75] font-bold">pop</span>(); &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#7f8c8d]// ★座標状態を復元（シフト解除）</span><br><br>
+                                &nbsp;&nbsp;<span class="text-[#7f8c8d]// 3. スクロールの影響を受けない画面固定の描画</span><br>
+                                &nbsp;&nbsp;drawGameCharacter(); &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-[#7f8c8d]// プレイヤー操作キャラクター</span><br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Side-Scrolling Mechanics</span><span class="page-num"></span>
+                </div>
+            </section>
+
+            <!-- Slide 9: まとめと今後の実装ミッション -->
+            <section class="slide text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Summary &amp; Next Stage</span>
+                    <span class="text-[9px] font-mono text-light tracking-widest page-num"></span>
+                </div>
+                <div class="slide-content max-w-2xl py-4">
+                    <h2>Summary &amp; Mission</h2>
+                    <h1 class="font-serif text-main mb-4">世界を拡張し、大冒険の舞台へ</h1>
+                    
+                    <p class="text-xs text-muted leading-relaxed max-w-lg mx-auto mb-6">
+                        配列による複数オブジェクトの描画と、<code>translate()</code>・<code>push()</code>・<code>pop()</code> の組み合わせにより、本格的な横スクロールアクションゲームの基盤が完成しました。
+                    </p>
+
+                    <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-left text-xs space-y-1.5 max-w-md mx-auto mb-4">
+                        <p class="font-bold text-navy border-b border-border pb-1">今後の実装チェックリスト</p>
+                        <ul class="minimal-list">
+                            <li><strong>山・峡谷・コイン：</strong> 配列化してスクロール空間に配置する</li>
+                            <li><strong>公式リファレンス確認：</strong> <code>translate</code>, <code>push</code>, <code>pop</code> をドキュメントで復習する</li>
+                        </ul>
+                    </div>
+
+                    <p class="text-[11px] text-slate-500 italic mt-3">
+                        背景オブジェクトをどんどん追加して、あなただけの魅力的な長大ワールドを作り上げましょう！
+                    </p>
+                </div>
+                <div class="slide-footer">
+                    <span>Side-Scrolling Mechanics</span><span class="page-num"></span>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Minimalist Navigation Controls Footer overlay inside the slide deck -->
+    <div class="absolute bottom-4 left-8 right-8 flex justify-between items-center pointer-events-auto z-30">
+        <div class="flex gap-6">
+            <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-600 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold cursor-pointer">
+                <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
+            </button>
+            <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-600 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold cursor-pointer">
+                Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
+            </button>
+        </div>
+
+        <!-- Dynamic Step Indicators Container -->
+        <div class="flex gap-1.5 overflow-x-auto max-w-xs justify-center px-2 no-scrollbar" id="dots-container"></div>
+    </div>
+
+    <!-- Script for interactive presentation features -->
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsContainer = document.getElementById('dots-container');
+        const pageNumDisplays = document.querySelectorAll('.page-num');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const navSidebar = document.getElementById('navSidebar');
+        const navOverlay = document.getElementById('navOverlay');
+        const navMenu = document.getElementById('navMenu');
+        
+        let currentSlide = 0;
+        let indicators = [];
+
+        slides.forEach((slide, index) => {
+            const dot = document.createElement('span');
+            dot.className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 ' + (index === 0 ? 'dot-active' : 'dot-inactive');
+            dotsContainer.appendChild(dot);
+            indicators.push(dot);
+            
+            if(pageNumDisplays[index]) {
+                pageNumDisplays[index].textContent = `Slide ${index + 1} / ${slides.length}`;
+            }
+
+            const title = slide.querySelector('h1')?.innerText.replace(/\n/g, ' ') || `Slide ${index + 1}`;
+            const navItem = document.createElement('div');
+            navItem.className = `nav-item ${index === 0 ? 'active' : ''}`;
+            navItem.textContent = `${index + 1}. ${title}`;
+            navItem.onclick = () => { updateSlide(index); closeSidebar(); };
+            navMenu.appendChild(navItem);
+        });
+
+        function updateSlide(index) {
+            if (index < 0) {
+                currentSlide = 0;
+                return;
+            }
+            if (index >= slides.length) {
+                currentSlide = slides.length - 1;
+                return;
+            }
+
+            slides[currentSlide].classList.remove('active');
+            indicators[currentSlide].className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 bg-gray-300';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.remove('active');
+
+            currentSlide = index;
+            
+            slides[currentSlide].classList.add('active');
+            indicators[currentSlide].className = 'w-1.5 h-1.5 rounded-full transition-all duration-300 bg-black';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.add('active');
+
+            prevBtn.style.opacity = currentSlide === 0 ? '0.2' : '1';
+            prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+            nextBtn.style.opacity = currentSlide === slides.length - 1 ? '0.2' : '1';
+            nextBtn.style.pointerEvents = currentSlide === slides.length - 1 ? 'none' : 'auto';
+        }
+
+        function closeSidebar() {
+            navSidebar.classList.remove('open');
+            navOverlay.classList.remove('open');
+            hamburgerBtn.classList.remove('active');
+        }
+
+        hamburgerBtn.onclick = () => {
+            hamburgerBtn.classList.toggle('active');
+            navSidebar.classList.toggle('open');
+            navOverlay.classList.toggle('open');
+        };
+        navOverlay.onclick = closeSidebar;
+
+        prevBtn.onclick = () => updateSlide(currentSlide - 1);
+        nextBtn.onclick = () => updateSlide(currentSlide + 1);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                updateSlide(currentSlide - 1);
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                updateSlide(currentSlide + 1);
+            }
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const deck = document.getElementById('deck');
+        deck.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        deck.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                updateSlide(currentSlide + 1);
+            }
+            if (touchEndX > touchStartX + 50) {
+                updateSlide(currentSlide - 1);
+            }
+        }
+
+        function copyCode(button, code) {
+            const textarea = document.createElement('textarea');
+            textarea.value = code;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                const originalContent = button.innerHTML;
+                button.innerHTML = '<i class="fa-solid fa-check text-[#8A9A86]"></i> Copied';
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                }, 2000);
+            } catch (err) {
+                console.error('Copy failed:', err);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        updateSlide(0);
+    </script>
+</body>
+</html>
