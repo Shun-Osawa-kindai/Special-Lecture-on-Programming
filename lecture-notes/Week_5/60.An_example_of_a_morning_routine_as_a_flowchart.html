@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>朝のルーティンのフローチャート化 (Algorithms and Data Structures Part 1)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --color-bg-outer: #D1CFCA;      
+            --color-bg-slide:  #F7F6F4;     
+            --color-surface-1: #F2EFEA;    
+            --color-surface-2: #FFFFFF;    
+            --color-border: #DDDAD5;       
+            --color-text-main: #222222;    
+            --color-text-muted: #555555;   
+            --color-text-light: #999999;   
+            --color-accent-temp: #8C7A6B;  
+            --navy: #344D61;               
+            --terracotta: #994F60;         
+            --gold-muted: #C4B298;         
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--color-bg-outer);
+            color: var(--color-text-main);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+        }
+
+        h1, h2, h3, .font-serif {
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-weight: 400;
+        }
+
+        .presentation-viewport {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .slide-deck {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--color-bg-slide);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            padding: 4.5% 6.5% 56px 6.5%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            transform: translateY(10px);
+            background: var(--color-bg-slide);
+            overflow-y: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        h1 {
+            color: var(--color-text-main);
+            font-size: 1.85rem; 
+            font-weight: 400;
+            line-height: 1.38;
+            margin-bottom: 1.1rem;
+            letter-spacing: 0.04em;
+        }
+
+        h2 {
+            color: var(--color-accent-temp);
+            font-size: 0.65rem; 
+            font-weight: 600;
+            letter-spacing: 0.35em;
+            margin-bottom: 0.45rem;
+            text-transform: uppercase;
+        }
+
+        .main-text {
+            font-size: 1.02rem; 
+            line-height: 1.75;
+            color: var(--color-text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        .highlight {
+            background: linear-gradient(transparent 70%, #E2DDD5 70%);
+            font-weight: 500;
+            padding: 0 0.15em;
+        }
+
+        code {
+            background: var(--color-surface-1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 2px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--terracotta);
+            font-weight: bold;
+            font-size: 0.88em;
+            border: 1px solid var(--color-border);
+        }
+
+        .minimal-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .minimal-list li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.55rem;
+            font-size: 0.92rem; 
+            color: var(--color-text-muted);
+            display: block;
+            line-height: 1.55;
+        }
+        .minimal-list li::before {
+            content: "・";
+            position: absolute;
+            left: 0;
+            color: var(--color-accent-temp);
+            font-weight: bold;
+        }
+
+        .slide-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: var(--color-text-light);
+            border-top: 1px solid var(--color-border);
+            padding-top: 0.65rem;
+            margin-top: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .nav-btn {
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            color: var(--color-text-main);
+            opacity: 1 !important;
+        }
+
+        .hamburger-btn {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            z-index: 50;
+            background: rgba(247, 246, 244, 0.9);
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 0;
+            width: 48px;
+            height: 48px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+
+        .hamburger-btn:hover {
+            background: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .hamburger-btn span {
+            width: 18px;
+            height: 2px;
+            background-color: var(--color-text-main);
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+
+        .nav-sidebar {
+            position: fixed;
+            left: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background-color: var(--color-bg-slide);
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
+            z-index: 40;
+            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            border-right: 1px solid var(--color-border);
+        }
+
+        .nav-sidebar.open {
+            left: 0;
+        }
+
+        .nav-sidebar-content {
+            padding: 100px 24px 40px 24px;
+        }
+
+        .nav-sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--color-text-light);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .nav-item {
+            padding: 10px 0;
+            font-size: 12px;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            padding-left: 12px;
+            line-height: 1.4;
+        }
+
+        .nav-item:hover {
+            color: var(--color-text-main);
+            border-left-color: var(--color-accent-temp);
+            background: rgba(0,0,0,0.01);
+        }
+
+        .nav-item.active {
+            color: var(--color-accent-temp);
+            font-weight: 600;
+            border-left-color: var(--color-accent-temp);
+        }
+
+        .nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0);
+            z-index: 30;
+            transition: background-color 0.3s ease;
+            pointer-events: none;
+        }
+
+        .nav-overlay.open {
+            background-color: rgba(0, 0, 0, 0.3);
+            pointer-events: auto;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .dot-active { 
+            background-color: var(--color-text-main); 
+            width: 6px;
+            height: 6px;
+        }
+        .dot-inactive { 
+            background-color: var(--color-border); 
+            width: 4px;
+            height: 4px;
+        }
+
+        @media (max-width: 1320px) {
+            .slide-deck { transform: scale(0.9); }
+        }
+        @media (max-width: 1150px) {
+            .slide-deck { transform: scale(0.8); }
+        }
+        @media (max-width: 980px) {
+            .slide-deck { transform: scale(0.7); }
+        }
+        @media (max-width: 768px) {
+            .presentation-viewport { padding: 10px; height: auto; }
+            .slide-deck { aspect-ratio: auto; height: 560px; transform: none; }
+            .slide { padding: 32px 24px; }
+            h1 { font-size: 1.5rem; }
+            .main-text, .minimal-list li { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-btn" id="hamburgerBtn" title="目次を開く">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Navigation Sidebar -->
+    <div class="nav-sidebar" id="navSidebar">
+        <div class="nav-sidebar-content">
+            <div class="nav-sidebar-title">講義スライド一覧</div>
+            <div id="navMenu"></div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <div class="presentation-viewport">
+        <div class="slide-deck" id="deck">
+
+            <!-- Slide 1: ある数学者の朝のルーティン実例 -->
+            <section class="slide active">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Morning Routine Case</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Routine As Algorithm</h2>
+                    <h1 class="font-serif text-main mb-4">ある数学者の「朝のルーティン」を図解する<br><span class="highlight">「日常の判断と反復プロセス」</span></h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-4">
+                            <p class="main-text text-xs text-muted leading-relaxed">
+                                前回の演習で扱った「朝のルーティン」のフローチャート化について、ある数学者の実例を見ていきます。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                起床から始まる行動の中には、数学の研究者ならではの<span class="highlight">「思考ループ」</span>と、日常的な<span class="highlight">「終了条件の判定」</span>が組み込まれています。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                一連の何気ない行動が、いかにアルゴリズムの制御構造と合致しているかを確認しましょう。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <!-- 抽象図解: 朝のルーティンの概略 -->
+                            <svg viewBox="0 0 180 120" class="w-44 h-28 bg-[#F2EFEA] rounded-sm p-2">
+                                <rect x="25" y="15" width="50" height="20" rx="10" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="50" y="27.5" font-size="6" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Awake</text>
+
+                                <path d="M 50 35 L 50 48" stroke="var(--navy)" stroke-width="1"/>
+                                <polygon points="48.5,48 50,51 51.5,48" fill="var(--navy)"/>
+
+                                <rect x="20" y="52" width="60" height="20" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="50" y="64.5" font-size="5.5" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Do Maths</text>
+
+                                <path d="M 80 62 L 105 62" stroke="var(--terracotta)" stroke-width="1"/>
+                                <polygon points="105,60.5 108,62 105,63.5" fill="var(--terracotta)"/>
+
+                                <rect x="110" y="52" width="60" height="20" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="140" y="64.5" font-size="5.5" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Eat Cereal</text>
+
+                                <text x="90" y="105" font-size="6" font-family="monospace" text-anchor="middle" fill="var(--color-text-muted)">Daily Activity Pipeline</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Morning Routine</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 2: パート1：目覚めと「数学ループ」 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Routine Phase 1</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Phase 1: Math Loop</h2>
+                    <h1 class="font-serif text-main mb-3">起床と「数学を解く」反復ループ</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-3">
+                        <div class="p-5 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-navy block border-b border-border pb-1">開始端子と基本処理</span>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                ルーティンの開始端子（Terminal）は「目覚める（Awake）」です。
+                            </p>
+                            <p class="text-slate-500 text-[11px] leading-relaxed">
+                                起床直後、最初の基本処理（Action）として「数学をする（Do Maths）」を実行します。簡単な問題もあれば、難解な問題もあります。
+                            </p>
+                        </div>
+
+                        <div class="p-5 bg-surface-2 border border-terracotta rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-terracotta block border-b border-border pb-1">反復判定（Decision）</span>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                数学を解きながら「まだやるべき数学はあるか？」を判定します。
+                            </p>
+                            <p class="text-slate-500 text-[11px] leading-relaxed">
+                                <span class="highlight font-semibold">Yes（まだある）：</span> 再び「数学をする」へループバック。<br>
+                                <span class="highlight font-semibold">No（もうない）：</span> 次の朝食フェーズへ進む。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Math Loop</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 3: パート2：シリアルを食べる「終了条件判定」 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Routine Phase 2</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Phase 2: Breakfast Loop</h2>
+                    <h1 class="font-serif text-main mb-3">朝食：「器が空になるまで食べる」ループ</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                数学が終わると、次の行動である「シリアルを食べる（Eat Cereal）」に移ります。
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1.5">
+                                <li><strong>基本処理（Action）：</strong> シリアルを食べ進める。</li>
+                                <li><strong>状態判定（Decision）：</strong> 「ボウル（器）は空になったか？」。</li>
+                                <li><strong>No（まだ残っている）：</strong> 食べ続ける処理へループバック。</li>
+                                <li><strong>Yes（空になった）：</strong> 食事を終え、終了端子（Finish）へ向かう。</li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <div class="p-3 font-mono text-center space-y-1.5">
+                                <span class="text-xs text-slate-400 block">Termination Condition</span>
+                                <span class="text-sm font-bold text-navy block">Bowl Empty?</span>
+                                <span class="text-[10px] text-terracotta block">No ➔ Keep Eating | Yes ➔ Finish</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Breakfast Loop</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 4: 朝のルーティンの全体フローチャート -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Complete Diagram</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Whole Flowchart</h2>
+                    <h1 class="font-serif text-main mb-2">ある数学者の朝のルーティン：全体の制御構造</h1>
+                    <div class="flex justify-center py-3 bg-surface-2 border border-border rounded-sm shadow-sm mt-1">
+                        <!-- ルーティン全体のフローチャート -->
+                        <svg viewBox="0 0 380 150" class="w-full max-w-xl h-44 bg-[#F2EFEA] rounded-sm p-2">
+                            <!-- Start: Awake -->
+                            <rect x="10" y="25" width="46" height="18" rx="9" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                            <text x="33" y="37" font-size="6" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Awake</text>
+
+                            <path d="M 56 34 L 70 34" stroke="var(--navy)" stroke-width="1"/>
+                            <polygon points="70,32.5 73,34 70,35.5" fill="var(--navy)"/>
+
+                            <!-- Action: Do Maths -->
+                            <rect x="73" y="25" width="56" height="18" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                            <text x="101" y="36.5" font-size="5.5" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Do Maths</text>
+
+                            <path d="M 129 34 L 145 34" stroke="var(--navy)" stroke-width="1"/>
+                            <polygon points="145,32.5 148,34 145,35.5" fill="var(--navy)"/>
+
+                            <!-- Decision: More Maths? -->
+                            <polygon points="185,20 222,34 185,48 148,34" fill="white" stroke="var(--terracotta)" stroke-width="1.2"/>
+                            <text x="185" y="33" font-size="5" font-family="sans-serif" text-anchor="middle" fill="var(--terracotta)">More Maths</text>
+                            <text x="185" y="39" font-size="4.5" font-family="sans-serif" text-anchor="middle" fill="var(--terracotta)">to do?</text>
+
+                            <!-- Loop Yes for Maths -->
+                            <path d="M 185 20 L 185 8 L 101 8 L 101 25" fill="none" stroke="var(--terracotta)" stroke-width="1"/>
+                            <text x="145" y="6" font-size="5" font-family="monospace" fill="var(--terracotta)">Yes</text>
+                            <polygon points="99.5,22 101,25 102.5,22" fill="var(--terracotta)"/>
+
+                            <!-- No for Maths -> Eat Cereal -->
+                            <path d="M 185 48 L 185 65" stroke="var(--navy)" stroke-width="1"/>
+                            <text x="191" y="58" font-size="5" font-family="monospace" fill="var(--navy)">No</text>
+                            <polygon points="183.5,65 185,68 186.5,65" fill="var(--navy)"/>
+
+                            <!-- Action: Eat Cereal -->
+                            <rect x="157" y="68" width="56" height="18" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                            <text x="185" y="79.5" font-size="5.5" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Eat Cereal</text>
+
+                            <path d="M 213 77 L 235 77" stroke="var(--navy)" stroke-width="1"/>
+                            <polygon points="235,75.5 238,77 235,78.5" fill="var(--navy)"/>
+
+                            <!-- Decision: Bowl Empty? -->
+                            <polygon points="275,63 312,77 275,91 238,77" fill="white" stroke="var(--terracotta)" stroke-width="1.2"/>
+                            <text x="275" y="75.5" font-size="5" font-family="sans-serif" text-anchor="middle" fill="var(--terracotta)">Cereal Bowl</text>
+                            <text x="275" y="81.5" font-size="4.5" font-family="sans-serif" text-anchor="middle" fill="var(--terracotta)">empty?</text>
+
+                            <!-- Loop No for Bowl (Keep eating) -->
+                            <path d="M 275 63 L 275 52 L 185 52 L 185 68" fill="none" stroke="var(--terracotta)" stroke-width="1"/>
+                            <text x="230" y="50" font-size="5" font-family="monospace" fill="var(--terracotta)">No</text>
+                            <polygon points="183.5,65 185,68 186.5,65" fill="var(--terracotta)"/>
+
+                            <!-- Yes for Bowl -> Finish -->
+                            <path d="M 312 77 L 330 77" stroke="var(--navy)" stroke-width="1"/>
+                            <text x="318" y="73" font-size="5" font-family="monospace" fill="var(--navy)">Yes</text>
+                            <polygon points="330,75.5 333,77 330,78.5" fill="var(--navy)"/>
+
+                            <!-- Stop: Finish -->
+                            <rect x="333" y="68" width="42" height="18" rx="9" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                            <text x="354" y="80" font-size="6" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Finish</text>
+                        </svg>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Flowchart Architecture</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 5: 日常生活に潜む「反復」と「終了条件」の共通点 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Algorithmic Thinking</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Structural Equivalence</h2>
+                    <h1 class="font-serif text-main mb-3">日常とアルゴリズムの「構造的一致」</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-3">
+                        <div class="p-5 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-navy block border-b border-border pb-1">朝のルーティン</span>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                ・「もっと数学を解くべきか？」<br>
+                                ・「ボウルが空になるまで食べ続ける」
+                            </p>
+                            <p class="text-slate-500 text-[11px] leading-relaxed">
+                                人間の日常行動も、条件が満たされるまで動作を反復するループ処理として表現できます。
+                            </p>
+                        </div>
+
+                        <div class="p-5 bg-surface-2 border border-navy rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-navy block border-b border-border pb-1">計算機アルゴリズム（ヘロンの解法）</span>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                ・「小数第n位まで一致したか？」<br>
+                                ・「精度を満たすまで平均を取り続ける」
+                            </p>
+                            <p class="text-slate-500 text-[11px] leading-relaxed">
+                                終了条件を判定しながら候補値を更新する論理構造は、人間の習慣と全く同一です。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Algorithmic Thinking</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 6: まとめ -->
+            <section class="slide text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Summary</span>
+                    <span></span>
+                </div>
+                <div class="slide-content max-w-2xl py-3">
+                    <h2>Summary</h2>
+                    <h1 class="font-serif text-main mb-4">プロセスのモデル化からプログラミングへ</h1>
+                    
+                    <div class="p-4 bg-surface-2 border border-navy rounded-sm shadow-sm text-left text-xs space-y-2 max-w-md mx-auto">
+                        <div class="border-b border-border pb-1.5">
+                            <span class="font-bold text-navy block">生活の中のアルゴリズム：</span>
+                            <span class="text-slate-600 text-[11px]">起床、問題演習、食事といった一連の行動も、明確な条件分岐とループの集合体である。</span>
+                        </div>
+                        <div class="border-t border-border pt-1.5 pb-1.5">
+                            <span class="font-bold text-navy block">終了条件の明示：</span>
+                            <span class="text-slate-600 text-[11px]">「ボウルが空か」「解くべき数学がないか」という条件判定が無限ループを防ぐ鍵となる。</span>
+                        </div>
+                        <div class="border-t border-border pt-1.5">
+                            <span class="font-bold text-terracotta block">フローチャートの汎用性：</span>
+                            <span class="text-slate-600 text-[11px]">人間の習慣から計算機プログラムの設計まで、あらゆるプロセスを同一の記法でモデル化できる。</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Summary</span><span></span>
+                </div>
+            </section>
+
+                                <!-- Minimalist Navigation Controls Footer overlay inside the slide deck -->
+                            <div class="absolute bottom-6 left-10 right-10 flex justify-between items-center pointer-events-auto z-30">
+                                <div class="flex gap-6">
+                                    <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-600 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold cursor-pointer">
+                                        <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
+                                    </button>
+                                    <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-600 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold cursor-pointer">
+                                        Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Dynamic Step Indicators Container -->
+                                <div class="flex gap-1.5 overflow-x-auto max-w-xs justify-center px-2 no-scrollbar" id="dots-container"></div>
+                            </div>
+
+        </div>
+    </div>
+
+    
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsContainer = document.getElementById('dots-container');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const navSidebar = document.getElementById('navSidebar');
+        const navOverlay = document.getElementById('navOverlay');
+        const navMenu = document.getElementById('navMenu');
+        
+        let currentSlide = 0;
+        let indicators = [];
+
+        slides.forEach((slide, index) => {
+            const dot = document.createElement('span');
+            dot.className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 ' + (index === 0 ? 'dot-active' : 'dot-inactive');
+            dotsContainer.appendChild(dot);
+            indicators.push(dot);
+
+            const title = slide.querySelector('h1')?.innerText.replace(/\n/g, ' ') || `Slide ${index + 1}`;
+            const navItem = document.createElement('div');
+            navItem.className = `nav-item ${index === 0 ? 'active' : ''}`;
+            navItem.textContent = `${index + 1}. ${title}`;
+            navItem.onclick = () => { updateSlide(index); closeSidebar(); };
+            navMenu.appendChild(navItem);
+        });
+
+        function updateSlide(index) {
+            if (index < 0) {
+                currentSlide = 0;
+                return;
+            }
+            if (index >= slides.length) {
+                currentSlide = slides.length - 1;
+                return;
+            }
+
+            slides[currentSlide].classList.remove('active');
+            indicators[currentSlide].className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 bg-gray-300';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.remove('active');
+
+            currentSlide = index;
+            
+            slides[currentSlide].classList.add('active');
+            indicators[currentSlide].className = 'w-1.5 h-1.5 rounded-full transition-all duration-300 bg-black';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.add('active');
+
+            prevBtn.style.opacity = currentSlide === 0 ? '0.2' : '1';
+            prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+            nextBtn.style.opacity = currentSlide === slides.length - 1 ? '0.2' : '1';
+            nextBtn.style.pointerEvents = currentSlide === slides.length - 1 ? 'none' : 'auto';
+        }
+
+        function closeSidebar() {
+            navSidebar.classList.remove('open');
+            navOverlay.classList.remove('open');
+            hamburgerBtn.classList.remove('active');
+        }
+
+        hamburgerBtn.onclick = () => {
+            hamburgerBtn.classList.toggle('active');
+            navSidebar.classList.toggle('open');
+            navOverlay.classList.toggle('open');
+        };
+        navOverlay.onclick = closeSidebar;
+
+        prevBtn.onclick = () => updateSlide(currentSlide - 1);
+        nextBtn.onclick = () => updateSlide(currentSlide + 1);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                updateSlide(currentSlide - 1);
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                updateSlide(currentSlide + 1);
+            }
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const deck = document.getElementById('deck');
+        deck.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        deck.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                updateSlide(currentSlide + 1);
+            }
+            if (touchEndX > touchStartX + 50) {
+                updateSlide(currentSlide - 1);
+            }
+        }
+
+        updateSlide(0);
+    </script>
+</body>
+</html>

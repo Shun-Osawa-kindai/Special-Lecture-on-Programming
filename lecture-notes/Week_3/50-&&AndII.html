@@ -576,23 +576,25 @@
                 </div>
             </section>
 
+                                <!-- Minimalist Navigation Controls Footer overlay inside the slide deck -->
+                            <div class="absolute bottom-6 left-10 right-10 flex justify-between items-center pointer-events-auto z-30">
+                                <div class="flex gap-6">
+                                    <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                                        <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
+                                    </button>
+                                    <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                                        Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Dynamic Step Indicators Container -->
+                                <div class="flex gap-1.5 overflow-x-auto max-w-xs justify-center px-2 no-scrollbar" id="dots-container"></div>
+                            </div>
+
         </div>
     </div>
 
-    <!-- Minimalist Navigation Controls Footer overlay inside the slide deck -->
-    <div class="absolute bottom-6 left-10 right-10 flex justify-between items-center pointer-events-auto z-30">
-        <div class="flex gap-6">
-            <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
-                <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
-            </button>
-            <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
-                Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
-            </button>
-        </div>
-
-        <!-- Dynamic Step Indicators Container -->
-        <div class="flex gap-1.5 overflow-x-auto max-w-xs justify-center px-2 no-scrollbar" id="dots-container"></div>
-    </div>
+    
 
     <!-- Script for interactive presentation features -->
     <script>

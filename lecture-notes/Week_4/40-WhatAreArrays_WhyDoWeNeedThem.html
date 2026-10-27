@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>講義スライド：配列（Array）の概念とデータ構造 (p5.js / JavaScript)</title>
+    <title>講義スライド：配列（Array）の概念とデータ構造（Data Structure） (p5.js / JavaScript)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -473,10 +473,10 @@
                     <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
                         <div class="md:col-span-6 space-y-3">
                             <p class="text-xs text-muted leading-relaxed">
-                                コンピュータ科学において、データ構造とは<span class="highlight">「値の集まりであり、それらの間に組織化された規則や関係性があるもの」</span>を指します。
+                                コンピュータ科学において、データ構造（Data Structure）とは<span class="highlight">「アルゴリズムが作用する対象・器」</span>を記述するものです。
                             </p>
                             <p class="text-xs text-muted leading-relaxed">
-                                オブジェクトもデータ構造の一種ですが、配列は「順序のあるリスト」という最も基本的で強力な関係性を提供します。
+                                配列やリストのように、メモリ上にデータを体系的・規則的に組織化して配置した構造体です。配列はその中でも「順序のあるリスト」という最も基本的な形式です。
                             </p>
                             <p class="text-[11px] text-slate-500">
                                 ※高度なアルゴリズムで登場する二分木（Binary Tree）やグラフ（Graph）も、すべてこのシンプルな配列が土台になっています。
@@ -720,7 +720,7 @@
                     <h1 class="font-serif text-main mb-4">配列が切り拓く「大量データ処理」の未来</h1>
                     
                     <p class="text-xs text-muted leading-relaxed max-w-lg mx-auto mb-6">
-                        配列というデータ構造を理解したことで、コンピュータの本来の強みである「反復と大量処理」を真の意味で解き放つ準備が整いました。
+                        配列というデータ構造（Data Structure）を理解したことで、コンピュータの本来の強みである「反復と大量処理」を真の意味で解き放つ準備が整いました。
                     </p>
 
                     <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-left text-xs space-y-1.5 max-w-md mx-auto mb-4">
@@ -742,23 +742,25 @@
                 </div>
             </section>
 
+                                <!-- Minimalist Navigation Controls Footer overlay inside the slide deck -->
+                            <div class="absolute bottom-6 left-10 right-10 flex justify-between items-center pointer-events-auto z-30">
+                                <div class="flex gap-6">
+                                    <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                                        <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
+                                    </button>
+                                    <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                                        Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Dynamic Step Indicators Container -->
+                                <div class="flex gap-1.5 overflow-x-auto max-w-xs justify-center px-2 no-scrollbar" id="dots-container"></div>
+                            </div>
+
         </div>
     </div>
 
-    <!-- Minimalist Navigation Controls Footer overlay inside the slide deck -->
-    <div class="absolute bottom-6 left-10 right-10 flex justify-between items-center pointer-events-auto z-30">
-        <div class="flex gap-6">
-            <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
-                <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
-            </button>
-            <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
-                Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
-            </button>
-        </div>
-
-        <!-- Dynamic Step Indicators Container -->
-        <div class="flex gap-1.5 overflow-x-auto max-w-xs justify-center px-2 no-scrollbar" id="dots-container"></div>
-    </div>
+    
 
     <!-- Script for interactive presentation features -->
     <script>

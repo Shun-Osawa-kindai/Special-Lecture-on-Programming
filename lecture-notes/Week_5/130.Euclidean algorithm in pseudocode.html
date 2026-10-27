@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>講義スライド：ユークリッド互除法の実装と擬似コードの多様性</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --color-bg-outer: #D1CFCA;      
+            --color-bg-slide:  #F7F6F4;     
+            --color-surface-1: #F2EFEA;    
+            --color-surface-2: #FFFFFF;    
+            --color-border: #DDDAD5;       
+            --color-text-main: #222222;    
+            --color-text-muted: #555555;   
+            --color-text-light: #999999;   
+            --color-accent-temp: #8C7A6B;  
+            --navy: #344D61;               
+            --terracotta: #994F60;         
+            --gold-muted: #C4B298;         
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--color-bg-outer);
+            color: var(--color-text-main);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+        }
+
+        h1, h2, h3, .font-serif {
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-weight: 400;
+        }
+
+        .presentation-viewport {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .slide-deck {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--color-bg-slide);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            padding: 5% 7% 7% 7%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            transform: translateY(10px);
+            background: var(--color-bg-slide);
+            overflow-y: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        h1 {
+            color: var(--color-text-main);
+            font-size: 1.85rem; 
+            font-weight: 400;
+            line-height: 1.4;
+            margin-bottom: 1.25rem;
+            letter-spacing: 0.05em;
+        }
+
+        h2 {
+            color: var(--color-accent-temp);
+            font-size: 0.65rem; 
+            font-weight: 500;
+            letter-spacing: 0.4em;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .main-text {
+            font-size: 1.05rem; 
+            line-height: 1.8;
+            color: var(--color-text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        /* 擬似コード用のスタイル */
+        .pseudocode-box {
+            background: var(--color-surface-2);
+            padding: 1.5rem 2rem;
+            border-radius: 4px;
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-size: 1.2rem;
+            border: 1px solid var(--color-border);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            line-height: 1.8;
+            color: var(--color-text-main);
+            display: inline-block;
+        }
+
+        .pseudo-keyword {
+            font-weight: 700;
+        }
+
+        .pseudo-var {
+            font-style: italic;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .minimal-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .minimal-list li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.6rem;
+            font-size: 0.95rem; 
+            color: var(--color-text-muted);
+            display: block;
+            line-height: 1.6;
+        }
+        .minimal-list li::before {
+            content: "・";
+            position: absolute;
+            left: 0;
+            color: var(--color-accent-temp);
+            font-weight: bold;
+        }
+
+        .slide-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: var(--color-text-light);
+            border-top: 1px solid var(--color-border);
+            padding-top: 0.75rem;
+            margin-top: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .nav-btn {
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            color: var(--color-text-main);
+            opacity: 1 !important;
+        }
+
+        .hamburger-btn {
+            position: fixed; top: 40px; left: 40px; z-index: 50;
+            background: rgba(247, 246, 244, 0.9); border: 1px solid var(--color-border);
+            border-radius: 50%; cursor: pointer; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; gap: 4px; padding: 0;
+            width: 48px; height: 48px; box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+        .hamburger-btn:hover { background: #ffffff; transform: scale(1.05); }
+        .hamburger-btn span { width: 18px; height: 2px; background-color: var(--color-text-main); transition: all 0.3s ease; display: block; }
+        .hamburger-btn.active span:nth-child(1) { transform: rotate(45deg) translate(4px, 4px); }
+        .hamburger-btn.active span:nth-child(2) { opacity: 0; }
+        .hamburger-btn.active span:nth-child(3) { transform: rotate(-45deg) translate(4px, -4px); }
+
+        .nav-sidebar {
+            position: fixed; left: -320px; top: 0; width: 320px; height: 100vh;
+            background-color: var(--color-bg-slide); box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
+            z-index: 40; transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto; border-right: 1px solid var(--color-border);
+        }
+        .nav-sidebar.open { left: 0; }
+        .nav-sidebar-content { padding: 100px 24px 40px 24px; }
+        .nav-sidebar-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; color: var(--color-text-light); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--color-border); }
+        .nav-item { padding: 10px 0; font-size: 12px; color: var(--color-text-muted); cursor: pointer; transition: all 0.2s ease; border-left: 3px solid transparent; padding-left: 12px; line-height: 1.4; }
+        .nav-item:hover { color: var(--color-text-main); border-left-color: var(--color-accent-temp); background: rgba(0,0,0,0.01); }
+        .nav-item.active { color: var(--color-accent-temp); font-weight: 600; border-left-color: var(--color-accent-temp); }
+
+        .nav-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: rgba(0, 0, 0, 0); z-index: 30; transition: background-color 0.3s ease; pointer-events: none;
+        }
+        .nav-overlay.open { background-color: rgba(0, 0, 0, 0.3); pointer-events: auto; }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body>
+
+    <button class="hamburger-btn" id="hamburgerBtn" title="目次を開く">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <div class="nav-sidebar" id="navSidebar">
+        <div class="nav-sidebar-content">
+            <div class="nav-sidebar-title">講義スライド一覧</div>
+            <div id="navMenu"></div>
+        </div>
+    </div>
+
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <div class="presentation-viewport">
+        <div class="slide-deck" id="deck">
+
+            <!-- Slide 1: Introduction -->
+            <section class="slide active">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Solution Review</span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Euclidean Algorithm</h2>
+                    <h1 class="font-serif text-main mb-4">ユークリッド互除法の関数実装</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-4">
+                            <p class="main-text text-xs text-muted leading-relaxed">
+                                前回の演習の解答を確認しましょう。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                フローチャートで描かれたユークリッドの互除法を、2つの異なるアプローチ（ForループとWhileループ）を用いて、擬似コードの関数（Function）として書き起こします。
+                            </p>
+                        </div>
+                        <div class="md:col-span-6 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <svg viewBox="0 0 160 120" class="w-40 h-32 bg-[#F2EFEA] rounded-sm p-2">
+                                <rect x="20" y="45" width="40" height="30" fill="white" stroke="var(--navy)" stroke-width="1.5" rx="2"/>
+                                <text x="40" y="62" font-size="8" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">a, b</text>
+                                
+                                <path d="M 60 60 L 95 60" fill="none" stroke="var(--terracotta)" stroke-width="1.5" stroke-dasharray="2 2"/>
+                                <polygon points="95,58 100,60 95,62" fill="var(--terracotta)"/>
+                                
+                                <rect x="100" y="45" width="40" height="30" fill="white" stroke="var(--accent-temp)" stroke-width="1.5" rx="2"/>
+                                <text x="120" y="62" font-size="8" font-family="sans-serif" text-anchor="middle" fill="var(--accent-temp)">GCD</text>
+                                
+                                <path d="M 60 30 Q 80 10 100 30" fill="none" stroke="var(--navy)" stroke-width="1.5"/>
+                                <polygon points="98,28 100,30 102,28" fill="var(--navy)"/>
+                                <text x="80" y="20" font-size="6" font-family="monospace" text-anchor="middle" fill="var(--color-text-muted)">Loop</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Algorithm Solutions</span>
+                </div>
+            </section>
+
+            <!-- Slide 2: For Loop Implementation -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">For Loop Approach</span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Implementation 1</h2>
+                    <h1 class="font-serif text-main mb-3">Forループによる実装</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start mt-2">
+                        <div class="md:col-span-5 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                <em>a</em> + <em>b</em> 回という十分に大きな反復回数を設定し、差分処理を行います。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                <em>a</em> = <em>b</em> になった瞬間に <span class="pseudo-keyword text-terracotta">break</span> でループから脱出し、結果を返します。
+                            </p>
+                        </div>
+                        <div class="md:col-span-7 flex justify-center">
+                            <div class="pseudocode-box relative">
+                                <span class="pseudo-keyword">function</span> GreatestCommonDivisor(<span class="pseudo-var">a</span>, <span class="pseudo-var">b</span>)<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">for</span> 0 &le; <span class="pseudo-var">i</span> &le; <span class="pseudo-var">a</span> + <span class="pseudo-var">b</span> <span class="pseudo-keyword">do</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">if</span> <span class="pseudo-var">a</span> = <span class="pseudo-var">b</span> <span class="pseudo-keyword">then</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">break</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">end if</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">if</span> <span class="pseudo-var">a</span> &gt; <span class="pseudo-var">b</span> <span class="pseudo-keyword">then</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-var">a</span> &larr; <span class="pseudo-var">a</span> &minus; <span class="pseudo-var">b</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">else</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-var">b</span> &larr; <span class="pseudo-var">b</span> &minus; <span class="pseudo-var">a</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">end if</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">end for</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">return</span> <span class="pseudo-var">a</span><br>
+                                <span class="pseudo-keyword">end function</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Algorithm Solutions</span>
+                </div>
+            </section>
+
+            <!-- Slide 3: While Loop Implementation -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">While Loop Approach</span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Implementation 2</h2>
+                    <h1 class="font-serif text-main mb-3">Whileループによる実装</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start mt-2">
+                        <div class="md:col-span-5 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                <em>a</em> &ne; <em>b</em> である限り反復を続ける構造です。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                <code>break</code> や不要な上限設定がなくなり、関数全体がよりシンプルで洗練された形になります。
+                            </p>
+                        </div>
+                        <div class="md:col-span-7 flex justify-center">
+                            <div class="pseudocode-box relative">
+                                <span class="pseudo-keyword">function</span> GreatestCommonDivisor(<span class="pseudo-var">a</span>, <span class="pseudo-var">b</span>)<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">while</span> <span class="pseudo-var">a</span> &ne; <span class="pseudo-var">b</span> <span class="pseudo-keyword">do</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">if</span> <span class="pseudo-var">a</span> &gt; <span class="pseudo-var">b</span> <span class="pseudo-keyword">then</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-var">a</span> &larr; <span class="pseudo-var">a</span> &minus; <span class="pseudo-var">b</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">else</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-var">b</span> &larr; <span class="pseudo-var">b</span> &minus; <span class="pseudo-var">a</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">end if</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">end while</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">return</span> <span class="pseudo-var">a</span><br>
+                                <span class="pseudo-keyword">end function</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Algorithm Solutions</span>
+                </div>
+            </section>
+
+            <!-- Slide 4: Loop Characteristics -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Loop Characteristics</span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Intuition &amp; Experience</h2>
+                    <h1 class="font-serif text-main mb-3">反復処理の特性と直感の醸成</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-4">
+                        <div class="p-5 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <p class="font-serif font-semibold text-navy border-b border-border pb-1">Whileループの性質</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px] mt-2">
+                                Forループのように単に1ずつ増加させるだけでなく、毎回のイテレーションで意味のある変数の更新（代入）が行われます。終了回数が不明なタスクに適しています。
+                            </p>
+                        </div>
+                        <div class="p-5 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <p class="font-serif font-semibold text-terracotta border-b border-border pb-1">経験の重要性</p>
+                            <p class="text-slate-600 leading-relaxed text-[11px] mt-2">
+                                「どのループをいつ使うべきか」というツール選択の直感は、使用すればするほど自然に身につきます。今後の学習において極めて有用な基盤となります。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Algorithm Solutions</span>
+                </div>
+            </section>
+
+            <!-- Slide 5: Pseudocode Variations -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Language &amp; Conventions</span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Lack of Universality</h2>
+                    <h1 class="font-serif text-main mb-3">擬似コードの記法における多様性</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                擬似コードは特定のプログラミング言語に依存しませんが、教科書や文献によって記法のルール（Conventions）が異なるという問題があります。
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1">
+                                <li>本モジュールの記法と他文献の記法の違いに気づくこと。</li>
+                                <li>両方を理解できれば、世の中のほぼ全ての擬似コードを解読できます。</li>
+                                <li>英語ベースで記述されること自体も、完全な普遍性を制限しています。</li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <svg viewBox="0 0 160 120" class="w-36 h-28 bg-[#F2EFEA] rounded-sm p-2">
+                                <rect x="20" y="20" width="50" height="30" fill="white" stroke="var(--navy)" stroke-width="1.5" />
+                                <text x="45" y="38" font-size="8" font-family="monospace" text-anchor="middle" fill="var(--navy)">do..while</text>
+                                
+                                <rect x="90" y="20" width="50" height="30" fill="white" stroke="var(--terracotta)" stroke-width="1.5" />
+                                <text x="115" y="38" font-size="8" font-family="monospace" text-anchor="middle" fill="var(--terracotta)">repeat..until</text>
+                                
+                                <path d="M 45 50 L 80 80" fill="none" stroke="var(--accent-temp)" stroke-width="1.5" stroke-dasharray="2 2" />
+                                <path d="M 115 50 L 80 80" fill="none" stroke="var(--accent-temp)" stroke-width="1.5" stroke-dasharray="2 2" />
+                                
+                                <rect x="50" y="80" width="60" height="25" rx="2" fill="var(--accent-temp)" />
+                                <text x="80" y="96" font-size="8" font-family="sans-serif" text-anchor="middle" fill="white" font-weight="bold">Logic Core</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Algorithm Solutions</span>
+                </div>
+            </section>
+
+            <!-- Slide 6: やってみよう！ -->
+            <section class="slide text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">やってみよう！</span>
+                </div>
+                <div class="slide-content max-w-2xl py-4">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Creative Translation</h2>
+                    <h1 class="font-serif text-main mb-4">やってみよう！</h1>
+                    
+                    <p class="text-xs text-muted leading-relaxed max-w-lg mx-auto mb-4">
+                        英語ベースである擬似コードの限界を超え、数理記号の普遍性を活かして、これまでに見たコードの一部を別の言語へ翻訳してみましょう。
+                    </p>
+
+                    <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-left text-xs space-y-1.5 max-w-md mx-auto mb-4">
+                        <ul class="minimal-list">
+                            <li>あなたの母国語や、知っている別の言語への翻訳。</li>
+                            <li>全く新しい架空のプログラミング言語（文字体系）の発明。</li>
+                            <li>元のコードと翻訳版の画像を並べて共有し、お互いのコードを解読し合ってください！</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Algorithm Solutions</span>
+                </div>
+            </section>
+
+                                <!-- Minimalist Navigation Controls Footer overlay inside the slide deck -->
+                            <div class="absolute bottom-6 left-10 right-10 flex justify-between items-center pointer-events-auto z-30">
+                                <div class="flex gap-6">
+                                    <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                                        <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
+                                    </button>
+                                    <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                                        Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                                    </button>
+                                </div>
+                                <div class="flex gap-1.5 overflow-x-auto max-w-xs justify-center px-2 no-scrollbar" id="dots-container"></div>
+                            </div>
+
+        </div>
+    </div>
+
+    
+
+    <!-- Script for interactivity -->
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsContainer = document.getElementById('dots-container');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const navSidebar = document.getElementById('navSidebar');
+        const navOverlay = document.getElementById('navOverlay');
+        const navMenu = document.getElementById('navMenu');
+        
+        let currentSlide = 0;
+        let indicators = [];
+
+        slides.forEach((slide, index) => {
+            const dot = document.createElement('span');
+            dot.className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 ' + (index === 0 ? 'dot-active' : 'dot-inactive');
+            dotsContainer.appendChild(dot);
+            indicators.push(dot);
+
+            const title = slide.querySelector('h1')?.innerText.replace(/\n/g, ' ') || `Slide ${index + 1}`;
+            const navItem = document.createElement('div');
+            navItem.className = `nav-item ${index === 0 ? 'active' : ''}`;
+            navItem.textContent = title;
+            navItem.onclick = () => { updateSlide(index); closeSidebar(); };
+            navMenu.appendChild(navItem);
+        });
+
+        function updateSlide(index) {
+            if (index < 0 || index >= slides.length) return;
+
+            slides[currentSlide].classList.remove('active');
+            indicators[currentSlide].className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 bg-gray-300';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.remove('active');
+
+            currentSlide = index;
+            
+            slides[currentSlide].classList.add('active');
+            indicators[currentSlide].className = 'w-1.5 h-1.5 rounded-full transition-all duration-300 bg-black';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.add('active');
+
+            prevBtn.style.opacity = currentSlide === 0 ? '0.2' : '1';
+            prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+            nextBtn.style.opacity = currentSlide === slides.length - 1 ? '0.2' : '1';
+            nextBtn.style.pointerEvents = currentSlide === slides.length - 1 ? 'none' : 'auto';
+        }
+
+        function closeSidebar() {
+            navSidebar.classList.remove('open');
+            navOverlay.classList.remove('open');
+            hamburgerBtn.classList.remove('active');
+        }
+
+        hamburgerBtn.onclick = () => {
+            hamburgerBtn.classList.toggle('active');
+            navSidebar.classList.toggle('open');
+            navOverlay.classList.toggle('open');
+        };
+        navOverlay.onclick = closeSidebar;
+
+        prevBtn.onclick = () => updateSlide(currentSlide - 1);
+        nextBtn.onclick = () => updateSlide(currentSlide + 1);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') updateSlide(currentSlide - 1);
+            if (e.key === 'ArrowRight' || e.key === ' ') updateSlide(currentSlide + 1);
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+        const deck = document.getElementById('deck');
+        deck.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
+        deck.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            if (touchEndX < touchStartX - 50) updateSlide(currentSlide + 1);
+            if (touchEndX > touchStartX + 50) updateSlide(currentSlide - 1);
+        });
+
+        updateSlide(0);
+    </script>
+</body>
+</html>

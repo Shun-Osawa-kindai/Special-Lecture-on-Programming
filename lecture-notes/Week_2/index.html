@@ -19,6 +19,12 @@
         .eyebrow { margin:0 0 8px 0; font-size:10px; letter-spacing:.34em; text-transform:uppercase; color:var(--accent); }
         h1 { margin:0 0 10px 0; font-size:clamp(1.75rem,2.7vw,2.2rem); }
         .lead { margin:0; color:var(--muted); font-size:.94rem; }
+        .subtitle { margin-top:8px; color:var(--muted); font-size:.92rem; }
+        .section { margin-top:22px; border:1px solid var(--border); background:var(--surface); border-radius:6px; padding:16px 18px; }
+        .section h2 { margin:0 0 10px; font-size:.9rem; letter-spacing:.08em; color:var(--navy); }
+        .syllabus-lines { margin:0; padding-left:1.1rem; color:var(--muted); font-size:.88rem; }
+        .syllabus-lines li { margin:.25rem 0; }
+        .keywords { margin:0; color:var(--muted); font-size:.88rem; }
         .box { margin-top:24px; border:1px solid var(--border); background:var(--surface); padding:16px 18px; }
         .box h2 { margin:0 0 8px 0; font-size:1rem; color:var(--navy); }
         .box p { margin:0; color:var(--muted); font-size:.88rem; }
@@ -39,8 +45,12 @@
 <div class="viewport"><main class="card">
     <div class="top"><a href="../../index.html">← Course Hub</a><span>Week 2 / Hub</span></div>
     <p class="eyebrow">Special Lecture on Programming</p>
-    <h1 class="serif">Creating patterns with variables and loops</h1>
-    <p class="lead">Variables and data、loops による repetition、randomness を使った反復的パターン生成を扱います。</p>
+    <h1 class="serif">第2回 Creating patterns with variables and loops</h1>
+    <p class="subtitle">授業形式：演習を含む講義</p>
+    <section class="section">
+        <h2>授業計画の内容</h2>
+        <p class="keywords">Variables and data； loops による repetition； randomness； 反復的処理によるパターン生成</p>
+    </section>
     <section class="slide-list" aria-label="Week 2 スライド一覧">
         <a class="slide-item" href="./10-builtInVariables_mouseX_mouseY.html"><div><p class="slide-label">10 / Ready</p><h2 class="slide-title serif">Built-in variables</h2><p class="slide-desc">mouseX / mouseY / width / height を使って変数の概念を学びます。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
         <a class="slide-item" href="./20-builtInEvents_mousePressed_keyPressed.html"><div><p class="slide-label">20 / Ready</p><h2 class="slide-title serif">Built-in events</h2><p class="slide-desc">mousePressed / keyPressed を使った入力イベントの基礎です。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
@@ -54,7 +64,6 @@
         <a class="slide-item" href="./100-Game_Project_Part_2a_gameCharacter.html"><div><p class="slide-label">100 / Ready</p><h2 class="slide-title serif">Game Project Part 2a</h2><p class="slide-desc">ゲームキャラクターを描き、動きを作る制作演習です。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
         <a class="slide-item" href="./110-Game_Project_Part_2b_usingVariables.html"><div><p class="slide-label">110 / Ready</p><h2 class="slide-title serif">Game Project Part 2b</h2><p class="slide-desc">変数とインタラクションを使ってゲームの見た目と動作を統合します。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
     </section>
-    <p class="meta">授業形式: 演習を含む講義 / 予習 90分 / 復習 90分</p>
     <div class="bottom"><span>Kindai University</span><a href="../../index.html">Back to Week List</a></div>
 </main></div>
 </body>

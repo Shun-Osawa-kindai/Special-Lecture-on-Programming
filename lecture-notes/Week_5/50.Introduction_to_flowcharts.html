@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>講義スライド：フローチャートによるアルゴリズムの記述 (Algorithms and Data Structures Part 1)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --color-bg-outer: #D1CFCA;      
+            --color-bg-slide:  #F7F6F4;     
+            --color-surface-1: #F2EFEA;    
+            --color-surface-2: #FFFFFF;    
+            --color-border: #DDDAD5;       
+            --color-text-main: #222222;    
+            --color-text-muted: #555555;   
+            --color-text-light: #999999;   
+            --color-accent-temp: #8C7A6B;  
+            --navy: #344D61;               
+            --terracotta: #994F60;         
+            --gold-muted: #C4B298;         
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--color-bg-outer);
+            color: var(--color-text-main);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+        }
+
+        h1, h2, h3, .font-serif {
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-weight: 400;
+        }
+
+        .presentation-viewport {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .slide-deck {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--color-bg-slide);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            padding: 4.5% 6.5% 56px 6.5%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            transform: translateY(10px);
+            background: var(--color-bg-slide);
+            overflow-y: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        h1 {
+            color: var(--color-text-main);
+            font-size: 1.85rem; 
+            font-weight: 400;
+            line-height: 1.38;
+            margin-bottom: 1.1rem;
+            letter-spacing: 0.04em;
+        }
+
+        h2 {
+            color: var(--color-accent-temp);
+            font-size: 0.65rem; 
+            font-weight: 600;
+            letter-spacing: 0.35em;
+            margin-bottom: 0.45rem;
+            text-transform: uppercase;
+        }
+
+        .main-text {
+            font-size: 1.02rem; 
+            line-height: 1.75;
+            color: var(--color-text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        .highlight {
+            background: linear-gradient(transparent 70%, #E2DDD5 70%);
+            font-weight: 500;
+            padding: 0 0.15em;
+        }
+
+        code {
+            background: var(--color-surface-1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 2px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--terracotta);
+            font-weight: bold;
+            font-size: 0.88em;
+            border: 1px solid var(--color-border);
+        }
+
+        .minimal-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .minimal-list li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.55rem;
+            font-size: 0.92rem; 
+            color: var(--color-text-muted);
+            display: block;
+            line-height: 1.55;
+        }
+        .minimal-list li::before {
+            content: "・";
+            position: absolute;
+            left: 0;
+            color: var(--color-accent-temp);
+            font-weight: bold;
+        }
+
+        .slide-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: var(--color-text-light);
+            border-top: 1px solid var(--color-border);
+            padding-top: 0.65rem;
+            margin-top: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .nav-btn {
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            color: var(--color-text-main);
+            opacity: 1 !important;
+        }
+
+        .hamburger-btn {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            z-index: 50;
+            background: rgba(247, 246, 244, 0.9);
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 0;
+            width: 48px;
+            height: 48px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+
+        .hamburger-btn:hover {
+            background: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .hamburger-btn span {
+            width: 18px;
+            height: 2px;
+            background-color: var(--color-text-main);
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+
+        .nav-sidebar {
+            position: fixed;
+            left: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background-color: var(--color-bg-slide);
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
+            z-index: 40;
+            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            border-right: 1px solid var(--color-border);
+        }
+
+        .nav-sidebar.open {
+            left: 0;
+        }
+
+        .nav-sidebar-content {
+            padding: 100px 24px 40px 24px;
+        }
+
+        .nav-sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--color-text-light);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .nav-item {
+            padding: 10px 0;
+            font-size: 12px;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            padding-left: 12px;
+            line-height: 1.4;
+        }
+
+        .nav-item:hover {
+            color: var(--color-text-main);
+            border-left-color: var(--color-accent-temp);
+            background: rgba(0,0,0,0.01);
+        }
+
+        .nav-item.active {
+            color: var(--color-accent-temp);
+            font-weight: 600;
+            border-left-color: var(--color-accent-temp);
+        }
+
+        .nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0);
+            z-index: 30;
+            transition: background-color 0.3s ease;
+            pointer-events: none;
+        }
+
+        .nav-overlay.open {
+            background-color: rgba(0, 0, 0, 0.3);
+            pointer-events: auto;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .dot-active { 
+            background-color: var(--color-text-main); 
+            width: 6px;
+            height: 6px;
+        }
+        .dot-inactive { 
+            background-color: var(--color-border); 
+            width: 4px;
+            height: 4px;
+        }
+
+        @media (max-width: 1320px) {
+            .slide-deck { transform: scale(0.9); }
+        }
+        @media (max-width: 1150px) {
+            .slide-deck { transform: scale(0.8); }
+        }
+        @media (max-width: 980px) {
+            .slide-deck { transform: scale(0.7); }
+        }
+        @media (max-width: 768px) {
+            .presentation-viewport { padding: 10px; height: auto; }
+            .slide-deck { aspect-ratio: auto; height: 560px; transform: none; }
+            .slide { padding: 32px 24px; }
+            h1 { font-size: 1.5rem; }
+            .main-text, .minimal-list li { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-btn" id="hamburgerBtn" title="目次を開く">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Navigation Sidebar -->
+    <div class="nav-sidebar" id="navSidebar">
+        <div class="nav-sidebar-content">
+            <div class="nav-sidebar-title">講義スライド一覧</div>
+            <div id="navMenu"></div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <div class="presentation-viewport">
+        <div class="slide-deck" id="deck">
+
+            <!-- Slide 1: アルゴリズムをどう記述するか -->
+            <section class="slide active">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Algorithm Description</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Visualizing Logic</h2>
+                    <h1 class="font-serif text-main mb-4">アルゴリズムをどう記述するか？<br><span class="highlight">「図と文字でプロセスを描く」</span></h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-4">
+                            <p class="main-text text-xs text-muted leading-relaxed">
+                                アルゴリズムを人に伝えたり設計する際、自然言語の箇条書きやコードだけでは処理の流れが見えにくくなります。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                <span class="highlight">フローチャート（Flowchart）</span>は、図形と矢印を用いてあらゆるプロセスを抽象的かつ明快に記述できる標準的な手法です。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                ソフトウェアの設計だけでなく、業務ワークフローやプロジェクト管理にもそのまま応用できます。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <!-- 抽象図解: 箱と矢印によるプロセス -->
+                            <svg viewBox="0 0 180 120" class="w-44 h-28 bg-[#F2EFEA] rounded-sm p-2">
+                                <rect x="30" y="15" width="50" height="22" rx="11" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="55" y="29" font-size="6.5" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Start</text>
+
+                                <path d="M 55 37 L 55 52" stroke="var(--terracotta)" stroke-width="1.2"/>
+                                <polygon points="53,52 55,56 57,52" fill="var(--terracotta)"/>
+
+                                <rect x="25" y="56" width="60" height="22" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="55" y="70" font-size="6.5" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Action</text>
+
+                                <path d="M 85 67 L 115 67" stroke="var(--navy)" stroke-width="1.2"/>
+                                <polygon points="115,65 119,67 115,69" fill="var(--navy)"/>
+
+                                <polygon points="140,52 165,67 140,82 115,67" fill="white" stroke="var(--terracotta)" stroke-width="1.2"/>
+                                <text x="140" y="69.5" font-size="6" font-family="sans-serif" text-anchor="middle" fill="var(--terracotta)">Decision</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Describing Algorithms</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 2: 身近な例：部屋の明かりをつける -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Everyday Process</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Practical Example</h2>
+                    <h1 class="font-serif text-main mb-3">日常の行動をフローチャートにする</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                「部屋に入って着席する」という日常の行動にも、判断とループ（繰り返し）が存在します。
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1.5">
+                                <li>部屋に入る（開始）</li>
+                                <li>明るさを確認する（データ入力）</li>
+                                <li>「暗いか？」を判定（Yes / No 分岐）</li>
+                                <li>暗ければ電気をつけ、再度確認する（ループ）</li>
+                                <li>明るければ着席する（終了）</li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-6 flex justify-center py-3 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <!-- 抽象図解: 部屋の明かり判定フロー -->
+                            <svg viewBox="0 0 200 130" class="w-52 h-32 bg-[#F2EFEA] rounded-sm p-2">
+                                <rect x="20" y="10" width="55" height="18" rx="9" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="47.5" y="22" font-size="6" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Enter Room</text>
+
+                                <path d="M 47.5 28 L 47.5 38" stroke="var(--navy)" stroke-width="1"/>
+                                <polygon points="46,38 47.5,41 49,38" fill="var(--navy)"/>
+
+                                <polygon points="25,42 75,42 65,58 15,58" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="45" y="52" font-size="5.5" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Check Light</text>
+
+                                <path d="M 47.5 58 L 47.5 68" stroke="var(--navy)" stroke-width="1"/>
+                                <polygon points="46,68 47.5,71 49,68" fill="var(--navy)"/>
+
+                                <polygon points="47.5,72 75,85 47.5,98 20,85" fill="white" stroke="var(--terracotta)" stroke-width="1.2"/>
+                                <text x="47.5" y="87" font-size="5.5" font-family="sans-serif" text-anchor="middle" fill="var(--terracotta)">Dark?</text>
+
+                                <path d="M 75 85 L 115 85" stroke="var(--terracotta)" stroke-width="1"/>
+                                <text x="88" y="81" font-size="5.5" font-family="monospace" fill="var(--terracotta)">Yes</text>
+                                <polygon points="115,83 118,85 115,87" fill="var(--terracotta)"/>
+
+                                <rect x="118" y="74" width="62" height="22" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="149" y="87" font-size="5.5" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Turn On Light</text>
+
+                                <!-- ループ戻り線（L字矢印） -->
+                                <polyline points="149,74 149,50 78,50" fill="none" stroke="var(--navy)" stroke-width="1"/>
+                                <polygon points="78,48.5 75,50 78,51.5" fill="var(--navy)"/>
+
+                                <path d="M 47.5 98 L 47.5 108" stroke="var(--navy)" stroke-width="1"/>
+                                <text x="52" y="105" font-size="5.5" font-family="monospace" fill="var(--navy)">No</text>
+                                <polygon points="46,108 47.5,111 49,108" fill="var(--navy)"/>
+
+                                <rect x="25" y="112" width="45" height="16" rx="8" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="47.5" y="123" font-size="5.5" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Sit Down</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Flowchart Example</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 3: 構成要素① 端子とI/O -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Standard Symbols 1</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Flowchart Elements (1)</h2>
+                    <h1 class="font-serif text-main mb-3">開始・終了と入出力の記号</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-3">
+                        <div class="p-5 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <div class="flex items-center gap-3 border-b border-border pb-2">
+                                <svg viewBox="0 0 70 30" class="w-16 h-8">
+                                    <rect x="5" y="5" width="60" height="20" rx="10" fill="white" stroke="var(--navy)" stroke-width="1.5"/>
+                                </svg>
+                                <span class="font-mono text-xs font-bold text-navy">楕円（Oval / Terminal）</span>
+                            </div>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                フローチャートの<span class="highlight font-semibold">開始（Start）と終了（Stop）</span>を示します。
+                            </p>
+                            <p class="text-slate-500 text-[11px] leading-relaxed">
+                                例：「部屋に入る」「着席する」「計算開始」
+                            </p>
+                        </div>
+
+                        <div class="p-5 bg-surface-2 border border-navy rounded-sm shadow-sm space-y-2">
+                            <div class="flex items-center gap-3 border-b border-border pb-2">
+                                <svg viewBox="0 0 70 30" class="w-16 h-8">
+                                    <polygon points="15,5 65,5 55,25 5,25" fill="white" stroke="var(--navy)" stroke-width="1.5"/>
+                                </svg>
+                                <span class="font-mono text-xs font-bold text-navy">平行四辺形（Parallelogram）</span>
+                            </div>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                データの<span class="highlight font-semibold">入力（Input）と出力（Output）</span>を示します。
+                            </p>
+                            <p class="text-slate-500 text-[11px] leading-relaxed">
+                                例：「明るさを確認する」「整数xを入力」「解を出力」
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Standard Symbols</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 4: 構成要素② 処理と判断 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Standard Symbols 2</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Flowchart Elements (2)</h2>
+                    <h1 class="font-serif text-main mb-3">基本処理と判断分岐の記号</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-3">
+                        <div class="p-5 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <div class="flex items-center gap-3 border-b border-border pb-2">
+                                <svg viewBox="0 0 70 30" class="w-16 h-8">
+                                    <rect x="5" y="5" width="60" height="20" fill="white" stroke="var(--navy)" stroke-width="1.5"/>
+                                </svg>
+                                <span class="font-mono text-xs font-bold text-navy">長方形（Rectangle）</span>
+                            </div>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                算術計算や代入などの<span class="highlight font-semibold">基本処理（Action / Process）</span>を示します。
+                            </p>
+                            <p class="text-slate-500 text-[11px] leading-relaxed">
+                                例：「電気をつける」「平均を計算」「gを更新」
+                            </p>
+                        </div>
+
+                        <div class="p-5 bg-surface-2 border border-terracotta rounded-sm shadow-sm space-y-2">
+                            <div class="flex items-center gap-3 border-b border-border pb-2">
+                                <svg viewBox="0 0 70 30" class="w-16 h-8">
+                                    <polygon points="35,5 65,15 35,25 5,15" fill="white" stroke="var(--terracotta)" stroke-width="1.5"/>
+                                </svg>
+                                <span class="font-mono text-xs font-bold text-terracotta">ひし形（Diamond / Decision）</span>
+                            </div>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                条件による<span class="highlight font-semibold">判断（Decision）</span>を示し、Yes / No に分岐します。
+                            </p>
+                            <p class="text-slate-500 text-[11px] leading-relaxed">
+                                矢印（Control Flow）とともにプログラムの構造を決定します。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Standard Symbols</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 5: ヘロンの解法をフローチャートで再訪 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Algorithm Application</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Heron's Method</h2>
+                    <h1 class="font-serif text-main mb-3">ヘロンの解法をフローチャートで定義する</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                前回の平方根近似アルゴリズムを、汎用フローチャートに落とし込みます。
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1.5">
+                                <li><strong>目的：</strong> 整数 <code>x</code> の平方根 <code>√x</code> を小数第 <code>n</code> 位まで求める。</li>
+                                <li><strong>入力（Input）：</strong> 整数 <code>x</code> と目標桁数 <code>n</code></li>
+                                <li><strong>推測値（Guess）：</strong> 初期候補 <code>g</code>（<code>1 &lt; g &lt; x</code>）</li>
+                                <li><strong>出力（Output）：</strong> 精度を満たした推測値 <code>g</code></li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <div class="p-3 font-mono text-center space-y-1.5">
+                                <span class="text-xs text-slate-400 block">Problem Formalization</span>
+                                <span class="text-sm font-bold text-navy block">√x to n decimal places</span>
+                                <span class="text-[10px] text-terracotta block">Input: x, n ➔ Output: g</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Heron's Algorithm</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 6: ヘロンの解法の全体図解 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Complete Diagram</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Heron Flowchart</h2>
+                    <h1 class="font-serif text-main mb-2">ヘロンのアルゴリズム：全体の制御構造</h1>
+                    <div class="flex justify-center py-3 bg-surface-2 border border-border rounded-sm shadow-sm mt-1">
+                        <!-- ヘロンの解法の構造フローチャート -->
+                        <svg viewBox="0 0 360 170" class="w-full max-w-lg h-44 bg-[#F2EFEA] rounded-sm p-2">
+                            <!-- Start -->
+                            <rect x="10" y="20" width="44" height="18" rx="9" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                            <text x="32" y="32" font-size="6" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Start</text>
+
+                            <path d="M 54 29 L 68 29" stroke="var(--navy)" stroke-width="1"/>
+                            <polygon points="68,27.5 71,29 68,30.5" fill="var(--navy)"/>
+
+                            <!-- Input x, n -->
+                            <polygon points="76,20 124,20 114,38 66,38" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                            <text x="95" y="31" font-size="5.5" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Input x, n</text>
+
+                            <path d="M 120 29 L 134 29" stroke="var(--navy)" stroke-width="1"/>
+                            <polygon points="134,27.5 137,29 134,30.5" fill="var(--navy)"/>
+
+                            <!-- Guess g -->
+                            <rect x="137" y="20" width="56" height="18" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                            <text x="165" y="31" font-size="5.5" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Guess g</text>
+
+                            <path d="M 193 29 L 207 29" stroke="var(--navy)" stroke-width="1"/>
+                            <polygon points="207,27.5 210,29 207,30.5" fill="var(--navy)"/>
+
+                            <!-- Calc x/g -->
+                            <rect x="210" y="20" width="56" height="18" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                            <text x="238" y="31" font-size="5.5" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Calc x / g</text>
+
+                            <path d="M 238 38 L 238 52" stroke="var(--navy)" stroke-width="1"/>
+                            <polygon points="236.5,52 238,55 239.5,52" fill="var(--navy)"/>
+
+                            <!-- Decision: Differs in n dec? -->
+                            <polygon points="238,56 295,74 238,92 181,74" fill="white" stroke="var(--terracotta)" stroke-width="1.2"/>
+                            <text x="238" y="72" font-size="5" font-family="sans-serif" text-anchor="middle" fill="var(--terracotta)">x/g &amp; g differ</text>
+                            <text x="238" y="79" font-size="4.8" font-family="sans-serif" text-anchor="middle" fill="var(--terracotta)">in n decimals?</text>
+
+                            <!-- Loop Yes -->
+                            <path d="M 181 74 L 145 74" stroke="var(--terracotta)" stroke-width="1"/>
+                            <text x="163" y="70" font-size="5" font-family="monospace" fill="var(--terracotta)">Yes (不一致)</text>
+                            <polygon points="145,72.5 142,74 145,75.5" fill="var(--terracotta)"/>
+
+                            <!-- Calc mean & set g -->
+                            <rect x="76" y="65" width="66" height="18" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                            <text x="109" y="76" font-size="5" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">g = mean(x/g, g)</text>
+
+                            <!-- Return to Calc x/g -->
+                            <polyline points="109,65 109,50 235,50" fill="none" stroke="var(--navy)" stroke-width="1"/>
+                            <polygon points="235,48.5 238,50 235,51.5" fill="var(--navy)"/>
+
+                            <!-- Loop No -->
+                            <path d="M 238 92 L 238 106" stroke="var(--navy)" stroke-width="1"/>
+                            <text x="244" y="101" font-size="5" font-family="monospace" fill="var(--navy)">No (一致)</text>
+                            <polygon points="236.5,106 238,109 239.5,106" fill="var(--navy)"/>
+
+                            <!-- Output g -->
+                            <polygon points="216,110 264,110 254,128 206,128" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                            <text x="235" y="121" font-size="5.5" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Output g</text>
+
+                            <path d="M 235 128 L 235 140" stroke="var(--navy)" stroke-width="1"/>
+                            <polygon points="233.5,140 235,143 236.5,140" fill="var(--navy)"/>
+
+                            <!-- Stop -->
+                            <rect x="213" y="144" width="44" height="18" rx="9" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                            <text x="235" y="156" font-size="6" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Stop</text>
+                        </svg>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Heron Flowchart</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 7: 反復ループと終了条件のメカニズム -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Loop &amp; Precision</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Precision &amp; Convergence</h2>
+                    <h1 class="font-serif text-main mb-3">反復ループと「終了判定」の仕組み</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-3">
+                        <div class="p-5 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-navy block border-b border-border pb-1">反復更新（ループの継続）</span>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                <code>x / g</code> と <code>g</code> が小数第 <code>n</code> 位で一致しない場合：
+                            </p>
+                            <p class="text-slate-600 text-[11px] leading-relaxed">
+                                新しい候補値 <code>g = (x/g + g) / 2</code> を計算し、再び <code>x / g</code> の計算へとループバックします。
+                            </p>
+                        </div>
+
+                        <div class="p-5 bg-surface-2 border border-navy rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-navy block border-b border-border pb-1">終了判定（目標精度の達成）</span>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                四捨五入して小数第 <code>n</code> 位まで両者が一致した瞬間：
+                            </p>
+                            <p class="text-slate-600 text-[11px] leading-relaxed font-bold text-terracotta">
+                                ループを抜け、確定した <code>g</code> を解として出力してアルゴリズムを停止（Stop）します。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Loop &amp; Precision</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 8: 朝のルーティンをフローチャート化 -->
+            <section class="slide text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">やってみよう！</span>
+                    <span></span>
+                </div>
+                <div class="slide-content max-w-2xl py-3">
+                    <h2>Hands-on Practice</h2>
+                    <h1 class="font-serif text-main mb-3">やってみよう！</h1>
+                    
+                    <p class="text-xs text-muted leading-relaxed max-w-lg mx-auto mb-4">
+                        フローチャートはアルゴリズムだけでなく、あらゆる日常のプロセスを可視化できます。自分の「朝の習慣」を図にしてみましょう。
+                    </p>
+
+                    <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-left text-xs space-y-2 max-w-md mx-auto mb-3">
+                        <p class="font-bold text-navy border-b border-border pb-1">作成と投稿の手順</p>
+                        <ul class="minimal-list text-[11px] space-y-1">
+                            <li>手書きで紙に描いてスマホで写真撮影、または作図ツールで作成</li>
+                            <li>開始／終了（楕円）、判断分岐（ひし形）、行動（長方形）を活用</li>
+                            <li>画像またはスクリーンショットを共有</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>やってみよう！</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 9: まとめ -->
+            <section class="slide text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Summary</span>
+                    <span></span>
+                </div>
+                <div class="slide-content max-w-2xl py-3">
+                    <h2>Summary</h2>
+                    <h1 class="font-serif text-main mb-4">フローチャートがもたらす設計力</h1>
+                    
+                    <div class="p-4 bg-surface-2 border border-navy rounded-sm shadow-sm text-left text-xs space-y-2 max-w-md mx-auto">
+                        <div class="border-b border-border pb-1.5">
+                            <span class="font-bold text-navy block">プロセスの可視化：</span>
+                            <span class="text-slate-600 text-[11px]">図と文字を組み合わせることで、複雑な条件分岐やループ構造を一目で把握できる。</span>
+                        </div>
+                        <div class="border-t border-border pt-1.5 pb-1.5">
+                            <span class="font-bold text-navy block">標準記号の規律：</span>
+                            <span class="text-slate-600 text-[11px]">楕円（端子）、平行四辺形（I/O）、長方形（処理）、ひし形（判断）の明確な役割分担。</span>
+                        </div>
+                        <div class="border-t border-border pt-1.5">
+                            <span class="font-bold text-terracotta block">実装への橋渡し：</span>
+                            <span class="text-slate-600 text-[11px]">フローチャートで論理を整理してからコーディングに入ることで、迷いなく堅牢なプログラムが書ける。</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Summary</span><span></span>
+                </div>
+            </section>
+
+                                <!-- Minimalist Navigation Controls Footer overlay inside the slide deck -->
+                            <div class="absolute bottom-6 left-10 right-10 flex justify-between items-center pointer-events-auto z-30">
+                                <div class="flex gap-6">
+                                    <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-600 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold cursor-pointer">
+                                        <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
+                                    </button>
+                                    <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-600 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold cursor-pointer">
+                                        Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Dynamic Step Indicators Container -->
+                                <div class="flex gap-1.5 overflow-x-auto max-w-xs justify-center px-2 no-scrollbar" id="dots-container"></div>
+                            </div>
+
+        </div>
+    </div>
+
+    
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsContainer = document.getElementById('dots-container');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const navSidebar = document.getElementById('navSidebar');
+        const navOverlay = document.getElementById('navOverlay');
+        const navMenu = document.getElementById('navMenu');
+        
+        let currentSlide = 0;
+        let indicators = [];
+
+        slides.forEach((slide, index) => {
+            const dot = document.createElement('span');
+            dot.className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 ' + (index === 0 ? 'dot-active' : 'dot-inactive');
+            dotsContainer.appendChild(dot);
+            indicators.push(dot);
+
+            const title = slide.querySelector('h1')?.innerText.replace(/\n/g, ' ') || `Slide ${index + 1}`;
+            const navItem = document.createElement('div');
+            navItem.className = `nav-item ${index === 0 ? 'active' : ''}`;
+            navItem.textContent = `${index + 1}. ${title}`;
+            navItem.onclick = () => { updateSlide(index); closeSidebar(); };
+            navMenu.appendChild(navItem);
+        });
+
+        function updateSlide(index) {
+            if (index < 0) {
+                currentSlide = 0;
+                return;
+            }
+            if (index >= slides.length) {
+                currentSlide = slides.length - 1;
+                return;
+            }
+
+            slides[currentSlide].classList.remove('active');
+            indicators[currentSlide].className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 bg-gray-300';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.remove('active');
+
+            currentSlide = index;
+            
+            slides[currentSlide].classList.add('active');
+            indicators[currentSlide].className = 'w-1.5 h-1.5 rounded-full transition-all duration-300 bg-black';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.add('active');
+
+            prevBtn.style.opacity = currentSlide === 0 ? '0.2' : '1';
+            prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+            nextBtn.style.opacity = currentSlide === slides.length - 1 ? '0.2' : '1';
+            nextBtn.style.pointerEvents = currentSlide === slides.length - 1 ? 'none' : 'auto';
+        }
+
+        function closeSidebar() {
+            navSidebar.classList.remove('open');
+            navOverlay.classList.remove('open');
+            hamburgerBtn.classList.remove('active');
+        }
+
+        hamburgerBtn.onclick = () => {
+            hamburgerBtn.classList.toggle('active');
+            navSidebar.classList.toggle('open');
+            navOverlay.classList.toggle('open');
+        };
+        navOverlay.onclick = closeSidebar;
+
+        prevBtn.onclick = () => updateSlide(currentSlide - 1);
+        nextBtn.onclick = () => updateSlide(currentSlide + 1);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                updateSlide(currentSlide - 1);
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                updateSlide(currentSlide + 1);
+            }
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const deck = document.getElementById('deck');
+        deck.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        deck.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                updateSlide(currentSlide + 1);
+            }
+            if (touchEndX > touchStartX + 50) {
+                updateSlide(currentSlide - 1);
+            }
+        }
+
+        updateSlide(0);
+    </script>
+</body>
+</html>

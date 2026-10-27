@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>講義スライド：計算問題の定義とアルゴリズムの基礎 (Algorithms and Data Structures Part 1)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --color-bg-outer: #D1CFCA;      
+            --color-bg-slide:  #F7F6F4;     
+            --color-surface-1: #F2EFEA;    
+            --color-surface-2: #FFFFFF;    
+            --color-border: #DDDAD5;       
+            --color-text-main: #222222;    
+            --color-text-muted: #555555;   
+            --color-text-light: #999999;   
+            --color-accent-temp: #8C7A6B;  
+            --navy: #344D61;               
+            --terracotta: #994F60;         
+            --gold-muted: #C4B298;         
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--color-bg-outer);
+            color: var(--color-text-main);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+        }
+
+        h1, h2, h3, .font-serif {
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-weight: 400;
+        }
+
+        .presentation-viewport {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .slide-deck {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--color-bg-slide);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            padding: 4.5% 6.5% 56px 6.5%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            transform: translateY(10px);
+            background: var(--color-bg-slide);
+            overflow-y: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        h1 {
+            color: var(--color-text-main);
+            font-size: 1.85rem; 
+            font-weight: 400;
+            line-height: 1.38;
+            margin-bottom: 1.1rem;
+            letter-spacing: 0.04em;
+        }
+
+        h2 {
+            color: var(--color-accent-temp);
+            font-size: 0.65rem; 
+            font-weight: 600;
+            letter-spacing: 0.35em;
+            margin-bottom: 0.45rem;
+            text-transform: uppercase;
+        }
+
+        .main-text {
+            font-size: 1.02rem; 
+            line-height: 1.75;
+            color: var(--color-text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        .highlight {
+            background: linear-gradient(transparent 70%, #E2DDD5 70%);
+            font-weight: 500;
+            padding: 0 0.15em;
+        }
+
+        code {
+            background: var(--color-surface-1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 2px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--terracotta);
+            font-weight: bold;
+            font-size: 0.88em;
+            border: 1px solid var(--color-border);
+        }
+
+        .minimal-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .minimal-list li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.55rem;
+            font-size: 0.92rem; 
+            color: var(--color-text-muted);
+            display: block;
+            line-height: 1.55;
+        }
+        .minimal-list li::before {
+            content: "・";
+            position: absolute;
+            left: 0;
+            color: var(--color-accent-temp);
+            font-weight: bold;
+        }
+
+        .slide-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: var(--color-text-light);
+            border-top: 1px solid var(--color-border);
+            padding-top: 0.65rem;
+            margin-top: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .nav-btn {
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            color: var(--color-text-main);
+            opacity: 1 !important;
+        }
+
+        .hamburger-btn {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            z-index: 50;
+            background: rgba(247, 246, 244, 0.9);
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 0;
+            width: 48px;
+            height: 48px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+
+        .hamburger-btn:hover {
+            background: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .hamburger-btn span {
+            width: 18px;
+            height: 2px;
+            background-color: var(--color-text-main);
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+
+        .nav-sidebar {
+            position: fixed;
+            left: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background-color: var(--color-bg-slide);
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
+            z-index: 40;
+            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            border-right: 1px solid var(--color-border);
+        }
+
+        .nav-sidebar.open {
+            left: 0;
+        }
+
+        .nav-sidebar-content {
+            padding: 100px 24px 40px 24px;
+        }
+
+        .nav-sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--color-text-light);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .nav-item {
+            padding: 10px 0;
+            font-size: 12px;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            padding-left: 12px;
+            line-height: 1.4;
+        }
+
+        .nav-item:hover {
+            color: var(--color-text-main);
+            border-left-color: var(--color-accent-temp);
+            background: rgba(0,0,0,0.01);
+        }
+
+        .nav-item.active {
+            color: var(--color-accent-temp);
+            font-weight: 600;
+            border-left-color: var(--color-accent-temp);
+        }
+
+        .nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0);
+            z-index: 30;
+            transition: background-color 0.3s ease;
+            pointer-events: none;
+        }
+
+        .nav-overlay.open {
+            background-color: rgba(0, 0, 0, 0.3);
+            pointer-events: auto;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .dot-active { 
+            background-color: var(--color-text-main); 
+            width: 6px;
+            height: 6px;
+        }
+        .dot-inactive { 
+            background-color: var(--color-border); 
+            width: 4px;
+            height: 4px;
+        }
+
+        @media (max-width: 1320px) {
+            .slide-deck { transform: scale(0.9); }
+        }
+        @media (max-width: 1150px) {
+            .slide-deck { transform: scale(0.8); }
+        }
+        @media (max-width: 980px) {
+            .slide-deck { transform: scale(0.7); }
+        }
+        @media (max-width: 768px) {
+            .presentation-viewport { padding: 10px; height: auto; }
+            .slide-deck { aspect-ratio: auto; height: 560px; transform: none; }
+            .slide { padding: 32px 24px; }
+            h1 { font-size: 1.5rem; }
+            .main-text, .minimal-list li { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-btn" id="hamburgerBtn" title="目次を開く">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Navigation Sidebar -->
+    <div class="nav-sidebar" id="navSidebar">
+        <div class="nav-sidebar-content">
+            <div class="nav-sidebar-title">講義スライド一覧</div>
+            <div id="navMenu"></div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <div class="presentation-viewport">
+        <div class="slide-deck" id="deck">
+
+            <!-- Slide 1: 計算機科学における「問題」とは何か -->
+            <section class="slide active">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Problem Solving Basics</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Foundations of Algorithms</h2>
+                    <h1 class="font-serif text-main mb-4">なぜアルゴリズムが必要なのか？<br><span class="highlight">「計算機が解くべき問題の定義」</span></h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-4">
+                            <p class="main-text text-xs text-muted leading-relaxed">
+                                アルゴリズムを学ぶ前に、まず「なぜアルゴリズムが必要なのか」を問う必要があります。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                アルゴリズムの唯一の存在理由は<span class="highlight">「問題を解くこと（Solving Problems）」</span>です。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                では、計算機科学において「問題（Problem）」とは一体何を指すのでしょうか？
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <!-- 抽象図解: 日常の問題から数理問題への昇華 -->
+                            <svg viewBox="0 0 200 120" class="w-48 h-32 bg-[#F2EFEA] rounded-sm p-2">
+                                <circle cx="45" cy="60" r="22" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="45" y="58" font-size="7.5" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">日常の問題</text>
+                                <text x="45" y="69" font-size="6" font-family="sans-serif" text-anchor="middle" fill="var(--color-text-muted)">曖昧・主観的</text>
+
+                                <path d="M 73 60 L 115 60" stroke="var(--terracotta)" stroke-width="1.5" stroke-dasharray="2 2"/>
+                                <polygon points="115,57 121,60 115,63" fill="var(--terracotta)"/>
+
+                                <rect x="127" y="38" width="55" height="44" rx="3" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="154.5" y="56" font-size="7.5" font-family="monospace" text-anchor="middle" fill="var(--navy)">計算問題</text>
+                                <text x="154.5" y="67" font-size="6" font-family="monospace" text-anchor="middle" fill="var(--terracotta)">Input ➔ Output</text>
+
+                                <text x="100" y="108" font-size="6.5" font-family="monospace" text-anchor="middle" fill="var(--color-text-muted)">Problem Formulation</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>What is a Problem</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 2: 日常の悩みと計算機が扱える問題の違い -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Mathematical Translation</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Context and Mathematics</h2>
+                    <h1 class="font-serif text-main mb-3">日常の疑問を「数学の言葉」に翻訳する</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-3">
+                        <div class="p-5 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <div class="flex items-center gap-2 border-b border-border pb-2">
+                                <span class="font-mono text-xs font-bold text-terracotta px-1.5 py-0.5 bg-surface-1 rounded">Q1</span>
+                                <p class="font-serif font-bold text-terracotta text-sm">計算機が答えられない問い</p>
+                            </div>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                「私は休暇を取るべきか？（Should I take a holiday?）」
+                            </p>
+                            <p class="text-slate-500 text-[11px] leading-relaxed">
+                                文脈のない問いに計算機は答えられません。答が「Yes」だと人間同士には自明でも、感情や感覚を直接処理することはできないからです。
+                            </p>
+                        </div>
+
+                        <div class="p-5 bg-surface-2 border border-navy rounded-sm shadow-sm space-y-2">
+                            <div class="flex items-center gap-2 border-b border-border pb-2">
+                                <span class="font-mono text-xs font-bold text-navy px-1.5 py-0.5 bg-surface-1 rounded">Q2</span>
+                                <p class="font-serif font-bold text-navy text-sm">計算機が解ける問い</p>
+                            </div>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                <span class="highlight font-semibold">数値（Number）や真偽値（True/False）</span>への変換。
+                            </p>
+                            <p class="text-slate-500 text-[11px] leading-relaxed">
+                                プログラミング言語の種類に関係なく、根本となる表現は必ず厳密な数学的データでなければなりません。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Mathematical Translation</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 3: 具体例：休暇問題の定式化 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Example Formulation</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Holiday Allowance Problem</h2>
+                    <h1 class="font-serif text-main mb-3">問いの数理モデル化：<code>x &gt; y</code></h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                「休暇を取れるか？」という問いを、整数の変数を使って厳密に定義します。
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1.5">
+                                <li><strong>年間付与日数：</strong> 整数 <code>x</code> 日</li>
+                                <li><strong>取得済み日数：</strong> 整数 <code>y</code> 日</li>
+                                <li><strong>数学的な問い：</strong> <code>x &gt; y</code> は真か？</li>
+                                <li><strong>出力（Output）：</strong> <code>true</code> または <code>false</code></li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-6 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <svg viewBox="0 0 200 110" class="w-48 h-28 bg-[#F2EFEA] rounded-sm p-2">
+                                <rect x="15" y="35" width="45" height="40" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="37.5" y="52" font-size="7.5" font-family="monospace" text-anchor="middle" fill="var(--navy)">x (付与)</text>
+                                <text x="37.5" y="65" font-size="7.5" font-family="monospace" text-anchor="middle" fill="var(--navy)">y (消化)</text>
+
+                                <path d="M 64 55 L 94 55" stroke="var(--accent-temp)" stroke-width="1.5"/>
+                                <polygon points="94,52 100,55 94,58" fill="var(--accent-temp)"/>
+
+                                <rect x="104" y="35" width="80" height="40" fill="white" stroke="var(--terracotta)" stroke-width="1.2"/>
+                                <text x="144" y="53" font-size="8" font-family="monospace" text-anchor="middle" fill="var(--terracotta)">x &gt; y ?</text>
+                                <text x="144" y="66" font-size="7" font-family="monospace" text-anchor="middle" fill="var(--color-text-muted)">➔ true / false</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Example Formulation</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 4: 求める出力（Output）の設計 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Desired Output</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Designing the Answer</h2>
+                    <h1 class="font-serif text-main mb-3">「どんな形の答えが欲しいか」を決める</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-3">
+                        <div class="p-5 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <p class="font-serif font-bold text-slate-700 text-xs border-b border-border pb-1">出力形式 A：真偽値（判定のみ）</p>
+                            <p class="text-slate-600 text-[11px] leading-relaxed">
+                                <code>true</code> または <code>false</code>
+                            </p>
+                            <p class="text-slate-500 text-[10.5px] leading-relaxed">
+                                「取れるかどうか」は分かりますが、具体的な旅行計画を立てるには情報が足りません。
+                            </p>
+                        </div>
+
+                        <div class="p-5 bg-surface-2 border-2 border-navy rounded-sm shadow-sm space-y-2">
+                            <p class="font-serif font-bold text-navy text-xs border-b border-border pb-1">出力形式 B：残り日数（有益な数値）</p>
+                            <p class="text-slate-600 text-[11px] leading-relaxed">
+                                <code>x - y</code> （残日数そのもの）
+                            </p>
+                            <p class="text-slate-500 text-[10.5px] leading-relaxed">
+                                差が正なら休暇可能であり、かつ「あと何日取れるか」まで分かります。求める出力の定義が問題の価値を決めます。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Desired Output</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 5: 計算問題（Problem）の定義 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Problem Definition</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Core Formalism</h2>
+                    <h1 class="font-serif text-main mb-3">計算科学における「問題」の構成要素</h1>
+                    <div class="p-5 bg-surface-2 border border-navy rounded-sm shadow-sm space-y-3 mt-3">
+                        <div class="space-y-1">
+                            <span class="font-mono text-xs font-bold text-navy block">1. 明確に定義された入力（Well-defined Input）</span>
+                            <p class="text-slate-600 text-[11.5px]">対象となるデータ集合（例：整数 <code>x, y</code>）。</p>
+                        </div>
+                        <div class="space-y-1 border-t border-border pt-2">
+                            <span class="font-mono text-xs font-bold text-navy block">2. 明確に定義された出力（Well-defined Output）</span>
+                            <p class="text-slate-600 text-[11.5px]">期待される解答の形式（例：残日数を示す整数、真偽値）。</p>
+                        </div>
+                        <div class="space-y-1 border-t border-border pt-2">
+                            <span class="font-mono text-xs font-bold text-terracotta block">3. 入力に対する問い（A Question about the Input）</span>
+                            <p class="text-slate-600 text-[11.5px]">入力を受け取り、対応する出力を確定させる数理的な要件。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Problem Definition</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 6: 具体例：方程式 x^2 = 2 の整数解 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Case Study</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Integer Solution Problem</h2>
+                    <h1 class="font-serif text-main mb-3">if <code>x² = 2</code> ならば、<code>x</code> は integer（整数）か？</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                この問題の入力と出力は何でしょうか？
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1.5">
+                                <li><strong>入力（Input）：</strong> 方程式全体ではなく、数値 <span class="highlight"><code>2</code></span></li>
+                                <li><strong>問い（Question）：</strong> if <code>x² = 2</code> のとき、<code>x</code> が integer（整数）か否か</li>
+                                <li><strong>出力（Output）：</strong> <code>true</code> または <code>false</code></li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <!-- 抽象図解: 入力2の検証 -->
+                            <svg viewBox="0 0 170 110" class="w-44 h-28 bg-[#F2EFEA] rounded-sm p-2">
+                                <circle cx="45" cy="55" r="18" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="45" y="60" font-size="12" font-family="monospace" text-anchor="middle" fill="var(--navy)">2</text>
+
+                                <path d="M 68 55 L 98 55" stroke="var(--terracotta)" stroke-width="1.5"/>
+                                <polygon points="98,52 104,55 98,58" fill="var(--terracotta)"/>
+
+                                <rect x="110" y="37" width="48" height="36" rx="2" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="134" y="53" font-size="7.5" font-family="monospace" text-anchor="middle" fill="var(--navy)">√2 ∈ ℤ ?</text>
+                                <text x="134" y="65" font-size="7.5" font-family="monospace" text-anchor="middle" fill="var(--terracotta)">false</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Case Study</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 7: 解法は1つではない（2つのアプローチ） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Multiple Approaches</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Two Ways to Solve</h2>
+                    <h1 class="font-serif text-main mb-3">同じ問題に対する「2つの解法」</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-3">
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-navy block border-b border-border pb-1">解法 1：直接計算アプローチ</span>
+                            <p class="text-slate-600 text-[11px] leading-relaxed">
+                                <code>√2</code> を直接算出し、それが整数かどうか判定する。
+                            </p>
+                            <p class="text-slate-500 text-[10.5px]">
+                                注意：平方根の算出自体は基本演算（加減乗除）に含まれないため、追加の手続きが必要。
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-terracotta block border-b border-border pb-1">解法 2：探索的列挙アプローチ</span>
+                            <p class="text-slate-600 text-[11px] leading-relaxed">
+                                <code>1² = 1</code>, <code>2² = 4</code> と順に自乗を計算し、<code>2</code> を超えた瞬間に打ち切る。
+                            </p>
+                            <p class="text-slate-500 text-[10.5px]">
+                                特徴：基本乗算と大小比較だけで今すぐ完全に実行可能。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Multiple Approaches</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 8: アルゴリズム（Algorithm）の定義 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Algorithm Definition</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Step-by-Step Instructions</h2>
+                    <h1 class="font-serif text-main mb-3">アルゴリズムとは何か？</h1>
+                    <p class="main-text text-xs text-muted mb-3 leading-relaxed">
+                        アルゴリズムとは、従うことで問題を解決できる<span class="highlight">「一般的で単純な一連の手順（命令列）」</span>です。
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-2">
+                        <div class="p-4 bg-surface-2 border border-navy rounded-sm shadow-sm space-y-1.5">
+                            <span class="font-bold text-navy text-xs block border-b border-border pb-1">要件 1：正当性（Correctness）</span>
+                            <p class="text-slate-600 text-[11px] leading-relaxed">
+                                導き出される出力が、問題に対する正しい解答であること。
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-surface-2 border border-terracotta rounded-sm shadow-sm space-y-1.5">
+                            <span class="font-bold text-terracotta text-xs block border-b border-border pb-1">要件 2：基本命令のステップ</span>
+                            <p class="text-slate-600 text-[11px] leading-relaxed">
+                                基本的な算術演算（加減乗除）や論理判定（if-then）の組み合わせで記述できること。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Algorithm Definition</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 9: 問題の一般化：x^2 = y への拡張 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Generalization</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Scaling the Input</h2>
+                    <h1 class="font-serif text-main mb-3">問題の拡張：if <code>x² = 1601</code> ならば、<code>x</code> は integer（整数）か？</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                対象が <code>2</code> から <code>1601</code>、さらに任意の整数 <code>y</code> へ変わったとき、<code>if x² = y, is x an integer?</code> という問いに対する解法はどうなるでしょうか？
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1.5">
+                                <li><strong>平方根法：</strong> <code>√1601</code> の汎用計算アルゴリズムが必要</li>
+                                <li><strong>列挙法：</strong> 1から順に二乗を試す（計算ステップ数が膨大になる）</li>
+                                <li><span class="highlight font-semibold">どちらがより良い解法か？</span> これこそが本モジュールの中心命題です。</li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <div class="p-3 font-mono text-center space-y-1">
+                                <span class="text-xs text-slate-400 block">General Problem</span>
+                                <span class="text-base font-bold text-navy block">if x² = y</span>
+                                <span class="text-[10px] text-navy block">is x an integer?</span>
+                                <span class="text-[10px] text-terracotta block">How many steps required?</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Generalization</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 10: まとめと振り返りの問いかけ -->
+            <section class="slide text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Summary</span>
+                    <span></span>
+                </div>
+                <div class="slide-content max-w-2xl py-3">
+                    <h2>Summary</h2>
+                    <h1 class="font-serif text-main mb-4">問題とアルゴリズムの核</h1>
+                    
+                    <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-left text-xs space-y-2 max-w-md mx-auto mb-4">
+                        <div class="border-b border-border pb-1.5">
+                            <span class="font-bold text-navy block">問題（Problem）：</span>
+                            <span class="text-slate-600 text-[11px]">明確な入力と、期待される出力の形式を定める問い。</span>
+                        </div>
+                        <div>
+                            <span class="font-bold text-terracotta block">アルゴリズム（Algorithm）：</span>
+                            <span class="text-slate-600 text-[11px]">正しい出力を生成する有限のステップ列。</span>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-surface-1 border border-border rounded-sm max-w-md mx-auto text-center">
+                        <span class="font-mono text-[10px] text-navy font-bold uppercase tracking-wider block mb-0.5">やってみよう！</span>
+                        <p class="text-[11px] text-slate-700 font-medium">
+                            「アルゴリズムによって解決できる問題」の例を、身近なところから1つ考えてみましょう。
+                        </p>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Summary</span><span></span>
+                </div>
+            </section>
+
+                                <!-- Minimalist Navigation Controls Footer overlay inside the slide deck -->
+                            <div class="absolute bottom-6 left-10 right-10 flex justify-between items-center pointer-events-auto z-30">
+                                <div class="flex gap-6">
+                                    <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-600 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold cursor-pointer">
+                                        <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
+                                    </button>
+                                    <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-600 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold cursor-pointer">
+                                        Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Dynamic Step Indicators Container -->
+                                <div class="flex gap-1.5 overflow-x-auto max-w-xs justify-center px-2 no-scrollbar" id="dots-container"></div>
+                            </div>
+
+        </div>
+    </div>
+
+    
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsContainer = document.getElementById('dots-container');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const navSidebar = document.getElementById('navSidebar');
+        const navOverlay = document.getElementById('navOverlay');
+        const navMenu = document.getElementById('navMenu');
+        
+        let currentSlide = 0;
+        let indicators = [];
+
+        slides.forEach((slide, index) => {
+            const dot = document.createElement('span');
+            dot.className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 ' + (index === 0 ? 'dot-active' : 'dot-inactive');
+            dotsContainer.appendChild(dot);
+            indicators.push(dot);
+
+            const title = slide.querySelector('h1')?.innerText.replace(/\n/g, ' ') || `Slide ${index + 1}`;
+            const navItem = document.createElement('div');
+            navItem.className = `nav-item ${index === 0 ? 'active' : ''}`;
+            navItem.textContent = `${index + 1}. ${title}`;
+            navItem.onclick = () => { updateSlide(index); closeSidebar(); };
+            navMenu.appendChild(navItem);
+        });
+
+        function updateSlide(index) {
+            if (index < 0) {
+                currentSlide = 0;
+                return;
+            }
+            if (index >= slides.length) {
+                currentSlide = slides.length - 1;
+                return;
+            }
+
+            slides[currentSlide].classList.remove('active');
+            indicators[currentSlide].className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 bg-gray-300';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.remove('active');
+
+            currentSlide = index;
+            
+            slides[currentSlide].classList.add('active');
+            indicators[currentSlide].className = 'w-1.5 h-1.5 rounded-full transition-all duration-300 bg-black';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.add('active');
+
+            prevBtn.style.opacity = currentSlide === 0 ? '0.2' : '1';
+            prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+            nextBtn.style.opacity = currentSlide === slides.length - 1 ? '0.2' : '1';
+            nextBtn.style.pointerEvents = currentSlide === slides.length - 1 ? 'none' : 'auto';
+        }
+
+        function closeSidebar() {
+            navSidebar.classList.remove('open');
+            navOverlay.classList.remove('open');
+            hamburgerBtn.classList.remove('active');
+        }
+
+        hamburgerBtn.onclick = () => {
+            hamburgerBtn.classList.toggle('active');
+            navSidebar.classList.toggle('open');
+            navOverlay.classList.toggle('open');
+        };
+        navOverlay.onclick = closeSidebar;
+
+        prevBtn.onclick = () => updateSlide(currentSlide - 1);
+        nextBtn.onclick = () => updateSlide(currentSlide + 1);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                updateSlide(currentSlide - 1);
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                updateSlide(currentSlide + 1);
+            }
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const deck = document.getElementById('deck');
+        deck.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        deck.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                updateSlide(currentSlide + 1);
+            }
+            if (touchEndX > touchStartX + 50) {
+                updateSlide(currentSlide - 1);
+            }
+        }
+
+        updateSlide(0);
+    </script>
+</body>
+</html>

@@ -1,0 +1,1930 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>講義スライド：コンピュータへの入力と近似アルゴリズム (Algorithms and Data Structures Part 1)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --color-bg-outer: #D1CFCA;      
+            --color-bg-slide:  #F7F6F4;     
+            --color-surface-1: #F2EFEA;    
+            --color-surface-2: #FFFFFF;    
+            --color-border: #DDDAD5;       
+            --color-text-main: #222222;    
+            --color-text-muted: #555555;   
+            --color-text-light: #999999;   
+            --color-accent-temp: #8C7A6B;  
+            --navy: #344D61;               
+            --terracotta: #994F60;         
+            --gold-muted: #C4B298;         
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--color-bg-outer);
+            color: var(--color-text-main);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+        }
+
+        h1, h2, h3, .font-serif {
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-weight: 400;
+        }
+
+        .presentation-viewport {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .slide-deck {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--color-bg-slide);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            padding: 4.5% 6.5% 56px 6.5%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            transform: translateY(10px);
+            background: var(--color-bg-slide);
+            overflow-y: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        h1 {
+            color: var(--color-text-main);
+            font-size: 1.85rem; 
+            font-weight: 400;
+            line-height: 1.38;
+            margin-bottom: 1.1rem;
+            letter-spacing: 0.04em;
+        }
+
+        h2 {
+            color: var(--color-accent-temp);
+            font-size: 0.65rem; 
+            font-weight: 600;
+            letter-spacing: 0.35em;
+            margin-bottom: 0.45rem;
+            text-transform: uppercase;
+        }
+
+        .main-text {
+            font-size: 1.02rem; 
+            line-height: 1.75;
+            color: var(--color-text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        .highlight {
+            background: linear-gradient(transparent 70%, #E2DDD5 70%);
+            font-weight: 500;
+            padding: 0 0.15em;
+        }
+
+        code {
+            background: var(--color-surface-1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 2px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--terracotta);
+            font-weight: bold;
+            font-size: 0.88em;
+            border: 1px solid var(--color-border);
+        }
+
+        .math-eq {
+            font-family: 'Noto Serif JP', 'Playfair Display', serif;
+            color: var(--color-text-main);
+            letter-spacing: 0.01em;
+        }
+
+        .math-frac {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            line-height: 1.03;
+            margin: 0 0.08em;
+        }
+
+        .math-frac .num {
+            padding: 0 0.22em 0.09em;
+            border-bottom: 1px solid currentColor;
+        }
+
+        .math-frac .den {
+            padding: 0.09em 0.22em 0;
+        }
+
+        .math-frac-sm {
+            font-size: 0.9em;
+        }
+
+        .math-box {
+            background: var(--color-surface-2);
+            border: 1px solid var(--color-border);
+            border-radius: 2px;
+            padding: 0.55rem 0.85rem;
+            display: inline-block;
+        }
+
+        .minimal-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .minimal-list li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.55rem;
+            font-size: 0.92rem; 
+            color: var(--color-text-muted);
+            display: block;
+            line-height: 1.55;
+        }
+        .minimal-list li::before {
+            content: "・";
+            position: absolute;
+            left: 0;
+            color: var(--color-accent-temp);
+            font-weight: bold;
+        }
+
+        .slide-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: var(--color-text-light);
+            border-top: 1px solid var(--color-border);
+            padding-top: 0.65rem;
+            margin-top: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .nav-btn {
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            color: var(--color-text-main);
+            opacity: 1 !important;
+        }
+
+        .hamburger-btn {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            z-index: 50;
+            background: rgba(247, 246, 244, 0.9);
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 0;
+            width: 48px;
+            height: 48px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+
+        .hamburger-btn:hover {
+            background: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .hamburger-btn span {
+            width: 18px;
+            height: 2px;
+            background-color: var(--color-text-main);
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+
+        .nav-sidebar {
+            position: fixed;
+            left: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background-color: var(--color-bg-slide);
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
+            z-index: 40;
+            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            border-right: 1px solid var(--color-border);
+        }
+
+        .nav-sidebar.open {
+            left: 0;
+        }
+
+        .nav-sidebar-content {
+            padding: 100px 24px 40px 24px;
+        }
+
+        .nav-sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--color-text-light);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .nav-item {
+            padding: 10px 0;
+            font-size: 12px;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            padding-left: 12px;
+            line-height: 1.4;
+        }
+
+        .nav-item:hover {
+            color: var(--color-text-main);
+            border-left-color: var(--color-accent-temp);
+            background: rgba(0,0,0,0.01);
+        }
+
+        .nav-item.active {
+            color: var(--color-accent-temp);
+            font-weight: 600;
+            border-left-color: var(--color-accent-temp);
+        }
+
+        .nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0);
+            z-index: 30;
+            transition: background-color 0.3s ease;
+            pointer-events: none;
+        }
+
+        .nav-overlay.open {
+            background-color: rgba(0, 0, 0, 0.3);
+            pointer-events: auto;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .dot-active { 
+            background-color: var(--color-text-main); 
+            width: 6px;
+            height: 6px;
+        }
+        .dot-inactive { 
+            background-color: var(--color-border); 
+            width: 4px;
+            height: 4px;
+        }
+
+        @media (max-width: 1320px) {
+            .slide-deck { transform: scale(0.9); }
+        }
+        @media (max-width: 1150px) {
+            .slide-deck { transform: scale(0.8); }
+        }
+        @media (max-width: 980px) {
+            .slide-deck { transform: scale(0.7); }
+        }
+        @media (max-width: 768px) {
+            .presentation-viewport { padding: 10px; height: auto; }
+            .slide-deck { aspect-ratio: auto; height: 560px; transform: none; }
+            .slide { padding: 32px 24px; }
+            h1 { font-size: 1.5rem; }
+            .main-text, .minimal-list li { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-btn" id="hamburgerBtn" title="目次を開く">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Navigation Sidebar -->
+    <div class="nav-sidebar" id="navSidebar">
+        <div class="nav-sidebar-content">
+            <div class="nav-sidebar-title">講義スライド一覧</div>
+            <div id="navMenu"></div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <div class="presentation-viewport">
+        <div class="slide-deck" id="deck">
+
+            <!-- Slide 1: コンピュータに入力できるデータとは何か -->
+            <section class="slide active">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Data Representation</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Input Representation</h2>
+                    <h1 class="font-serif text-main mb-4">コンピュータに入力可能なデータとは何か？<br><span class="highlight">「有限メモリと実データのギャップ」</span></h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-4">
+                            <p class="main-text text-xs text-muted leading-relaxed">
+                                アルゴリズムをプログラムに翻訳する前に、根本的な問いに答える必要があります。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                <span class="highlight">「あらゆるデータをコンピュータに入力することは常に可能か？」</span>
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                計算機は有限のメモリしか持たない物理的装置です。数学的な数理世界とデジタルの物理限界の橋渡しを探求します。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <!-- 抽象図解: 数学世界から有限メモリへの射影 -->
+                            <svg viewBox="0 0 200 120" class="w-48 h-32 bg-[#F2EFEA] rounded-sm p-2">
+                                <circle cx="45" cy="60" r="25" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="45" y="58" font-size="7.5" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">数学的実数</text>
+                                <text x="45" y="69" font-size="6" font-family="monospace" text-anchor="middle" fill="var(--color-text-muted)">π, √2, ℝ</text>
+
+                                <path d="M 73 60 L 115 60" stroke="var(--terracotta)" stroke-width="1.5" stroke-dasharray="2 2"/>
+                                <polygon points="115,57 121,60 115,63" fill="var(--terracotta)"/>
+
+                                <rect x="127" y="38" width="55" height="44" rx="2" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="154.5" y="56" font-size="7.5" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">有限メモリ</text>
+                                <text x="154.5" y="67" font-size="6" font-family="monospace" text-anchor="middle" fill="var(--terracotta)">Finite Bits</text>
+
+                                <text x="100" y="108" font-size="6.5" font-family="monospace" text-anchor="middle" fill="var(--color-text-muted)">Instantiation Limit</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Input Representation</span><span></span>
+                </div>
+            </section>
+
+            <!-- Bridge Slide A: 有限メモリの前提 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Finite Information</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Memory Constraint</h2>
+                    <h1 class="font-serif text-main mb-3">コンピュータは有限の情報しか保存できない</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                現実のコンピュータには有限量のメモリしかありません。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                したがって、コンピュータが直接扱えるデータも、<span class="highlight">有限の長さで表現できること</span>が前提になります。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                例えば整数の <code>2</code> は、2進数なら <code>2<sub>10</sub> = 10<sub>2</sub></code> と表せるため、有限個のビットで保存できます。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <div class="text-center space-y-3">
+                                <span class="font-mono text-xs uppercase tracking-wider text-slate-400 block">Binary Example</span>
+                                <span class="font-serif text-2xl text-navy block">2<sub>10</sub> = 10<sub>2</sub></span>
+                                <div class="flex items-center justify-center gap-2">
+                                    <span class="w-7 h-7 border border-navy rounded-sm bg-white flex items-center justify-center font-mono text-sm text-navy">1</span>
+                                    <span class="w-7 h-7 border border-navy rounded-sm bg-white flex items-center justify-center font-mono text-sm text-navy">0</span>
+                                </div>
+                                <span class="text-[10px] text-slate-500 block">Finite Bits = Storable</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Finite Information</span><span></span>
+                </div>
+            </section>
+
+            <!-- Bridge Slide B: 整数 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Integers</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>2.1 Integers</h2>
+                    <h1 class="font-serif text-main mb-3">整数は有限桁で表現できる（ただし上限はある）</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                任意の特定の整数は、有限桁で表現できます。例えば <code>12345</code> は2進数に変換しても有限桁です。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                ただし、これは「一台の固定されたコンピュータが、どれほど大きな整数でも保存できる」という意味ではありません。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                コンピュータのメモリは有限なので、保存できる整数の大きさには上限があります。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <div class="p-3 w-full max-w-xs bg-[#F2EFEA] border border-border rounded-sm">
+                                <p class="text-[11px] text-slate-500 mb-2">ここで重要なのは：</p>
+                                <p class="text-sm text-navy leading-relaxed">
+                                    一つひとつの整数は、原理的には<span class="highlight">有限の記号列</span>として表せる
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Integer Representation</span><span></span>
+                </div>
+            </section>
+
+            <!-- Bridge Slide C: 有理数 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Rational Numbers</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>2.2 Rational Numbers</h2>
+                    <h1 class="font-serif text-main mb-3">有理数は「2つの整数」として正確に保存できる</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                有理数とは、2つの整数 <code>p, q</code> を使って <code>p / q</code>（<code>q &ne; 0</code>）と表せる数です。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                例えば <code>1/3</code>、<code>17/12</code>、<code>-5/2</code> などです。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                分子と分母をそれぞれ整数として保存すれば、有理数を正確に表現できます。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <div class="p-3 w-full max-w-xs bg-[#F2EFEA] border border-border rounded-sm space-y-2">
+                                <span class="font-mono text-xs font-bold text-navy block border-b border-border pb-1">例：1/3 の保存</span>
+                                <div class="font-mono text-[11px] text-slate-700 leading-relaxed">
+                                    numerator &nbsp; = 1<br>
+                                    denominator = 3
+                                </div>
+                                <p class="text-[10px] text-slate-500">→ 「小数展開」ではなく「整数ペア」で保持する</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Rational Storage</span><span></span>
+                </div>
+            </section>
+
+            <!-- Bridge Slide D: 浮動小数点の注意 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Practical Caveat</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Floating-Point Caution</h2>
+                    <h1 class="font-serif text-main mb-3">実際のコンピュータでは少し注意が必要</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                通常の浮動小数点数では、有理数であっても正確に保存できないことがあります。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                例えば10進数の <code>0.1 = 1/10</code> は、2進数では有限桁で終わりません。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                そのため一般的なプログラミング言語では、<code>0.1</code> は内部的には非常に近い別の数として保存されます。
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1.5">
+                                <li><strong>分数 <code>(p, q)</code> として保存：</strong> 正確</li>
+                                <li><strong>浮動小数点数として保存：</strong> 近似になることがある</li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <div class="text-center space-y-3">
+                                <span class="font-mono text-xs uppercase tracking-wider text-slate-400 block">Decimal vs Binary</span>
+                                <span class="font-serif text-3xl text-navy block">0.1 = <sup>1</sup>&frasl;<sub>10</sub></span>
+                                <span class="font-mono text-[10px] text-terracotta block">0.0001100110011...<sub>2</sub></span>
+                                <span class="text-[10px] text-slate-500 block">finite decimal, infinite binary expansion</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Floating-Point Caveat</span><span></span>
+                </div>
+            </section>
+
+            <!-- Bridge Slide E: 無理数 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Irrational Numbers</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>3. Irrational Numbers</h2>
+                    <h1 class="font-serif text-main mb-3">無理数は有限桁では正確に保存できない</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                無理数とは、整数 <code>p, q</code> を使って <code>p / q</code>（<code>q &ne; 0</code>）という形に表せない実数です。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                代表例は <code>√2</code>、<code>π</code>、<code>e</code> です。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                例えば円周率は <code>π = 3.14159265358979323846...</code> と無限に続き、途中で終わることも、一定のパターンを繰り返すこともありません。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                したがって、<code>π</code> のすべての桁を有限メモリに数値として保存することはできません。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <div class="p-3 w-full max-w-xs bg-[#F2EFEA] border border-border rounded-sm text-center space-y-2">
+                                <span class="font-mono text-xs uppercase tracking-wider text-slate-400 block">Examples</span>
+                                <span class="font-serif text-2xl text-navy block">√2, &nbsp; π, &nbsp; e</span>
+                                <span class="font-mono text-[10px] text-terracotta block">not representable as p / q</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Irrational Numbers</span><span></span>
+                </div>
+            </section>
+
+            <!-- Bridge Slide F: πの超越性 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Transcendence of π</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>3.1 Transcendence</h2>
+                    <h1 class="font-serif text-main mb-3">π が超越数であるとは</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                講義では、<code>π</code> は無理数であるだけでなく、超越数であることにも触れます。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                <code>√2</code> は無理数ですが、<code>x<sup>2</sup> - 2 = 0</code> という整数係数の方程式の解です。このような数を代数的数と呼びます。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                一方、<code>π</code> はどのような整数係数の多項式の解にもなりません。このような数を超越数と呼びます。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                ただし今回の「有限桁では正確に保存できない」という議論には、<code>π</code> が無理数であることだけでも十分です。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <div class="p-3 w-full max-w-xs bg-[#F2EFEA] border border-border rounded-sm space-y-2">
+                                <span class="font-mono text-xs uppercase tracking-wider text-slate-400 block">Algebraic vs Transcendental</span>
+                                <p class="text-[11px] text-slate-700"><code>√2</code> : root of <code>x<sup>2</sup> - 2 = 0</code></p>
+                                <p class="text-[11px] text-slate-700"><code>π</code> : root of no integer-coefficient polynomial</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Transcendence</span><span></span>
+                </div>
+            </section>
+
+            <!-- Bridge Slide G: 記号としての保存 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Symbolic Storage</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>3.2 Symbolic Representation</h2>
+                    <h1 class="font-serif text-main mb-3">記号として保存することはできる</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start mt-2">
+                        <div class="md:col-span-7 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                厳密にいうと、コンピュータは文字列として <code>π</code> や <code>sqrt(2)</code> を保存できます。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                数式処理システムであれば、<code>π(√2 - 1)</code> のような式を、式のまま保持することもできます。
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1.5">
+                                <li><strong>誤解しやすい表現：</strong>「<code>π</code> は一切コンピュータに保存できない」</li>
+                                <li><strong>より正確な表現：</strong>「<code>π</code> の完全な数値展開を、有限桁の数値として保存することはできない」</li>
+                            </ul>
+                            <p class="text-xs text-muted leading-relaxed">
+                                したがって数値計算では、<code>π ≈ 3.14159265</code> のような有限桁の近似値を使います。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <div class="p-3 w-full max-w-xs bg-[#F2EFEA] border border-border rounded-sm space-y-2">
+                                <span class="font-mono text-xs uppercase tracking-wider text-slate-400 block">String / Symbol / Number</span>
+                                <div class="font-mono text-[11px] text-slate-700 bg-white border border-border rounded px-2 py-1.5">π</div>
+                                <div class="font-mono text-[11px] text-slate-700 bg-white border border-border rounded px-2 py-1.5">sqrt(2)</div>
+                                <div class="font-mono text-[11px] text-slate-700 bg-white border border-border rounded px-2 py-1.5">π(√2 - 1)</div>
+                                <div class="font-mono text-[11px] text-terracotta bg-white border border-border rounded px-2 py-1.5">π ≈ 3.14159265</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Symbolic vs Numeric Storage</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 2: 数式例と円周率πの壁 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Mathematical Problem</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Case Equation</h2>
+                    <h1 class="font-serif text-main mb-3">じゃあ <code>x² + 2πx = π²</code> はどうなるでしょう？</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                人間にとっては、この方程式は記号計算で比較的簡単に解けます。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                まずは手計算で、解がどのように導かれるかを順番に確認しましょう。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <div class="text-center space-y-2">
+                                <span class="font-mono text-xs uppercase tracking-wider text-slate-400 block">Equation</span>
+                                <span class="font-serif text-2xl text-navy block">x² + 2πx = π²</span>
+                                <span class="text-[10px] text-slate-500 block">Can we solve this symbolically?</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Mathematical Problem</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 2.1: 方程式の手計算（平方完成） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Hand Calculation 1</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Step-by-step Derivation</h2>
+                    <h1 class="font-serif text-main mb-3">手計算で解いてみる（平方完成）</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-5 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                まずは両辺に <code>π²</code> を加えて、左辺を平方の形にします。
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1.5">
+                                <li><code>x² + 2πx = π²</code></li>
+                                <li><code>x² + 2πx + π² = 2π²</code></li>
+                                <li><code>(x + π)² = 2π²</code></li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-7 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <div class="font-serif text-xl text-main leading-relaxed text-center space-y-2">
+                                <div>x² + 2πx = π²</div>
+                                <div>x² + 2πx + π² = 2π²</div>
+                                <div class="text-terracotta font-semibold">(x + π)² = 2π²</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Hand Calculation 1</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 2.2: 方程式の手計算（解の導出） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Hand Calculation 2</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Step-by-step Derivation</h2>
+                    <h1 class="font-serif text-main mb-3">手計算で解いてみる（解の導出）</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-5 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                次に平方根を取り、最終的な2つの解を得ます。
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1.5">
+                                <li><code>x + π = ±π√2</code></li>
+                                <li><code>x = -π ± π√2</code></li>
+                                <li><code>x = π(√2 - 1)</code> または <code>x = -π(√2 + 1)</code></li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-7 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <div class="font-serif text-xl text-main leading-relaxed text-center space-y-2">
+                                <div>x + π = ±π√2</div>
+                                <div>x = -π ± π√2</div>
+                                <div class="text-terracotta font-semibold">x = π(√2 - 1)</div>
+                                <div class="text-terracotta font-semibold">x = -π(√2 + 1)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Hand Calculation 2</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 3: 整数・有理数・無理数の記憶境界 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Storage Boundaries</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Back to Digital Limits</h2>
+                    <h1 class="font-serif text-main mb-3">2は保存できるが、πと√2は数値としては保存しきれない</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-3">
+                            <ul class="minimal-list text-xs space-y-2">
+                                <li><strong>整数 2：</strong> 有限ビットで厳密に保存できる。</li>
+                                <li><strong>π と √2：</strong> 無理数なので、有限桁の数値としては完全保存できない。</li>
+                                <li><span class="highlight font-semibold">つまり：</span> 解を式としては保持できても、数値としては近似値で扱う必要がある。</li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <svg viewBox="0 0 170 110" class="w-44 h-28 bg-[#F2EFEA] rounded-sm p-2">
+                                <rect x="20" y="20" width="130" height="20" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="85" y="33" font-size="7" font-family="monospace" text-anchor="middle" fill="var(--navy)">2 ➔ Exact Numeric</text>
+
+                                <rect x="20" y="46" width="130" height="20" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="85" y="59" font-size="7" font-family="monospace" text-anchor="middle" fill="var(--terracotta)">π ➔ Inexact Numeric</text>
+
+                                <rect x="20" y="72" width="130" height="20" fill="#FCE7F3" stroke="var(--terracotta)" stroke-width="1.2"/>
+                                <text x="85" y="85" font-size="7" font-family="monospace" text-anchor="middle" fill="var(--terracotta)">√2 ➔ Inexact Numeric</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Storage Boundaries</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 4: 近似（Approximation）と精度（Precision） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Approximation &amp; Precision</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Approximation</h2>
+                    <h1 class="font-serif text-main mb-3">近似（Approximation）と精度（Precision）</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-3">
+                        <div class="p-5 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-navy block border-b border-border pb-1">有理数による近似</span>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                任意の無理数は、差をいくらでも小さくできる有理数によって近似可能です。
+                            </p>
+                            <p class="text-slate-500 text-[11px] leading-relaxed">
+                                電卓の固定桁数表示のように、要求される誤差（エラー）を許容限界以下に抑え込みます。
+                            </p>
+                        </div>
+
+                        <div class="p-5 bg-surface-2 border border-navy rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-navy block border-b border-border pb-1">入力誤差と出力誤差</span>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                コンピュータへの入力が近似値である以上、アルゴリズムの導く出力も近似値となります。
+                            </p>
+                            <p class="text-slate-500 text-[11px] leading-relaxed">
+                                <span class="highlight font-semibold">理想の解との差（精度）</span>をコントロールできるかどうかが計算科学の要となります。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Approximation &amp; Precision</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 4.1: コンピュータで計算するとどうなるか -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Numerical Computation</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>4.1 Computational View</h2>
+                    <h1 class="font-serif text-main mb-3">コンピュータで計算するとどうなるか</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                先ほどの解には <code>π</code> と <code>√2</code> が含まれています。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                どちらも無理数なので、通常の数値計算では正確な値を有限桁で保存できません。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                そこで、<code>π ≈ 3.14159265</code>、<code>√2 ≈ 1.41421356</code> のように近似します。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                すると、出力される <code>x</code> も近似値になります。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <div class="p-3 w-full max-w-xs text-center space-y-2 bg-[#F2EFEA] border border-border rounded-sm">
+                                <span class="font-mono text-xs uppercase tracking-wider text-slate-400 block">Computation Pipeline</span>
+                                <span class="font-serif text-[18px] text-navy block">近似された入力</span>
+                                <span class="font-serif text-[18px] text-slate-500 block">→ 計算 →</span>
+                                <span class="font-serif text-[18px] text-terracotta block">近似された出力</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Numerical Computation</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 4.2: 近似値と誤差 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Approximation Error</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>5. Approximation Error</h2>
+                    <h1 class="font-serif text-main mb-3">近似値と誤差</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                本当の値を <code>a</code>、コンピュータが持つ近似値を <code>ã</code> とします。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                このとき、絶対誤差は <code>E<sub>abs</sub> = |a - ã|</code> で定義されます。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                例えば <code>π ≈ 3.14</code> とした場合、<code>E<sub>abs</sub> = |π - 3.14| ≈ 0.00159265</code> です。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                誤差が小さいほど、本当の値に近い計算になります。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <div class="p-3 w-full max-w-xs text-center space-y-2 bg-[#F2EFEA] border border-border rounded-sm">
+                                <span class="font-mono text-xs uppercase tracking-wider text-slate-400 block">Absolute Error</span>
+                                <span class="font-serif text-2xl text-navy block">E<sub>abs</sub> = |a - ã|</span>
+                                <span class="font-serif text-[16px] text-terracotta block">|π - 3.14| ≈ 0.00159265</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Approximation Error</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 5: 改変問題：x^2 = 2 を小数で求めよ -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Decimal Solution Problem</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Problem Mutation</h2>
+                    <h1 class="font-serif text-main mb-3">問いの変更：「<code>x² = 2</code> の解を小数で求めよ」</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                前回の方程式問題の問いをわずかに変更してみます。
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1.5">
+                                <li>問題文に無理数は一切含まれていない（<code>2</code> のみ）。</li>
+                                <li>しかし、解である <code>√2</code> は無理数である。</li>
+                                <li>したがって、<span class="highlight font-semibold">出力そのものを有限ビットに収めるために近似</span>せざるを得ない。</li>
+                                <li><span class="highlight font-semibold">コンピュータに解かせるには、問いを A または B の形に具体化する必要がある。</span></li>
+                                <li><span class="highlight font-semibold">無理数を扱う問題では、近似値を返すこと自体が、正しい問題設定の一部になります。</span></li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <div class="p-3 font-mono text-left space-y-1.5 w-full max-w-xs">
+                                <span class="text-xs text-slate-400 block text-center">To Make it Computable</span>
+                                <span class="text-[11px] text-navy block"><strong>A.</strong> <code>√2</code> を小数第 <code>n</code> 位まで求めよ</span>
+                                <span class="text-[11px] text-navy block"><strong>B.</strong> 誤差が <code>10<sup>-6</sup></code> 未満になる近似値を求めよ</span>
+                                <span class="text-[10px] text-terracotta block text-center">➔ Output Must Be Approximated</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Decimal Solution Problem</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 6: 歴史的先駆：ヘロンの解法（Heron's Method） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Ancient Approximation</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Hero of Alexandria</h2>
+                    <h1 class="font-serif text-main mb-3">紀元1世紀：アレクサンドリアのヘロンの解法</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                近似計算の必要性は、デジタルコンピュータ誕生より遥か昔から存在していました。
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1.5">
+                                <li>エジプト・ギリシャの数学者ヘロンが考案した平方根の近似アルゴリズム。</li>
+                                <li>現代のニュートン・ラフソン法にも通じる、極めて美しくエレガントな手順。</li>
+                                <li><span class="highlight font-semibold">「真の値を上下から挟み込み、平均（中点）を取る」</span>反復手続き。</li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <!-- 抽象図解: 挟み込みと平均化 -->
+                            <svg viewBox="0 0 170 110" class="w-44 h-28 bg-[#F2EFEA] rounded-sm p-2">
+                                <line x1="20" y1="55" x2="150" y2="55" stroke="var(--navy)" stroke-width="1.2"/>
+                                <circle cx="40" cy="55" r="4" fill="var(--navy)"/>
+                                <text x="40" y="42" font-size="6.5" font-family="monospace" text-anchor="middle" fill="var(--navy)">Lower</text>
+
+                                <circle cx="85" cy="55" r="5" fill="var(--terracotta)"/>
+                                <text x="85" y="42" font-size="6.5" font-family="monospace" text-anchor="middle" fill="var(--terracotta)">√2 (x)</text>
+
+                                <circle cx="130" cy="55" r="4" fill="var(--navy)"/>
+                                <text x="130" y="42" font-size="6.5" font-family="monospace" text-anchor="middle" fill="var(--navy)">Upper</text>
+
+                                <path d="M 40 70 Q 85 85 130 70" fill="none" stroke="var(--accent-temp)" stroke-width="1.2" stroke-dasharray="2 2"/>
+                                <text x="85" y="98" font-size="6.5" font-family="sans-serif" text-anchor="middle" fill="var(--color-text-muted)">Take Mean (平均)</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Ancient Approximation</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 6.1: 「小数第n位まで正しい」の意味 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Rounding Guarantee</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>What Does "Correct to n Digits" Mean?</h2>
+                    <h1 class="font-serif text-main mb-3">5.1 「小数第 <code>n</code> 位まで正しい」とは</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start mt-2">
+                        <div class="md:col-span-7 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                例えば、<code>√2 = 1.41421356...</code> を小数第2位まで四捨五入すると <code>1.41</code> です。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                ただし計算中は真の値が見えないため、1つの近似値だけでは「本当に正しく丸められたか」を保証できません。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                そこでヘロン法では、<span class="highlight font-semibold">真の値を挟む2つの値（下限・上限）</span>を作って判定します。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                これは後で登場する<span class="highlight font-semibold">停止条件</span>に直結します。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <div class="p-3 w-full max-w-xs bg-[#F2EFEA] border border-border rounded-sm space-y-2 text-[11px]">
+                                <span class="font-mono text-xs uppercase tracking-wider text-slate-400 block text-center">Example Interval</span>
+                                <p class="font-mono text-center text-navy"><code>1.4117... &lt; √2 &lt; 1.4166...</code></p>
+                                <div class="border-t border-border pt-1.5 space-y-1">
+                                    <p class="text-slate-700">小数第1位へ四捨五入：両端とも <code>1.4</code> → <span class="font-semibold text-navy">確定</span></p>
+                                    <p class="text-slate-700">小数第2位へ四捨五入：<code>1.41</code> と <code>1.42</code> → <span class="font-semibold text-terracotta">未確定</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Rounding Guarantee</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 7: ヘロン法の基本的な考え方 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Heron's Method Basics</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Heron's Method</h2>
+                    <h1 class="font-serif text-main mb-3">7．ヘロン法の基本的な考え方</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                ヘロン法は、平方根を近似するアルゴリズムです。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                今回は <code>x² = 2</code>、すなわち <code>x = √2</code> を求めます。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                方針は、<span class="highlight font-semibold">真の値を下限と上限で挟み、平均を取り続けて範囲を縮める</span>ことです。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <div class="p-3 w-full max-w-xs bg-[#F2EFEA] border border-border rounded-sm text-center space-y-2">
+                                <span class="font-mono text-xs uppercase tracking-wider text-slate-400 block">Target</span>
+                                <span class="font-serif text-xl text-navy block"><code>x² = 2</code></span>
+                                <span class="font-serif text-sm text-terracotta block"><code>x = √2</code></span>
+                                <span class="text-[11px] text-slate-600 block">有理数演算で近似値を構成する</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Heron's Method Basics</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 7.1: 最初の範囲と最初の候補 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Initial Bracket and First Guess</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>7.1 Initial Range</h2>
+                    <h1 class="font-serif text-main mb-3">7.1 最初の範囲を見つける</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-3">
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-navy block border-b border-border pb-1">最初の境界</span>
+                            <p class="text-slate-600 text-[11px] leading-relaxed"><span class="math-eq">1² = 1 &lt; 2</span> かつ <span class="math-eq">2² = 4 &gt; 2</span></p>
+                            <p class="text-slate-600 text-[11px] leading-relaxed">したがって <span class="math-eq">1 &lt; √2 &lt; 2</span></p>
+                            <p class="text-slate-500 text-[10.5px] leading-relaxed">真の値は <span class="math-eq">1</span> と <span class="math-eq">2</span> の間にある。</p>
+                        </div>
+                        <div class="p-4 bg-surface-2 border border-navy rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-navy block border-b border-border pb-1">平均で最初の候補を作る</span>
+                            <p class="text-slate-600 text-[11px] leading-relaxed"><span class="math-eq"><em>g</em><sub>0</sub> = <span class="math-frac math-frac-sm"><span class="num">1 + 2</span><span class="den">2</span></span> = <span class="math-frac math-frac-sm"><span class="num">3</span><span class="den">2</span></span> = 1.5</span></p>
+                            <p class="text-slate-500 text-[10.5px] leading-relaxed"><span class="math-eq"><em>g</em></span> は guess（候補値）を表す。</p>
+                            <p class="text-slate-600 text-[11px] leading-relaxed"><span class="math-eq"><em>g</em><sub>0</sub>² = (<span class="math-frac math-frac-sm"><span class="num">3</span><span class="den">2</span></span>)² = <span class="math-frac math-frac-sm"><span class="num">9</span><span class="den">4</span></span> = 2.25 &gt; 2</span></p>
+                            <p class="text-slate-600 text-[11px] leading-relaxed"><span class="math-eq"><em>g</em><sub>0</sub> &gt; √2</span>（1.5 は真の値より大きい）</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Initial Bracket and First Guess</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 8: 反対側の境界 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Opposite Bound Construction</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>8. Build the Other Bound</h2>
+                    <h1 class="font-serif text-main mb-3">8．反対側の境界を作る</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start mt-2">
+                        <div class="md:col-span-7 space-y-2.5">
+                            <p class="text-xs text-muted leading-relaxed"><span class="math-eq"><em>x</em> = √2</span> なら <span class="math-eq"><em>x</em>² = 2</span>、したがって <span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">2</span><span class="den"><em>x</em></span></span> = <em>x</em></span> です。</p>
+                            <p class="text-xs text-muted leading-relaxed">現在は <span class="math-eq"><em>g</em><sub>0</sub> = <span class="math-frac math-frac-sm"><span class="num">3</span><span class="den">2</span></span></span> かつ <span class="math-eq"><em>g</em><sub>0</sub> &gt; <em>x</em></span>。</p>
+                            <p class="text-xs text-muted leading-relaxed">正の数では分母が大きいほど分数は小さいため、<span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">2</span><span class="den"><em>g</em><sub>0</sub></span></span> &lt; <span class="math-frac math-frac-sm"><span class="num">2</span><span class="den"><em>x</em></span></span> = <em>x</em></span>。</p>
+                            <p class="text-xs text-muted leading-relaxed">実際に <span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">2</span><span class="den"><span class="math-frac math-frac-sm"><span class="num">3</span><span class="den">2</span></span></span></span> = <span class="math-frac math-frac-sm"><span class="num">4</span><span class="den">3</span></span></span>。</p>
+                            <p class="text-xs text-muted leading-relaxed"><span class="highlight font-semibold"><span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">4</span><span class="den">3</span></span> &lt; √2 &lt; <span class="math-frac math-frac-sm"><span class="num">3</span><span class="den">2</span></span></span></span></p>
+                            <p class="text-xs text-muted leading-relaxed">小数では <span class="math-eq">1.3333... &lt; √2 &lt; 1.5</span>。</p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <div class="p-3 w-full max-w-xs bg-[#F2EFEA] border border-border rounded-sm text-center space-y-1.5">
+                                <span class="font-mono text-xs uppercase tracking-wider text-slate-400 block">Narrower Interval</span>
+                                <span class="text-sm text-navy block"><span class="math-eq">1 &lt; √2 &lt; 2</span></span>
+                                <span class="text-[11px] text-slate-500 block">↓</span>
+                                <span class="text-sm font-bold text-terracotta block"><span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">4</span><span class="den">3</span></span> &lt; √2 &lt; <span class="math-frac math-frac-sm"><span class="num">3</span><span class="den">2</span></span></span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Opposite Bound Construction</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 9: 2回目の平均 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Second Mean</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>9. Take Mean Again</h2>
+                    <h1 class="font-serif text-main mb-3">9．もう一度、平均を取る</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-3">
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-navy block border-b border-border pb-1">新しい候補 <span class="math-eq"><em>g</em><sub>1</sub></span></span>
+                            <p class="text-slate-600 text-[11px] leading-relaxed"><span class="math-eq"><em>g</em><sub>1</sub> = <span class="math-frac math-frac-sm"><span class="num"><span class="math-frac math-frac-sm"><span class="num">4</span><span class="den">3</span></span> + <span class="math-frac math-frac-sm"><span class="num">3</span><span class="den">2</span></span></span><span class="den">2</span></span></span></p>
+                            <p class="text-slate-600 text-[11px] leading-relaxed"><span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">4</span><span class="den">3</span></span> = <span class="math-frac math-frac-sm"><span class="num">8</span><span class="den">6</span></span></span>, <span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">3</span><span class="den">2</span></span> = <span class="math-frac math-frac-sm"><span class="num">9</span><span class="den">6</span></span></span></p>
+                            <p class="text-slate-600 text-[11px] leading-relaxed"><span class="math-eq"><em>g</em><sub>1</sub> = <span class="math-frac math-frac-sm"><span class="num"><span class="math-frac math-frac-sm"><span class="num">8</span><span class="den">6</span></span> + <span class="math-frac math-frac-sm"><span class="num">9</span><span class="den">6</span></span></span><span class="den">2</span></span> = <span class="math-frac math-frac-sm"><span class="num"><span class="math-frac math-frac-sm"><span class="num">17</span><span class="den">6</span></span></span><span class="den">2</span></span> = <span class="math-frac math-frac-sm"><span class="num">17</span><span class="den">12</span></span></span></p>
+                            <p class="text-slate-500 text-[10.5px] leading-relaxed"><span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">17</span><span class="den">12</span></span> = 1.416666...</span></p>
+                        </div>
+                        <div class="p-4 bg-surface-2 border border-navy rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-navy block border-b border-border pb-1">上側か下側かを判定</span>
+                            <p class="text-slate-600 text-[11px] leading-relaxed"><span class="math-eq">(<span class="math-frac math-frac-sm"><span class="num">17</span><span class="den">12</span></span>)² = <span class="math-frac math-frac-sm"><span class="num">289</span><span class="den">144</span></span></span></p>
+                            <p class="text-slate-600 text-[11px] leading-relaxed"><span class="math-eq">2 = <span class="math-frac math-frac-sm"><span class="num">288</span><span class="den">144</span></span></span> なので <span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">289</span><span class="den">144</span></span> &gt; 2</span></p>
+                            <p class="text-slate-600 text-[11px] leading-relaxed"><span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">17</span><span class="den">12</span></span> &gt; √2</span>（再び上側の候補）</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Second Mean</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 9.1: 対になる下限 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Paired Lower Bound</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>9.1 Paired Lower Bound</h2>
+                    <h1 class="font-serif text-main mb-3">9.1 / 9.2 この候補に対する下限を作る</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-2.5">
+                            <p class="text-xs text-muted leading-relaxed"><span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">2</span><span class="den"><span class="math-frac math-frac-sm"><span class="num">17</span><span class="den">12</span></span></span></span> = <span class="math-frac math-frac-sm"><span class="num">24</span><span class="den">17</span></span></span></p>
+                            <p class="text-xs text-muted leading-relaxed"><span class="highlight font-semibold"><span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">24</span><span class="den">17</span></span> &lt; √2 &lt; <span class="math-frac math-frac-sm"><span class="num">17</span><span class="den">12</span></span></span></span></p>
+                            <p class="text-xs text-muted leading-relaxed">小数では <span class="math-eq">1.4117647... &lt; √2 &lt; 1.4166666...</span></p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <div class="p-3 w-full max-w-xs bg-[#F2EFEA] border border-border rounded-sm text-center space-y-1.5">
+                                <span class="font-mono text-xs uppercase tracking-wider text-slate-400 block">Updated Bracket</span>
+                                <span class="text-[11px] text-navy block"><span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">24</span><span class="den">17</span></span> ≈ 1.4117647...</span></span>
+                                <span class="text-[11px] font-bold text-terracotta block"><span class="math-eq">√2</span></span>
+                                <span class="text-[11px] text-navy block"><span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">17</span><span class="den">12</span></span> ≈ 1.4166666...</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Paired Lower Bound</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 10-11: 丸めで確定判定 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Digit Confirmation</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>10 / 11. Rounding Test</h2>
+                    <h1 class="font-serif text-main mb-3">10．小数第1位は確定、11．小数第2位は未確定</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-3">
+                        <div class="p-4 bg-surface-2 border border-navy rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-navy block border-b border-border pb-1">小数第1位の確認</span>
+                            <p class="text-slate-600 text-[11px] leading-relaxed"><span class="math-eq">1.4117647... → 1.4</span></p>
+                            <p class="text-slate-600 text-[11px] leading-relaxed"><span class="math-eq">1.4166666... → 1.4</span></p>
+                            <p class="text-slate-600 text-[11px] leading-relaxed">両端が一致するので <span class="math-eq">√2 ≈ 1.4</span> は確定。</p>
+                        </div>
+                        <div class="p-4 bg-surface-2 border border-terracotta rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-terracotta block border-b border-border pb-1">小数第2位の確認</span>
+                            <p class="text-slate-600 text-[11px] leading-relaxed"><span class="math-eq">1.4117647... → 1.41</span></p>
+                            <p class="text-slate-600 text-[11px] leading-relaxed"><span class="math-eq">1.4166666... → 1.42</span></p>
+                            <p class="text-slate-600 text-[11px] leading-relaxed"><span class="math-eq">1.41 ≠ 1.42</span> のため、この時点では未確定。</p>
+                            <p class="text-slate-500 text-[10.5px] leading-relaxed">→ もう一度平均を取る必要がある。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Digit Confirmation</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 12: さらにもう一度平均 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Third Mean</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>12. One More Mean</h2>
+                    <h1 class="font-serif text-main mb-3">12．さらにもう一度平均を取る</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start mt-2">
+                        <div class="md:col-span-7 space-y-2.5">
+                            <p class="text-xs text-muted leading-relaxed"><span class="math-eq"><em>g</em><sub>2</sub> = <span class="math-frac math-frac-sm"><span class="num"><span class="math-frac math-frac-sm"><span class="num">24</span><span class="den">17</span></span> + <span class="math-frac math-frac-sm"><span class="num">17</span><span class="den">12</span></span></span><span class="den">2</span></span></span></p>
+                            <p class="text-xs text-muted leading-relaxed"><span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">24</span><span class="den">17</span></span> = <span class="math-frac math-frac-sm"><span class="num">288</span><span class="den">204</span></span></span>, <span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">17</span><span class="den">12</span></span> = <span class="math-frac math-frac-sm"><span class="num">289</span><span class="den">204</span></span></span></p>
+                            <p class="text-xs text-muted leading-relaxed"><span class="math-eq"><em>g</em><sub>2</sub> = <span class="math-frac math-frac-sm"><span class="num"><span class="math-frac math-frac-sm"><span class="num">288</span><span class="den">204</span></span> + <span class="math-frac math-frac-sm"><span class="num">289</span><span class="den">204</span></span></span><span class="den">2</span></span> = <span class="math-frac math-frac-sm"><span class="num"><span class="math-frac math-frac-sm"><span class="num">577</span><span class="den">204</span></span></span><span class="den">2</span></span> = <span class="math-frac math-frac-sm"><span class="num">577</span><span class="den">408</span></span></span></p>
+                            <p class="text-xs text-muted leading-relaxed"><span class="math-eq"><em>g</em><sub>2</sub> ≈ 1.414215686</span></p>
+                            <p class="text-xs text-muted leading-relaxed">対応する下限は <span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">2</span><span class="den"><em>g</em><sub>2</sub></span></span> = <span class="math-frac math-frac-sm"><span class="num">2</span><span class="den"><span class="math-frac math-frac-sm"><span class="num">577</span><span class="den">408</span></span></span></span> = <span class="math-frac math-frac-sm"><span class="num">816</span><span class="den">577</span></span> ≈ 1.414211438</span></p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <div class="p-3 w-full max-w-xs bg-[#F2EFEA] border border-border rounded-sm text-center space-y-1.5">
+                                <span class="font-mono text-xs uppercase tracking-wider text-slate-400 block">New Tight Interval</span>
+                                <span class="text-[11px] text-navy block"><span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">816</span><span class="den">577</span></span> &lt; √2 &lt; <span class="math-frac math-frac-sm"><span class="num">577</span><span class="den">408</span></span></span></span>
+                                <span class="text-[11px] text-terracotta block"><span class="math-eq">1.414211438... &lt; √2 &lt; 1.414215686...</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Third Mean</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 12.1: 小数第2位の確定 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Second Decimal Fixed</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>12.1 Confirm 2nd Decimal</h2>
+                    <h1 class="font-serif text-main mb-3">両端が一致したので、小数第2位が確定する</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-3">
+                        <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-navy block border-b border-border pb-1">下限の丸め</span>
+                            <p class="text-slate-600 text-[11px] leading-relaxed"><span class="math-eq">1.414211438... → 1.41</span></p>
+                        </div>
+                        <div class="p-4 bg-surface-2 border border-navy rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-navy block border-b border-border pb-1">上限の丸め</span>
+                            <p class="text-slate-600 text-[11px] leading-relaxed"><span class="math-eq">1.414215686... → 1.41</span></p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-muted leading-relaxed mt-4 text-center">
+                        よって <span class="highlight font-semibold"><span class="math-eq">√2 ≈ 1.41</span></span> と確定できます。
+                    </p>
+                </div>
+                <div class="slide-footer">
+                    <span>Second Decimal Fixed</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 13: 区間の収束 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Rapid Interval Shrinkage</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>13. Fast Convergence</h2>
+                    <h1 class="font-serif text-main mb-3">13．範囲が急速に狭くなる</h1>
+                    <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-xs">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-border text-navy">
+                                    <th class="py-1 pr-2">回数</th>
+                                    <th class="py-1 pr-2">下限</th>
+                                    <th class="py-1 pr-2">上限</th>
+                                    <th class="py-1">区間の幅</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-slate-600 text-[11px]">
+                                <tr class="border-b border-border/60">
+                                    <td class="py-1 pr-2">初期</td>
+                                    <td class="py-1 pr-2"><span class="math-eq">1</span></td>
+                                    <td class="py-1 pr-2"><span class="math-eq">2</span></td>
+                                    <td class="py-1"><span class="math-eq">1</span></td>
+                                </tr>
+                                <tr class="border-b border-border/60">
+                                    <td class="py-1 pr-2">1回目</td>
+                                    <td class="py-1 pr-2"><span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">4</span><span class="den">3</span></span> ≈ 1.333333</span></td>
+                                    <td class="py-1 pr-2"><span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">3</span><span class="den">2</span></span> = 1.5</span></td>
+                                    <td class="py-1"><span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">1</span><span class="den">6</span></span> ≈ 0.166667</span></td>
+                                </tr>
+                                <tr class="border-b border-border/60">
+                                    <td class="py-1 pr-2">2回目</td>
+                                    <td class="py-1 pr-2"><span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">24</span><span class="den">17</span></span> ≈ 1.411765</span></td>
+                                    <td class="py-1 pr-2"><span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">17</span><span class="den">12</span></span> ≈ 1.416667</span></td>
+                                    <td class="py-1"><span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">1</span><span class="den">204</span></span> ≈ 0.004902</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="py-1 pr-2">3回目</td>
+                                    <td class="py-1 pr-2"><span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">816</span><span class="den">577</span></span> ≈ 1.414211438</span></td>
+                                    <td class="py-1 pr-2"><span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">577</span><span class="den">408</span></span> ≈ 1.414215686</span></td>
+                                    <td class="py-1"><span class="math-eq"><span class="math-frac math-frac-sm"><span class="num">1</span><span class="den">235416</span></span> ≈ 0.000004248</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-xs text-muted leading-relaxed mt-3 text-center">
+                        区間幅は <span class="math-eq">1 → 0.1666... → 0.0049... → 0.0000042...</span> と急速に小さくなります。
+                    </p>
+                </div>
+                <div class="slide-footer">
+                    <span>Rapid Interval Shrinkage</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 15: 問い：一般化と終了条件（Stop Condition） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Algorithmic Generalization</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>General Algorithm Questions</h2>
+                    <h1 class="font-serif text-main mb-3">任意の整数への一般化と終了条件</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-3">
+                        <div class="p-4 bg-surface-2 border border-navy rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-navy block border-b border-border pb-1">問い 1：一般化（Generalization）</span>
+                            <p class="text-slate-600 text-[11px] leading-relaxed">
+                                この手順を、任意の整数 <code>N</code> の平方根 <code>√N</code> に拡張するにはどう定式化すべきか？
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-surface-2 border border-terracotta rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-terracotta block border-b border-border pb-1">問い 2：終了条件（Stopping Condition）</span>
+                            <p class="text-slate-600 text-[11px] leading-relaxed">
+                                指定された精度（例：小数第 <code>k</code> 桁）に達したことをアルゴリズムはどうやって検知して停止するべきか？
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Algorithmic Generalization</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 16: まとめ -->
+            <section class="slide text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Summary</span>
+                    <span></span>
+                </div>
+                <div class="slide-content max-w-2xl py-3">
+                    <h2>Summary</h2>
+                    <h1 class="font-serif text-main mb-4">入力・出力と近似の本質</h1>
+                    
+                    <div class="p-4 bg-surface-2 border border-navy rounded-sm shadow-sm text-left text-xs space-y-2 max-w-md mx-auto mb-3">
+                        <div class="border-b border-border pb-1.5">
+                            <span class="font-bold text-navy block">物理的有限性：</span>
+                            <span class="text-slate-600 text-[11px]">計算機の入力と出力は、有限メモリに格納可能なデータ形式でなければならない。</span>
+                        </div>
+                        <div class="border-t border-border pt-1.5 pb-1.5">
+                            <span class="font-bold text-navy block">近似の必然性：</span>
+                            <span class="text-slate-600 text-[11px]">無理数は完全格納できないため、誤差を制御する近似が不可欠である。</span>
+                        </div>
+                        <div class="border-t border-border pt-1.5">
+                            <span class="font-bold text-terracotta block">アルゴリズムの力：</span>
+                            <span class="text-slate-600 text-[11px]">ヘロンの解法のように、有限の有理数操作の反復で要求精度を満たす解を導く。</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Summary</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 17: ヘロン法の一般形（補足） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Algorithmic Generalization</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>General Form of Heron's Method</h2>
+                    <h1 class="font-serif text-main mb-3">14．ヘロン法の一般形</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start mt-2">
+                        <div class="md:col-span-7 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                今度は、<code>√2</code> ではなく、正の数 <code>N</code> の平方根を考えます。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                求めたい値を <span class="math-eq text-sm"><em>r</em> = √<em>N</em></span> とします。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                現在の候補を <span class="math-eq text-sm"><em>g</em><sub>k</sub></span> とすると、次の候補は次で更新します。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                意味は単純です。
+                            </p>
+                            <ol class="list-decimal list-inside text-xs text-muted space-y-1.5 pl-1">
+                                <li>現在の候補 <span class="math-eq"><em>g</em><sub>k</sub></span> を用意する</li>
+                                <li>対になる値 <span class="math-eq"><span class="math-frac math-frac-sm"><span class="num"><em>N</em></span><span class="den"><em>g</em><sub>k</sub></span></span></span> を計算する</li>
+                                <li>二つの平均を次の候補にする</li>
+                            </ol>
+                        </div>
+                        <div class="md:col-span-5 flex flex-col justify-center items-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm space-y-4">
+                            <div class="math-box">
+                                <span class="math-eq text-xl">
+                                    <em>g</em><sub>k+1</sub> =
+                                    <span class="math-frac">
+                                        <span class="num">1</span>
+                                        <span class="den">2</span>
+                                    </span>
+                                    (
+                                    <em>g</em><sub>k</sub> +
+                                    <span class="math-frac math-frac-sm">
+                                        <span class="num"><em>N</em></span>
+                                        <span class="den"><em>g</em><sub>k</sub></span>
+                                    </span>
+                                    )
+                                </span>
+                            </div>
+                            <div class="math-box">
+                                <span class="math-eq text-xl">
+                                    <em>g</em><sub>k+1</sub> =
+                                    <span class="math-frac">
+                                        <span class="num">
+                                            <em>g</em><sub>k</sub> +
+                                            <span class="math-frac math-frac-sm">
+                                                <span class="num"><em>N</em></span>
+                                                <span class="den"><em>g</em><sub>k</sub></span>
+                                            </span>
+                                        </span>
+                                        <span class="den">2</span>
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Algorithmic Generalization</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 18: √2 への具体代入 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Worked Example</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Worked Example for N = 2</h2>
+                    <h1 class="font-serif text-main mb-3">√2の場合</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start mt-2">
+                        <div class="md:col-span-5 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                <span class="math-eq"><em>N</em> = 2</span> を代入すると、更新式は次になります。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                例えば初期候補を <span class="math-eq"><em>g</em><sub>0</sub> = <span class="math-frac math-frac-sm"><span class="num">3</span><span class="den">2</span></span></span> とすると、
+                                次の候補 <span class="math-eq"><em>g</em><sub>1</sub></span> は右のように計算できます。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                この計算結果は <span class="highlight font-semibold math-eq"><em>g</em><sub>1</sub> = <span class="math-frac math-frac-sm"><span class="num">17</span><span class="den">12</span></span></span> です。
+                            </p>
+                        </div>
+                        <div class="md:col-span-7 p-4 bg-surface-2 border border-border rounded-sm shadow-sm space-y-3">
+                            <div class="math-box w-full text-center">
+                                <span class="math-eq text-2xl">
+                                    <em>g</em><sub>k+1</sub> =
+                                    <span class="math-frac">
+                                        <span class="num">1</span>
+                                        <span class="den">2</span>
+                                    </span>
+                                    (
+                                    <em>g</em><sub>k</sub> +
+                                    <span class="math-frac math-frac-sm">
+                                        <span class="num">2</span>
+                                        <span class="den"><em>g</em><sub>k</sub></span>
+                                    </span>
+                                    )
+                                </span>
+                            </div>
+                            <div class="math-eq text-xl text-center">
+                                <em>g</em><sub>0</sub> =
+                                <span class="math-frac math-frac-sm">
+                                    <span class="num">3</span>
+                                    <span class="den">2</span>
+                                </span>
+                            </div>
+                            <div class="math-eq text-xl text-center">
+                                <em>g</em><sub>1</sub> =
+                                <span class="math-frac math-frac-sm">
+                                    <span class="num">1</span>
+                                    <span class="den">2</span>
+                                </span>
+                                (
+                                <span class="math-frac math-frac-sm">
+                                    <span class="num">3</span>
+                                    <span class="den">2</span>
+                                </span>
+                                +
+                                <span class="math-frac math-frac-sm">
+                                    <span class="num">2</span>
+                                    <span class="den">
+                                        <span class="math-frac math-frac-sm">
+                                            <span class="num">3</span>
+                                            <span class="den">2</span>
+                                        </span>
+                                    </span>
+                                </span>
+                                )
+                            </div>
+                            <div class="math-eq text-xl text-center">
+                                =
+                                <span class="math-frac math-frac-sm">
+                                    <span class="num">1</span>
+                                    <span class="den">2</span>
+                                </span>
+                                (
+                                <span class="math-frac math-frac-sm">
+                                    <span class="num">3</span>
+                                    <span class="den">2</span>
+                                </span>
+                                +
+                                <span class="math-frac math-frac-sm">
+                                    <span class="num">4</span>
+                                    <span class="den">3</span>
+                                </span>
+                                )
+                            </div>
+                            <div class="math-eq text-2xl text-center">
+                                =
+                                <span class="math-frac">
+                                    <span class="num">17</span>
+                                    <span class="den">12</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Worked Example</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 19: 停止条件の必要性 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Stopping Condition</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Stopping Condition</h2>
+                    <h1 class="font-serif text-main mb-3">16．どのように停止すればよいか</h1>
+                    <div class="p-5 bg-surface-2 border border-border rounded-sm shadow-sm space-y-3">
+                        <p class="text-xs text-muted leading-relaxed">アルゴリズムには、必ず停止条件が必要です。</p>
+                        <p class="text-xs text-muted leading-relaxed">単に、</p>
+                        <div class="border-l-2 border-accent-temp bg-surface-1 px-4 py-2">
+                            <p class="text-xs text-main leading-relaxed font-semibold">十分近くなるまで繰り返す</p>
+                        </div>
+                        <p class="text-xs text-muted leading-relaxed">では、コンピュータは「十分近い」が何を意味するか判断できません。</p>
+                        <p class="text-xs text-muted leading-relaxed">明確な条件が必要です。</p>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Stopping Condition</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 20: 方法1 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Stopping Method 1</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Method 1</h2>
+                    <h1 class="font-serif text-main mb-3">方法1：上下の値を丸めて比較する</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                上側の候補を <span class="math-eq"><em>g</em></span>、下側の候補を
+                                <span class="math-eq">ℓ = <span class="math-frac math-frac-sm"><span class="num"><em>N</em></span><span class="den"><em>g</em></span></span></span>
+                                とします。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                小数第 <span class="math-eq"><em>n</em></span> 位まで求めたい場合、
+                                <span class="math-eq">round(<em>g</em>, <em>n</em>)</span> と
+                                <span class="math-eq">round(ℓ, <em>n</em>)</span> を比較します。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                一致した場合、その間にある真の値も同じ値に丸められるため、停止できます。
+                            </p>
+                        </div>
+                        <div class="md:col-span-6 p-4 bg-surface-2 border border-border rounded-sm shadow-sm space-y-3">
+                            <div class="math-eq text-2xl text-center">
+                                ℓ =
+                                <span class="math-frac">
+                                    <span class="num"><em>N</em></span>
+                                    <span class="den"><em>g</em></span>
+                                </span>
+                            </div>
+                            <div class="math-eq text-2xl text-center">round(<em>g</em>, <em>n</em>)</div>
+                            <div class="math-eq text-2xl text-center">round(ℓ, <em>n</em>)</div>
+                            <div class="math-box w-full text-center">
+                                <span class="math-eq text-xl">
+                                    round(<em>g</em>, <em>n</em>) = round(
+                                    <span class="math-frac math-frac-sm">
+                                        <span class="num"><em>N</em></span>
+                                        <span class="den"><em>g</em></span>
+                                    </span>
+                                    , <em>n</em>)
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Stopping Method 1</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 21: 方法2 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Stopping Method 2</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Method 2</h2>
+                    <h1 class="font-serif text-main mb-3">方法2：区間の幅を調べる</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                区間の幅
+                                <span class="math-eq"><em>g</em> − <span class="math-frac math-frac-sm"><span class="num"><em>N</em></span><span class="den"><em>g</em></span></span></span>
+                                が十分小さくなったら停止する方法もあります。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                ここで <span class="math-eq">ε</span> は許容する誤差です。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                ただし、特定の小数桁へ正しく丸められたことを保証したい場合は、単に区間が狭いだけでなく、
+                                <span class="highlight font-semibold">上下の境界を丸めた結果が一致するか</span>を確認する方が明確です。
+                            </p>
+                        </div>
+                        <div class="md:col-span-6 p-4 bg-surface-2 border border-border rounded-sm shadow-sm space-y-4">
+                            <div class="math-eq text-2xl text-center">
+                                <em>g</em> −
+                                <span class="math-frac">
+                                    <span class="num"><em>N</em></span>
+                                    <span class="den"><em>g</em></span>
+                                </span>
+                            </div>
+                            <div class="math-box w-full text-center">
+                                <span class="math-eq text-2xl">
+                                    |<em>g</em> −
+                                    <span class="math-frac math-frac-sm">
+                                        <span class="num"><em>N</em></span>
+                                        <span class="den"><em>g</em></span>
+                                    </span>
+                                    | &lt; ε
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Stopping Method 2</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 22: 一般化した擬似コード -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Generalized Pseudocode</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Generalized Pseudocode</h2>
+                    <h1 class="font-serif text-main mb-3">17．一般化した擬似コード</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start mt-2">
+                        <div class="md:col-span-8 p-4 bg-surface-2 border border-border rounded-sm shadow-sm space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                非負の数 <span class="math-eq"><em>N</em></span> の平方根を、小数第 <span class="math-eq"><em>n</em></span> 位まで求める擬似コードは、次のように書けます。
+                            </p>
+                            <div class="bg-[#F2EFEA] border border-border rounded-sm p-3">
+                                <div class="text-[10px] text-slate-500 mb-2 font-mono uppercase tracking-wider">Pseudocode</div>
+                                <pre class="text-[11px] leading-relaxed font-mono text-slate-700 whitespace-pre-wrap">INPUT N, n
+
+IF N &lt; 0 THEN
+    OUTPUT "実数の平方根は存在しない"
+    STOP
+END IF
+
+IF N = 0 THEN
+    OUTPUT 0
+    STOP
+END IF
+
+g ← MAX(1, N)
+
+LOOP
+    lower ← N / g
+
+    IF ROUND(g, n) = ROUND(lower, n) THEN
+        OUTPUT ROUND(g, n)
+        STOP
+    END IF
+
+    g ← (g + lower) / 2
+END LOOP</pre>
+                            </div>
+                        </div>
+                        <div class="md:col-span-4 p-4 bg-surface-2 border border-border rounded-sm shadow-sm space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">ここで、</p>
+                            <p class="text-xl text-center math-eq"><em>g</em></p>
+                            <p class="text-xs text-muted leading-relaxed">は上側の候補、</p>
+                            <p class="text-xl text-center math-eq">
+                                lower =
+                                <span class="math-frac math-frac-sm">
+                                    <span class="num"><em>N</em></span>
+                                    <span class="den"><em>g</em></span>
+                                </span>
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">は下側の候補です。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Generalized Pseudocode</span><span></span>
+                </div>
+            </section>
+
+                                <!-- Minimalist Navigation Controls Footer overlay inside the slide deck -->
+                            <div class="absolute bottom-6 left-10 right-10 flex justify-between items-center pointer-events-auto z-30">
+                                <div class="flex gap-6">
+                                    <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-600 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold cursor-pointer">
+                                        <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
+                                    </button>
+                                    <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-600 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold cursor-pointer">
+                                        Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Dynamic Step Indicators Container -->
+                                <div class="flex gap-1.5 overflow-x-auto max-w-xs justify-center px-2 no-scrollbar" id="dots-container"></div>
+                            </div>
+
+        </div>
+    </div>
+
+    
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsContainer = document.getElementById('dots-container');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const navSidebar = document.getElementById('navSidebar');
+        const navOverlay = document.getElementById('navOverlay');
+        const navMenu = document.getElementById('navMenu');
+        
+        let currentSlide = 0;
+        let indicators = [];
+
+        slides.forEach((slide, index) => {
+            const dot = document.createElement('span');
+            dot.className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 ' + (index === 0 ? 'dot-active' : 'dot-inactive');
+            dotsContainer.appendChild(dot);
+            indicators.push(dot);
+
+            const title = slide.querySelector('h1')?.innerText.replace(/\n/g, ' ') || `Slide ${index + 1}`;
+            const navItem = document.createElement('div');
+            navItem.className = `nav-item ${index === 0 ? 'active' : ''}`;
+            navItem.textContent = `${index + 1}. ${title}`;
+            navItem.onclick = () => { updateSlide(index); closeSidebar(); };
+            navMenu.appendChild(navItem);
+        });
+
+        function updateSlide(index) {
+            if (index < 0) {
+                currentSlide = 0;
+                return;
+            }
+            if (index >= slides.length) {
+                currentSlide = slides.length - 1;
+                return;
+            }
+
+            slides[currentSlide].classList.remove('active');
+            indicators[currentSlide].className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 bg-gray-300';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.remove('active');
+
+            currentSlide = index;
+            
+            slides[currentSlide].classList.add('active');
+            indicators[currentSlide].className = 'w-1.5 h-1.5 rounded-full transition-all duration-300 bg-black';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.add('active');
+
+            prevBtn.style.opacity = currentSlide === 0 ? '0.2' : '1';
+            prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+            nextBtn.style.opacity = currentSlide === slides.length - 1 ? '0.2' : '1';
+            nextBtn.style.pointerEvents = currentSlide === slides.length - 1 ? 'none' : 'auto';
+        }
+
+        function closeSidebar() {
+            navSidebar.classList.remove('open');
+            navOverlay.classList.remove('open');
+            hamburgerBtn.classList.remove('active');
+        }
+
+        hamburgerBtn.onclick = () => {
+            hamburgerBtn.classList.toggle('active');
+            navSidebar.classList.toggle('open');
+            navOverlay.classList.toggle('open');
+        };
+        navOverlay.onclick = closeSidebar;
+
+        prevBtn.onclick = () => updateSlide(currentSlide - 1);
+        nextBtn.onclick = () => updateSlide(currentSlide + 1);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                updateSlide(currentSlide - 1);
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                updateSlide(currentSlide + 1);
+            }
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const deck = document.getElementById('deck');
+        deck.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        deck.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                updateSlide(currentSlide + 1);
+            }
+            if (touchEndX > touchStartX + 50) {
+                updateSlide(currentSlide - 1);
+            }
+        }
+
+        updateSlide(0);
+    </script>
+</body>
+</html>

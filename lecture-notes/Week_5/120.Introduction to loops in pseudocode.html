@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>講義スライド：擬似コードにおける反復処理（ForとWhile）</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --color-bg-outer: #D1CFCA;      
+            --color-bg-slide:  #F7F6F4;     
+            --color-surface-1: #F2EFEA;    
+            --color-surface-2: #FFFFFF;    
+            --color-border: #DDDAD5;       
+            --color-text-main: #222222;    
+            --color-text-muted: #555555;   
+            --color-text-light: #999999;   
+            --color-accent-temp: #8C7A6B;  
+            --navy: #344D61;               
+            --terracotta: #994F60;         
+            --gold-muted: #C4B298;         
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--color-bg-outer);
+            color: var(--color-text-main);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+        }
+
+        h1, h2, h3, .font-serif {
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-weight: 400;
+        }
+
+        .presentation-viewport {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .slide-deck {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--color-bg-slide);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            padding: 5% 7% 7% 7%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            transform: translateY(10px);
+            background: var(--color-bg-slide);
+            overflow-y: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        h1 {
+            color: var(--color-text-main);
+            font-size: 1.85rem; 
+            font-weight: 400;
+            line-height: 1.4;
+            margin-bottom: 1.25rem;
+            letter-spacing: 0.05em;
+        }
+
+        h2 {
+            color: var(--color-accent-temp);
+            font-size: 0.65rem; 
+            font-weight: 500;
+            letter-spacing: 0.4em;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .main-text {
+            font-size: 1.05rem; 
+            line-height: 1.8;
+            color: var(--color-text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        .highlight {
+            background: linear-gradient(transparent 70%, #E2DDD5 70%);
+            font-weight: 500;
+            padding: 0 0.15em;
+        }
+
+        /* 擬似コード用のスタイル */
+        .pseudocode-box {
+            background: var(--color-surface-2);
+            padding: 1.5rem 2rem;
+            border-radius: 4px;
+            font-family: 'Playfair Display', 'Noto Serif JP', serif; /* 数式・擬似コードらしさを出すためセリフ体ベース */
+            font-size: 1.1rem;
+            border: 1px solid var(--color-border);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            line-height: 1.8;
+            color: var(--color-text-main);
+        }
+
+        .pseudo-keyword {
+            font-weight: 700;
+        }
+
+        .pseudo-var {
+            font-style: italic;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .minimal-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .minimal-list li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.6rem;
+            font-size: 0.95rem; 
+            color: var(--color-text-muted);
+            display: block;
+            line-height: 1.6;
+        }
+        .minimal-list li::before {
+            content: "・";
+            position: absolute;
+            left: 0;
+            color: var(--color-accent-temp);
+            font-weight: bold;
+        }
+
+        .slide-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: var(--color-text-light);
+            border-top: 1px solid var(--color-border);
+            padding-top: 0.75rem;
+            margin-top: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .nav-btn {
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            color: var(--color-text-main);
+            opacity: 1 !important;
+        }
+
+        /* ハンバーガーメニュー等のUI部品 */
+        .hamburger-btn {
+            position: fixed; top: 40px; left: 40px; z-index: 50;
+            background: rgba(247, 246, 244, 0.9); border: 1px solid var(--color-border);
+            border-radius: 50%; cursor: pointer; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; gap: 4px; padding: 0;
+            width: 48px; height: 48px; box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+        .hamburger-btn:hover { background: #ffffff; transform: scale(1.05); }
+        .hamburger-btn span { width: 18px; height: 2px; background-color: var(--color-text-main); transition: all 0.3s ease; display: block; }
+        .hamburger-btn.active span:nth-child(1) { transform: rotate(45deg) translate(4px, 4px); }
+        .hamburger-btn.active span:nth-child(2) { opacity: 0; }
+        .hamburger-btn.active span:nth-child(3) { transform: rotate(-45deg) translate(4px, -4px); }
+
+        .nav-sidebar {
+            position: fixed; left: -320px; top: 0; width: 320px; height: 100vh;
+            background-color: var(--color-bg-slide); box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
+            z-index: 40; transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto; border-right: 1px solid var(--color-border);
+        }
+        .nav-sidebar.open { left: 0; }
+        .nav-sidebar-content { padding: 100px 24px 40px 24px; }
+        .nav-sidebar-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; color: var(--color-text-light); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--color-border); }
+        .nav-item { padding: 10px 0; font-size: 12px; color: var(--color-text-muted); cursor: pointer; transition: all 0.2s ease; border-left: 3px solid transparent; padding-left: 12px; line-height: 1.4; }
+        .nav-item:hover { color: var(--color-text-main); border-left-color: var(--color-accent-temp); background: rgba(0,0,0,0.01); }
+        .nav-item.active { color: var(--color-accent-temp); font-weight: 600; border-left-color: var(--color-accent-temp); }
+
+        .nav-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: rgba(0, 0, 0, 0); z-index: 30; transition: background-color 0.3s ease; pointer-events: none;
+        }
+        .nav-overlay.open { background-color: rgba(0, 0, 0, 0.3); pointer-events: auto; }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .dot-active { background-color: var(--color-text-main); width: 6px; height: 6px; }
+        .dot-inactive { background-color: var(--color-border); width: 4px; height: 4px; }
+    </style>
+</head>
+<body>
+
+    <button class="hamburger-btn" id="hamburgerBtn" title="目次を開く">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <div class="nav-sidebar" id="navSidebar">
+        <div class="nav-sidebar-content">
+            <div class="nav-sidebar-title">講義スライド一覧</div>
+            <div id="navMenu"></div>
+        </div>
+    </div>
+
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <div class="presentation-viewport">
+        <div class="slide-deck" id="deck">
+
+            <!-- Slide 1: Introduction to Iteration (Thermostat Recap) -->
+            <section class="slide active">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Repetition Need</span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Concept of Iteration</h2>
+                    <h1 class="font-serif text-main mb-4">反復処理（Iteration）の必要性</h1>
+                    <p class="text-xs text-muted leading-relaxed max-w-3xl mx-auto mb-3">
+                        サーモスタットの温度制御を、フローチャート（左）と擬似コード（右）で見比べてみましょう。同じ処理を2つの表現で確認すると、反復の意味が掴みやすくなります。
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-2 mb-3">
+                        <div class="p-3 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <p class="font-mono text-[10px] text-navy font-bold uppercase tracking-wider block mb-2">Flowchart</p>
+                            <svg viewBox="0 0 260 250" class="w-full h-[250px] bg-[#F2EFEA] rounded-sm p-2">
+                                <!-- Start -->
+                                <rect x="132" y="12" width="56" height="22" rx="11" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="160" y="26" font-size="7" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Start</text>
+
+                                <path d="M 160 34 L 160 44" stroke="var(--navy)" stroke-width="1"/>
+                                <polygon points="158.5,44 160,47 161.5,44" fill="var(--navy)"/>
+
+                                <!-- Input -->
+                                <polygon points="116,50 204,50 196,84 108,84" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="160" y="65" font-size="6.6" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Get Temperature</text>
+                                <text x="160" y="73" font-size="6.6" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">on Thermostat</text>
+
+                                <path d="M 160 84 L 160 115" stroke="var(--navy)" stroke-width="1"/>
+                                <polygon points="158.5,115 160,118 161.5,115" fill="var(--navy)"/>
+
+                                <!-- Decision -->
+                                <polygon points="160,118 208,146 160,174 112,146" fill="white" stroke="var(--terracotta)" stroke-width="1.2"/>
+                                <text x="160" y="148" font-size="6.4" font-family="sans-serif" text-anchor="middle" fill="var(--terracotta)">t &lt; T ?</text>
+
+                                <!-- Yes branch -->
+                                <path d="M 112 146 L 93 146" stroke="var(--terracotta)" stroke-width="1"/>
+                                <polygon points="93,144.5 90,146 93,147.5" fill="var(--terracotta)"/>
+                                <text x="102" y="139" font-size="6.3" font-family="monospace" text-anchor="middle" fill="var(--terracotta)">Yes</text>
+
+                                <rect x="28" y="126" width="62" height="40" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="59" y="141" font-size="6.2" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Increase</text>
+                                <text x="59" y="149" font-size="6.2" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">t by</text>
+                                <text x="59" y="157" font-size="6.2" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">0.5</text>
+
+                                <path d="M 59 166 L 59 202" stroke="var(--navy)" stroke-width="1"/>
+                                <polygon points="57.5,202 59,205 60.5,202" fill="var(--navy)"/>
+                                <text x="66" y="195" font-size="6.3" font-family="monospace" fill="var(--navy)">No</text>
+
+                                <rect x="37" y="206" width="44" height="18" rx="9" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="59" y="218" font-size="6.3" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Stop</text>
+
+                                <!-- No branch -->
+                                <polyline points="208,146 226,146 226,202" fill="none" stroke="var(--navy)" stroke-width="1"/>
+                                <polygon points="224.5,202 226,205 227.5,202" fill="var(--navy)"/>
+                                <text x="216" y="141" font-size="6.3" font-family="monospace" fill="var(--navy)">No</text>
+
+                                <rect x="204" y="206" width="44" height="18" rx="9" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="226" y="218" font-size="6.3" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Stop</text>
+                            </svg>
+                        </div>
+                        <div class="p-3 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <p class="font-mono text-[10px] text-terracotta font-bold uppercase tracking-wider block mb-2">Pseudocode</p>
+                            <div class="pseudocode-box relative text-sm">
+                                <span class="pseudo-var">t</span> &larr; 18<br>
+                                <span class="pseudo-var">T</span> &larr; 20<br><br>
+                                <span class="pseudo-keyword">if</span> <span class="pseudo-var">t</span> &lt; <span class="pseudo-var">T</span> <span class="pseudo-keyword">then</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-var">t</span> &larr; <span class="pseudo-var">t</span> + 0.5<br>
+                                <span class="pseudo-keyword">end if</span><br><br>
+                                <span class="text-slate-400 text-[11px]">/* 1回では足りない場合、どうする？ */</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-muted leading-relaxed max-w-3xl mx-auto">
+                        1回だけの <code>if-then</code> では目標温度に届かないことがあります。だからこそ、<span class="highlight">目標に到達するまで処理を繰り返す（loop）</span>という発想が必要です。
+                    </p>
+                </div>
+                <div class="slide-footer">
+                    <span>Iteration in Pseudocode</span>
+                </div>
+            </section>
+
+            <!-- Slide 2: For Loops Concept & Syntax -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">For Loops</span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Fixed Iteration</h2>
+                    <h1 class="font-serif text-main mb-3">回数が決まっている反復：<span class="pseudo-keyword">for</span> ループ</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-5 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                <code>for</code> ループは、特定の回数だけ処理を繰り返すための制御構造です。<br>
+                                変数（例：<code>i</code>）を初期化し、目標値に達するまで処理を繰り返します。
+                            </p>
+                        </div>
+                        <div class="md:col-span-7 space-y-4">
+                            <div class="pseudocode-box relative text-sm">
+                                <span class="pseudo-var">x</span> &larr; 1<br>
+                                <span class="pseudo-keyword">for</span> 2 &le; <span class="pseudo-var">i</span> &le; 10 <span class="pseudo-keyword">do</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-var">x</span> &larr; <span class="pseudo-var">x</span> + <span class="pseudo-var">i</span><br>
+                                <span class="pseudo-keyword">end for</span>
+                            </div>
+                            <div class="pseudocode-box relative text-sm">
+                                <span class="pseudo-var">x</span> &larr; 2<br>
+                                <span class="pseudo-keyword">for</span> 0 &le; <span class="pseudo-var">i</span> &le; 2 <span class="pseudo-keyword">do</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-var">x</span> &larr; <span class="pseudo-var">x</span> &times; 2<br>
+                                <span class="pseudo-keyword">end for</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Iteration in Pseudocode</span>
+                </div>
+            </section>
+
+            <!-- Slide 3: While Loops Concept & Syntax -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">While Loops</span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Conditional Iteration</h2>
+                    <h1 class="font-serif text-main mb-3">条件を満たす限り反復：<span class="pseudo-keyword">while</span> ループ</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                <code>while</code> ループは、特定の条件が「真（True）」である限り処理を継続します。<br>
+                                ループ本体（body）の中で、条件に関わる変数を手動で更新する必要があります。
+                            </p>
+                            <p class="text-[11px] text-slate-500 leading-relaxed">
+                                右の擬似コードは、先ほどの <code>for</code> ループ（和を求める）と全く同じ結果を出力します。
+                            </p>
+                        </div>
+                        <div class="md:col-span-6">
+                            <div class="pseudocode-box relative text-sm">
+                                <span class="pseudo-var">x</span> &larr; 1<br>
+                                <span class="pseudo-var">y</span> &larr; 0<br>
+                                <span class="pseudo-keyword">while</span> <span class="pseudo-var">x</span> &lt; 11 <span class="pseudo-keyword">do</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-var">y</span> &larr; <span class="pseudo-var">x</span> + <span class="pseudo-var">y</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-var">x</span> &larr; <span class="pseudo-var">x</span> + 1<br>
+                                <span class="pseudo-keyword">end while</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Iteration in Pseudocode</span>
+                </div>
+            </section>
+
+            <!-- Slide 4: Applied Problem: x^2 = n -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Problem Solving</span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Applied Problem</h2>
+                    <h1 class="font-serif text-main mb-3">方程式 <em>x</em><sup>2</sup> = <em>n</em> は整数解を持つか？</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-4">
+                        <div class="p-5 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <p class="font-serif font-semibold text-navy border-b border-border pb-1">問題の定義</p>
+                            <p class="text-slate-600 leading-relaxed text-xs mt-2">
+                                入力として整数 <em>n</em> が与えられたとき、二乗して <em>n</em> になるような整数 <em>x</em> が存在するかを判定します。<br>
+                                戻り値は <code>TRUE</code> または <code>FALSE</code> です。
+                            </p>
+                        </div>
+                        <div class="p-5 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <p class="font-serif font-semibold text-terracotta border-b border-border pb-1">解法アプローチ</p>
+                            <p class="text-slate-600 leading-relaxed text-xs mt-2">
+                                平方根を直接計算するのではなく、整数 <em>i</em> を <em>1</em> から順番に二乗し、<em>n</em> と等しくなるものがあるかを探す「反復的」なアプローチを取ります。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Iteration in Pseudocode</span>
+                </div>
+            </section>
+
+            <!-- Slide 5: For Loop Solution -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">For Loop Approach</span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Solution 1</h2>
+                    <h1 class="font-serif text-main mb-3"><span class="pseudo-keyword">for</span> ループによる解法</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-5 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                <em>i</em> を <em>1</em> から <em>n</em> まで順番に調べます。
+                            </p>
+                            <p class="text-[11px] text-slate-500 leading-relaxed">
+                                欠点：たとえ <em>i</em><sup>2</sup> が <em>n</em> を大きく超えても、ループは律儀に <em>n</em> 回目まで反復し続けてしまいます。
+                            </p>
+                        </div>
+                        <div class="md:col-span-7">
+                            <div class="pseudocode-box relative text-sm">
+                                <span class="pseudo-keyword">function</span> IsXInteger(<span class="pseudo-var">n</span>)<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-var">y</span> &larr; FALSE<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">for</span> 1 &le; <span class="pseudo-var">i</span> &le; <span class="pseudo-var">n</span> <span class="pseudo-keyword">do</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">if</span> <span class="pseudo-var">i</span><sup>2</sup> = <span class="pseudo-var">n</span> <span class="pseudo-keyword">then</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-var">y</span> &larr; TRUE<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">end if</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">end for</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">return</span> <span class="pseudo-var">y</span><br>
+                                <span class="pseudo-keyword">end function</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Iteration in Pseudocode</span>
+                </div>
+            </section>
+
+            <!-- Slide 6: While Loop Solution -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">While Loop Approach</span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Solution 2 (Optimised)</h2>
+                    <h1 class="font-serif text-main mb-3"><span class="pseudo-keyword">while</span> ループによる最適化</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-5 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                <em>i</em><sup>2</sup> &le; <em>n</em> である限りループを続けます。
+                            </p>
+                            <p class="text-[11px] text-slate-500 leading-relaxed">
+                                <em>i</em><sup>2</sup> が <em>n</em> を超えた時点で自動的にループが終了するため、不必要な計算を省くことができます。
+                            </p>
+                        </div>
+                        <div class="md:col-span-7">
+                            <div class="pseudocode-box relative text-[13px]">
+                                <span class="pseudo-keyword">function</span> IsXInteger(<span class="pseudo-var">n</span>)<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-var">y</span> &larr; FALSE<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-var">i</span> &larr; 1<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">while</span> <span class="pseudo-var">i</span><sup>2</sup> &le; <span class="pseudo-var">n</span> <span class="pseudo-keyword">then</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">if</span> <span class="pseudo-var">i</span><sup>2</sup> = <span class="pseudo-var">n</span> <span class="pseudo-keyword">then</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-var">y</span> &larr; TRUE<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">end if</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-var">i</span> &larr; <span class="pseudo-var">i</span> + 1<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">end while</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">return</span> <span class="pseudo-var">y</span><br>
+                                <span class="pseudo-keyword">end function</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Iteration in Pseudocode</span>
+                </div>
+            </section>
+
+            <!-- Slide 7: Break and Continue -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Loop Control Flow</span>
+                </div>
+                <div class="slide-content">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Advanced Control</h2>
+                    <h1 class="font-serif text-main mb-3">ループの制御：<span class="pseudo-keyword">break</span> と <span class="pseudo-keyword">continue</span></h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-4">
+                        <div class="space-y-3">
+                            <p class="font-bold text-sm text-navy">Break（ブレイク）</p>
+                            <p class="text-xs text-slate-600 mb-2">条件を満たした瞬間に、ループ全体を完全に停止して抜け出します。</p>
+                            <div class="pseudocode-box relative text-xs">
+                                <span class="pseudo-var">x</span> &larr; 1<br>
+                                <span class="pseudo-var">y</span> &larr; 0<br>
+                                <span class="pseudo-keyword">while</span> <span class="pseudo-var">x</span> &lt; 11 <span class="pseudo-keyword">do</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-var">y</span> &larr; <span class="pseudo-var">x</span> + <span class="pseudo-var">y</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-var">x</span> &larr; <span class="pseudo-var">x</span> + 1<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">break</span><br>
+                                <span class="pseudo-keyword">end while</span>
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <p class="font-bold text-sm text-terracotta">Continue（コンティニュー）</p>
+                            <p class="text-xs text-slate-600 mb-2">ループの残りの処理をスキップし、次の反復（イテレーション）へ即座にジャンプします。</p>
+                            <div class="pseudocode-box relative text-xs">
+                                <span class="pseudo-var">x</span> &larr; 2<br>
+                                <span class="pseudo-keyword">for</span> 0 &le; <span class="pseudo-var">i</span> &le; 2 <span class="pseudo-keyword">do</span><br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-var">x</span> &larr; <span class="pseudo-var">x</span> &times; 2<br>
+                                &nbsp;&nbsp;&nbsp;&nbsp;<span class="pseudo-keyword">continue</span><br>
+                                <span class="pseudo-keyword">end for</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Iteration in Pseudocode</span>
+                </div>
+            </section>
+
+            <!-- Slide 8: やってみよう！ -->
+            <section class="slide text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">やってみよう！</span>
+                </div>
+                <div class="slide-content max-w-2xl py-4">
+                    <h2 class="text-xs uppercase tracking-[0.3em] text-accent-temp font-medium mb-1">Next Step</h2>
+                    <h1 class="font-serif text-main mb-4">やってみよう！</h1>
+                    
+                    <p class="text-xs text-muted leading-relaxed max-w-lg mx-auto mb-4">
+                        反復処理の仕組みを理解したところで、前回の「ユークリッドの互除法（最大公約数）」を、関数（Function）とループを用いて擬似コードで記述してみましょう。
+                    </p>
+
+                    <div class="p-4 bg-surface-2 border border-border rounded-sm shadow-sm text-left text-xs space-y-1.5 max-w-md mx-auto mb-4">
+                        <ul class="minimal-list">
+                            <li>入力を明確にし、戻り値（Output）を設定する。</li>
+                            <li>Forループ、またはWhileループを使用した2種類のバージョンを考える。</li>
+                            <li>完成するまで、他の人の答えを見ないこと！</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Iteration in Pseudocode</span>
+                </div>
+            </section>
+
+                                <!-- Minimalist Navigation Controls Footer overlay inside the slide deck -->
+                            <div class="absolute bottom-6 left-10 right-10 flex justify-between items-center pointer-events-auto z-30">
+                                <div class="flex gap-6">
+                                    <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                                        <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
+                                    </button>
+                                    <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-500 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold">
+                                        Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                                    </button>
+                                </div>
+                                <div class="flex gap-1.5 overflow-x-auto max-w-xs justify-center px-2 no-scrollbar" id="dots-container"></div>
+                            </div>
+
+        </div>
+    </div>
+
+    
+
+    <!-- Script for interactivity -->
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsContainer = document.getElementById('dots-container');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const navSidebar = document.getElementById('navSidebar');
+        const navOverlay = document.getElementById('navOverlay');
+        const navMenu = document.getElementById('navMenu');
+        
+        let currentSlide = 0;
+        let indicators = [];
+
+        slides.forEach((slide, index) => {
+            const dot = document.createElement('span');
+            dot.className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 ' + (index === 0 ? 'dot-active' : 'dot-inactive');
+            dotsContainer.appendChild(dot);
+            indicators.push(dot);
+
+            const title = slide.querySelector('h1')?.innerText.replace(/\n/g, ' ') || `Slide ${index + 1}`;
+            const navItem = document.createElement('div');
+            navItem.className = `nav-item ${index === 0 ? 'active' : ''}`;
+            navItem.textContent = title;
+            navItem.onclick = () => { updateSlide(index); closeSidebar(); };
+            navMenu.appendChild(navItem);
+        });
+
+        function updateSlide(index) {
+            if (index < 0 || index >= slides.length) return;
+
+            slides[currentSlide].classList.remove('active');
+            indicators[currentSlide].className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 bg-gray-300';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.remove('active');
+
+            currentSlide = index;
+            
+            slides[currentSlide].classList.add('active');
+            indicators[currentSlide].className = 'w-1.5 h-1.5 rounded-full transition-all duration-300 bg-black';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.add('active');
+
+            prevBtn.style.opacity = currentSlide === 0 ? '0.2' : '1';
+            prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+            nextBtn.style.opacity = currentSlide === slides.length - 1 ? '0.2' : '1';
+            nextBtn.style.pointerEvents = currentSlide === slides.length - 1 ? 'none' : 'auto';
+        }
+
+        function closeSidebar() {
+            navSidebar.classList.remove('open');
+            navOverlay.classList.remove('open');
+            hamburgerBtn.classList.remove('active');
+        }
+
+        hamburgerBtn.onclick = () => {
+            hamburgerBtn.classList.toggle('active');
+            navSidebar.classList.toggle('open');
+            navOverlay.classList.toggle('open');
+        };
+        navOverlay.onclick = closeSidebar;
+
+        prevBtn.onclick = () => updateSlide(currentSlide - 1);
+        nextBtn.onclick = () => updateSlide(currentSlide + 1);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') updateSlide(currentSlide - 1);
+            if (e.key === 'ArrowRight' || e.key === ' ') updateSlide(currentSlide + 1);
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+        const deck = document.getElementById('deck');
+        deck.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
+        deck.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            if (touchEndX < touchStartX - 50) updateSlide(currentSlide + 1);
+            if (touchEndX > touchStartX + 50) updateSlide(currentSlide - 1);
+        });
+
+        updateSlide(0);
+    </script>
+</body>
+</html>

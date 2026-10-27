@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>講義スライド：第5回の総括とアルゴリズムの本質 (Algorithms and Data Structures)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --color-bg-outer: #D1CFCA;      
+            --color-bg-slide:  #F7F6F4;     
+            --color-surface-1: #F2EFEA;    
+            --color-surface-2: #FFFFFF;    
+            --color-border: #DDDAD5;       
+            --color-text-main: #222222;    
+            --color-text-muted: #555555;   
+            --color-text-light: #999999;   
+            --color-accent-temp: #8C7A6B;  
+            --navy: #344D61;               
+            --terracotta: #994F60;         
+            --gold-muted: #C4B298;         
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--color-bg-outer);
+            color: var(--color-text-main);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+        }
+
+        h1, h2, h3, .font-serif {
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-weight: 400;
+        }
+
+        .presentation-viewport {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .slide-deck {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--color-bg-slide);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            padding: 4.5% 6.5% 56px 6.5%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            transform: translateY(10px);
+            background: var(--color-bg-slide);
+            overflow-y: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        h1 {
+            color: var(--color-text-main);
+            font-size: 1.85rem; 
+            font-weight: 400;
+            line-height: 1.38;
+            margin-bottom: 1.1rem;
+            letter-spacing: 0.04em;
+        }
+
+        h2 {
+            color: var(--color-accent-temp);
+            font-size: 0.65rem; 
+            font-weight: 600;
+            letter-spacing: 0.35em;
+            margin-bottom: 0.45rem;
+            text-transform: uppercase;
+        }
+
+        .main-text {
+            font-size: 1.02rem; 
+            line-height: 1.75;
+            color: var(--color-text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        .highlight {
+            background: linear-gradient(transparent 70%, #E2DDD5 70%);
+            font-weight: 500;
+            padding: 0 0.15em;
+        }
+
+        code {
+            background: var(--color-surface-1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 2px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--terracotta);
+            font-weight: bold;
+            font-size: 0.88em;
+            border: 1px solid var(--color-border);
+        }
+
+        .minimal-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .minimal-list li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.55rem;
+            font-size: 0.92rem; 
+            color: var(--color-text-muted);
+            display: block;
+            line-height: 1.55;
+        }
+        .minimal-list li::before {
+            content: "・";
+            position: absolute;
+            left: 0;
+            color: var(--color-accent-temp);
+            font-weight: bold;
+        }
+
+        .slide-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: var(--color-text-light);
+            border-top: 1px solid var(--color-border);
+            padding-top: 0.65rem;
+            margin-top: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .nav-btn {
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            color: var(--color-text-main);
+            opacity: 1 !important;
+        }
+
+        .hamburger-btn {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            z-index: 50;
+            background: rgba(247, 246, 244, 0.9);
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 0;
+            width: 48px;
+            height: 48px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+
+        .hamburger-btn:hover {
+            background: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .hamburger-btn span {
+            width: 18px;
+            height: 2px;
+            background-color: var(--color-text-main);
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+
+        .nav-sidebar {
+            position: fixed;
+            left: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background-color: var(--color-bg-slide);
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
+            z-index: 40;
+            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            border-right: 1px solid var(--color-border);
+        }
+
+        .nav-sidebar.open {
+            left: 0;
+        }
+
+        .nav-sidebar-content {
+            padding: 100px 24px 40px 24px;
+        }
+
+        .nav-sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--color-text-light);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .nav-item {
+            padding: 10px 0;
+            font-size: 12px;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            padding-left: 12px;
+            line-height: 1.4;
+        }
+
+        .nav-item:hover {
+            color: var(--color-text-main);
+            border-left-color: var(--color-accent-temp);
+            background: rgba(0,0,0,0.01);
+        }
+
+        .nav-item.active {
+            color: var(--color-accent-temp);
+            font-weight: 600;
+            border-left-color: var(--color-accent-temp);
+        }
+
+        .nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0);
+            z-index: 30;
+            transition: background-color 0.3s ease;
+            pointer-events: none;
+        }
+
+        .nav-overlay.open {
+            background-color: rgba(0, 0, 0, 0.3);
+            pointer-events: auto;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .dot-active { 
+            background-color: var(--color-text-main); 
+            width: 6px;
+            height: 6px;
+        }
+        .dot-inactive { 
+            background-color: var(--color-border); 
+            width: 4px;
+            height: 4px;
+        }
+
+        @media (max-width: 1320px) {
+            .slide-deck { transform: scale(0.9); }
+        }
+        @media (max-width: 1150px) {
+            .slide-deck { transform: scale(0.8); }
+        }
+        @media (max-width: 980px) {
+            .slide-deck { transform: scale(0.7); }
+        }
+        @media (max-width: 768px) {
+            .presentation-viewport { padding: 10px; height: auto; }
+            .slide-deck { aspect-ratio: auto; height: 560px; transform: none; }
+            .slide { padding: 32px 24px; }
+            h1 { font-size: 1.5rem; }
+            .main-text, .minimal-list li { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-btn" id="hamburgerBtn" title="目次を開く">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Navigation Sidebar -->
+    <div class="nav-sidebar" id="navSidebar">
+        <div class="nav-sidebar-content">
+            <div class="nav-sidebar-title">講義スライド一覧</div>
+            <div id="navMenu"></div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <div class="presentation-viewport">
+        <div class="slide-deck" id="deck">
+
+            <!-- Slide 1: 第5回の到達点 -->
+            <section class="slide active">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Lecture 5 Review</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Lecture 5 Conclusion</h2>
+                    <h1 class="font-serif text-main mb-4">第5回の総括：<br><span class="highlight">「問題・解法・アルゴリズム」</span></h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-4">
+                            <p class="main-text text-xs text-muted leading-relaxed">
+                                ここまでの講義では、コンピュータサイエンスの根本基盤である「問題」「解法」「アルゴリズム」の本質を探求してきました。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                アルゴリズムの歴史的ルーツから、有限メモリを持つ物理マシンへの実装上の制約、そして多面的なプロセスを表現するフローチャートまでを網羅しました。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                学んだコアコンセプトを体系的に整理し、次なるステップへの土台を固めましょう。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <!-- 抽象図解: 講義内容の概念統合マップ -->
+                            <svg viewBox="0 0 190 120" class="w-48 h-28 bg-[#F2EFEA] rounded-sm p-2">
+                                <!-- Problem -->
+                                <rect x="15" y="20" width="45" height="24" rx="2" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="37.5" y="32" font-size="5.5" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Problem</text>
+                                <text x="37.5" y="39" font-size="4.5" font-family="monospace" text-anchor="middle" fill="var(--color-text-muted)">Input / Quest</text>
+
+                                <!-- Arrow -->
+                                <path d="M 60 32 L 80 32" stroke="var(--terracotta)" stroke-width="1.2"/>
+                                <polygon points="80,30.5 83,32 80,33.5" fill="var(--terracotta)"/>
+
+                                <!-- Algorithm -->
+                                <polygon points="105,18 128,32 105,46 82,32" fill="white" stroke="var(--terracotta)" stroke-width="1.2"/>
+                                <text x="105" y="30.5" font-size="5" font-family="sans-serif" text-anchor="middle" fill="var(--terracotta)">Algorithm</text>
+                                <text x="105" y="36.5" font-size="4.2" font-family="monospace" text-anchor="middle" fill="var(--terracotta)">Finite Steps</text>
+
+                                <!-- Arrow -->
+                                <path d="M 128 32 L 148 32" stroke="var(--navy)" stroke-width="1.2"/>
+                                <polygon points="148,30.5 151,32 148,33.5" fill="var(--navy)"/>
+
+                                <!-- Solution -->
+                                <rect x="151" y="20" width="30" height="24" rx="12" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="166" y="34.5" font-size="5.5" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Output</text>
+
+                                <!-- Below: Representation layer (Flowchart / Code) -->
+                                <rect x="35" y="72" width="120" height="26" rx="2" fill="white" stroke="var(--accent-temp)" stroke-width="1" stroke-dasharray="2 2"/>
+                                <text x="95" y="84" font-size="5.5" font-family="monospace" text-anchor="middle" fill="var(--navy)">Flowchart ➔ Program Code</text>
+                                <text x="95" y="92" font-size="4.5" font-family="sans-serif" text-anchor="middle" fill="var(--color-text-muted)">Instantiation on Physical Machine</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Lecture 5 Review</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 2: 核心の再確認①：「問題（Problem）」の定義 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Core Concept 1</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Core Concept: Problem</h2>
+                    <h1 class="font-serif text-main mb-3">計算科学における「問題」とは何か</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-3">
+                        <div class="p-5 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-navy block border-b border-border pb-1">有限メモリ内の入力データ</span>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                問題とは、計算機の<span class="highlight font-semibold">有限なメモリ内に格納されたデータ</span>に対して問いを投げかけることです。
+                            </p>
+                            <p class="text-slate-500 text-[11px] leading-relaxed">
+                                無限の無理数を直接扱えないため、データは有限ビットで表現可能であるか、適切に近似されている必要があります。
+                            </p>
+                        </div>
+
+                        <div class="p-5 bg-surface-2 border border-navy rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-navy block border-b border-border pb-1">明確な出力形式の要求</span>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                求められる解答の形（真偽値なのか、数値なのか、リストなのか）は、<span class="highlight font-semibold">問いの形式そのものから常に自明</span>でなければなりません。
+                            </p>
+                            <p class="text-slate-500 text-[11px] leading-relaxed">
+                                「休暇を取れるか（真偽値）」と「あと何日取れるか（整数）」の違いのように、出力の定義が問題の価値を定めます。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Problem Formalism</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 3: 核心の再確認②：「アルゴリズム（Algorithm）」の要件 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Core Concept 2</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Core Concept: Algorithm</h2>
+                    <h1 class="font-serif text-main mb-3">アルゴリズムを満たす2大要件</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-3">
+                        <div class="p-5 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-navy block border-b border-border pb-1">要件 1：正当性（Correctness）</span>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                手順に従うことで、与えられた入力に対して<span class="highlight font-semibold">必ず正しい答えを出力</span>すること。
+                            </p>
+                            <p class="text-slate-500 text-[11px] leading-relaxed">
+                                計算機が曖昧さなく従える、基本的で単純なステップ（四則演算や条件判定）の列として記述されます。
+                            </p>
+                        </div>
+
+                        <div class="p-5 bg-surface-2 border border-terracotta rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-terracotta block border-b border-border pb-1">要件 2：有限性（Finiteness）</span>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                実用に耐えうるアルゴリズムは、<span class="highlight font-semibold">有限回のステップで必ず停止</span>しなければなりません。
+                            </p>
+                            <p class="text-slate-500 text-[11px] leading-relaxed">
+                                無限ループに陥る手順はアルゴリズムとして不完全であり、明確な終了条件（Stopping Condition）が不可欠です。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Algorithm Requirements</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 4: なぜヘロンの解法を学んだのか -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Exemplary Algorithm</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Why Heron's Method?</h2>
+                    <h1 class="font-serif text-main mb-3">「答え」ではなく「手順」を学ぶ価値</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                現代なら、検索エンジンや電卓に数字を打ち込めば平方根の答えは一瞬で画面に表示されます。では、なぜヘロンの解法を学んだのでしょうか？
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1.5">
+                                <li><strong>概念理解の最良の例題：</strong> 近似、反復、終了条件という中核概念が凝縮されている。</li>
+                                <li><strong>限界への挑戦：</strong> アルゴリズムさえ知っていれば、原理上は<span class="highlight font-semibold">小数第232位まででも自力で計算可能</span>になる。</li>
+                                <li><strong>手法の普遍性：</strong> 答え単体ではなく「解法の手順（Method）」を知ることで、あらゆる問題への応用力が身につく。</li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <div class="p-3 font-mono text-center space-y-2">
+                                <span class="text-xs text-slate-400 block font-sans">Answer vs. Algorithm</span>
+                                <div class="p-2 bg-surface-1 border border-border rounded text-[11px] text-slate-500">
+                                    Search Engine ➔ "√2 = 1.414..."<br>
+                                    <span class="text-[9.5px] text-slate-400">（ただの数値結果）</span>
+                                </div>
+                                <div class="p-2 bg-white border border-terracotta rounded text-[11px] text-navy font-bold">
+                                    Heron Method ➔ x = (x + N/x)/2<br>
+                                    <span class="text-[9.5px] text-terracotta font-normal">（任意の精度へ拡張可能な知性）</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Power of Methods</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 5: フローチャートという万能の言語 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Modeling Technique</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Universal Notation</h2>
+                    <h1 class="font-serif text-main mb-3">多面的なプロセスを捉えるフローチャート</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-6 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                フローチャートは、単なるプログラムの設計図にとどまりません。
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1.5">
+                                <li><strong>多面的なプロセスの可視化：</strong> 人間の朝のルーティンから業務ワークフローまで記述可能。</li>
+                                <li><strong>実装前の論理検証：</strong> コードを書く前に、不要な分岐や無限ループの罠を排除できる。</li>
+                                <li><strong>共通言語としての力：</strong> プログラミング言語の種類を超えて他者とロジックを共有できる。</li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-6 flex justify-center py-3 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <!-- 抽象図解: 4つの標準記号のシンボル -->
+                            <svg viewBox="0 0 170 110" class="w-44 h-28 bg-[#F2EFEA] rounded-sm p-2">
+                                <!-- Oval: Terminal -->
+                                <rect x="15" y="15" width="46" height="18" rx="9" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="38" y="27" font-size="5.5" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Terminal</text>
+
+                                <!-- Parallelogram: I/O -->
+                                <polygon points="105,15 155,15 145,33 95,33" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="125" y="26" font-size="5.5" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">I / O</text>
+
+                                <!-- Rectangle: Action -->
+                                <rect x="15" y="65" width="46" height="20" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="38" y="77" font-size="5.5" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Action</text>
+
+                                <!-- Diamond: Decision -->
+                                <polygon points="125,55 155,75 125,95 95,75" fill="white" stroke="var(--terracotta)" stroke-width="1.2"/>
+                                <text x="125" y="77" font-size="5.5" font-family="sans-serif" text-anchor="middle" fill="var(--terracotta)">Decision</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Universal Notation</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 6: 次なる挑戦：新たな「問題」への対峙 -->
+            <section class="slide text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Next Horizon</span>
+                    <span></span>
+                </div>
+                <div class="slide-content max-w-2xl py-3">
+                    <h2>Next Challenge</h2>
+                    <h1 class="font-serif text-main mb-4">すべては「問題」から始まる</h1>
+                    
+                    <p class="text-xs text-muted leading-relaxed max-w-lg mx-auto mb-4">
+                        アルゴリズムの探求は、常に具体的な「問題」を目の前に据えることからスタートします。
+                    </p>
+
+                    <div class="p-4 bg-surface-2 border border-navy rounded-sm shadow-sm text-left text-xs space-y-2 max-w-md mx-auto mb-4">
+                        <div class="border-b border-border pb-1.5">
+                            <span class="font-bold text-navy block">次回への予告：</span>
+                            <span class="text-slate-600 text-[11px]">次回、新たな挑戦的な「計算問題」が提示されます。</span>
+                        </div>
+                        <div class="pt-1">
+                            <span class="font-bold text-terracotta block">あなたのミッション：</span>
+                            <span class="text-slate-600 text-[11px]">提示された問題に対し、自らの手でアルゴリズムを構築し、ステップを組み立てて解決法を導き出すこと。</span>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-surface-1 border border-border rounded-sm max-w-md mx-auto text-center">
+                        <span class="font-mono text-[10px] text-navy font-bold uppercase tracking-wider block mb-0.5">Ready for Next Step</span>
+                        <p class="text-[11px] text-slate-700 font-medium">
+                            問題の本質を見抜き、美しいアルゴリズムへと昇華させる旅へ進みましょう。
+                        </p>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Lecture 5 Wrap-up</span><span></span>
+                </div>
+            </section>
+
+                                <!-- Minimalist Navigation Controls Footer overlay inside the slide deck -->
+                            <div class="absolute bottom-6 left-10 right-10 flex justify-between items-center pointer-events-auto z-30">
+                                <div class="flex gap-6">
+                                    <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-600 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold cursor-pointer">
+                                        <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
+                                    </button>
+                                    <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-600 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold cursor-pointer">
+                                        Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Dynamic Step Indicators Container -->
+                                <div class="flex gap-1.5 overflow-x-auto max-w-xs justify-center px-2 no-scrollbar" id="dots-container"></div>
+                            </div>
+
+        </div>
+    </div>
+
+    
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsContainer = document.getElementById('dots-container');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const navSidebar = document.getElementById('navSidebar');
+        const navOverlay = document.getElementById('navOverlay');
+        const navMenu = document.getElementById('navMenu');
+        
+        let currentSlide = 0;
+        let indicators = [];
+
+        slides.forEach((slide, index) => {
+            const dot = document.createElement('span');
+            dot.className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 ' + (index === 0 ? 'dot-active' : 'dot-inactive');
+            dotsContainer.appendChild(dot);
+            indicators.push(dot);
+
+            const title = slide.querySelector('h1')?.innerText.replace(/\n/g, ' ') || `Slide ${index + 1}`;
+            const navItem = document.createElement('div');
+            navItem.className = `nav-item ${index === 0 ? 'active' : ''}`;
+            navItem.textContent = `${index + 1}. ${title}`;
+            navItem.onclick = () => { updateSlide(index); closeSidebar(); };
+            navMenu.appendChild(navItem);
+        });
+
+        function updateSlide(index) {
+            if (index < 0) {
+                currentSlide = 0;
+                return;
+            }
+            if (index >= slides.length) {
+                currentSlide = slides.length - 1;
+                return;
+            }
+
+            slides[currentSlide].classList.remove('active');
+            indicators[currentSlide].className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 bg-gray-300';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.remove('active');
+
+            currentSlide = index;
+            
+            slides[currentSlide].classList.add('active');
+            indicators[currentSlide].className = 'w-1.5 h-1.5 rounded-full transition-all duration-300 bg-black';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.add('active');
+
+            prevBtn.style.opacity = currentSlide === 0 ? '0.2' : '1';
+            prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+            nextBtn.style.opacity = currentSlide === slides.length - 1 ? '0.2' : '1';
+            nextBtn.style.pointerEvents = currentSlide === slides.length - 1 ? 'none' : 'auto';
+        }
+
+        function closeSidebar() {
+            navSidebar.classList.remove('open');
+            navOverlay.classList.remove('open');
+            hamburgerBtn.classList.remove('active');
+        }
+
+        hamburgerBtn.onclick = () => {
+            hamburgerBtn.classList.toggle('active');
+            navSidebar.classList.toggle('open');
+            navOverlay.classList.toggle('open');
+        };
+        navOverlay.onclick = closeSidebar;
+
+        prevBtn.onclick = () => updateSlide(currentSlide - 1);
+        nextBtn.onclick = () => updateSlide(currentSlide + 1);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                updateSlide(currentSlide - 1);
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                updateSlide(currentSlide + 1);
+            }
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const deck = document.getElementById('deck');
+        deck.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        deck.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                updateSlide(currentSlide + 1);
+            }
+            if (touchEndX > touchStartX + 50) {
+                updateSlide(currentSlide - 1);
+            }
+        }
+
+        updateSlide(0);
+    </script>
+</body>
+</html>
