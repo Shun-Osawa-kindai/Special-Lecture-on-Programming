@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>講義スライド：メッセージキュー (Message Queue)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --color-bg-outer: #D1CFCA;      
+            --color-bg-slide:  #F7F6F4;     
+            --color-surface-1: #F2EFEA;    
+            --color-surface-2: #FFFFFF;    
+            --color-border: #DDDAD5;       
+            --color-text-main: #222222;    
+            --color-text-muted: #555555;   
+            --color-text-light: #999999;   
+            --color-accent-temp: #8C7A6B;  
+            --navy: #344D61;               
+            --terracotta: #994F60;         
+            --gold-muted: #C4B298;         
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--color-bg-outer);
+            color: var(--color-text-main);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+        }
+
+        h1, h2, h3, .font-serif {
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-weight: 400;
+        }
+
+        .presentation-viewport {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .slide-deck {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--color-bg-slide);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            padding: 4.5% 6.5% 56px 6.5%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            transform: translateY(10px);
+            background: var(--color-bg-slide);
+            overflow-y: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        h1 {
+            color: var(--color-text-main);
+            font-size: 1.85rem; 
+            font-weight: 400;
+            line-height: 1.38;
+            margin-bottom: 1.1rem;
+            letter-spacing: 0.04em;
+        }
+
+        h2 {
+            color: var(--color-accent-temp);
+            font-size: 0.65rem; 
+            font-weight: 600;
+            letter-spacing: 0.35em;
+            margin-bottom: 0.45rem;
+            text-transform: uppercase;
+        }
+
+        .main-text {
+            font-size: 1.02rem; 
+            line-height: 1.75;
+            color: var(--color-text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        .highlight {
+            background: linear-gradient(transparent 70%, #E2DDD5 70%);
+            font-weight: 500;
+            padding: 0 0.15em;
+        }
+
+        .minimal-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .minimal-list li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.55rem;
+            font-size: 0.92rem; 
+            color: var(--color-text-muted);
+            display: block;
+            line-height: 1.55;
+        }
+        .minimal-list li::before {
+            content: "・";
+            position: absolute;
+            left: 0;
+            color: var(--color-accent-temp);
+            font-weight: bold;
+        }
+
+        .slide-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: var(--color-text-light);
+            border-top: 1px solid var(--color-border);
+            padding-top: 0.65rem;
+            margin-top: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .nav-btn {
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            color: var(--color-text-main);
+            opacity: 1 !important;
+        }
+
+        .hamburger-btn {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            z-index: 50;
+            background: rgba(247, 246, 244, 0.9);
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 0;
+            width: 48px;
+            height: 48px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+
+        .hamburger-btn:hover {
+            background: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .hamburger-btn span {
+            width: 18px;
+            height: 2px;
+            background-color: var(--color-text-main);
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+
+        .nav-sidebar {
+            position: fixed;
+            left: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background-color: var(--color-bg-slide);
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
+            z-index: 40;
+            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            border-right: 1px solid var(--color-border);
+        }
+
+        .nav-sidebar.open {
+            left: 0;
+        }
+
+        .nav-sidebar-content {
+            padding: 100px 24px 40px 24px;
+        }
+
+        .nav-sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--color-text-light);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .nav-item {
+            padding: 10px 0;
+            font-size: 12px;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            padding-left: 12px;
+            line-height: 1.4;
+        }
+
+        .nav-item:hover {
+            color: var(--color-text-main);
+            border-left-color: var(--color-accent-temp);
+            background: rgba(0,0,0,0.01);
+        }
+
+        .nav-item.active {
+            color: var(--color-accent-temp);
+            font-weight: 600;
+            border-left-color: var(--color-accent-temp);
+        }
+
+        .nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0);
+            z-index: 30;
+            transition: background-color 0.3s ease;
+            pointer-events: none;
+        }
+
+        .nav-overlay.open {
+            background-color: rgba(0, 0, 0, 0.3);
+            pointer-events: auto;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* ボード（板書）描画用カスタムスタイル */
+        .board-container {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            font-family: "Times New Roman", Times, serif;
+            color: #333;
+        }
+        
+        .board-element {
+            background-color: #a8a8a8;
+            border: 1px solid #777;
+            box-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            padding: 8px 16px;
+            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-btn" id="hamburgerBtn" title="目次を開く">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Navigation Sidebar -->
+    <div class="nav-sidebar" id="navSidebar">
+        <div class="nav-sidebar-content">
+            <div class="nav-sidebar-title">講義スライド一覧</div>
+            <div id="navMenu"></div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <div class="presentation-viewport">
+        <div class="slide-deck" id="deck">
+
+            <!-- Slide 1: Introduction to Message Queues -->
+            <section class="slide active">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Real-world Example</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Message Queue</h2>
+                    <h1 class="font-serif text-main mb-4">実例としての<span class="highlight">「メッセージキュー」</span></h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-4">
+                            <p class="main-text text-xs text-muted leading-relaxed">
+                                前回のセッションでキューの例を考えてもらいましたが、コンピューティングにおける通信タスクの典型的な例が「メッセージキュー」です。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                Amazon、Dropbox、Netflixなどが提供するクラウドベースのコンピューティングサービスで広く活用されています。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <svg viewBox="0 0 160 120" class="w-48 h-32 bg-[#F2EFEA] rounded-sm p-2">
+                                <!-- シンプルな抽象アイコン -->
+                                <rect x="25" y="45" width="30" height="30" rx="2" fill="none" stroke="var(--navy)" stroke-width="2"/>
+                                <path d="M 65 60 L 95 60" stroke="var(--terracotta)" stroke-width="2" stroke-dasharray="3 2"/>
+                                <polygon points="90,56 98,60 90,64" fill="var(--terracotta)"/>
+                                <rect x="105" y="45" width="30" height="30" rx="2" fill="var(--navy)"/>
+                                <text x="80" y="95" font-size="7" font-family="sans-serif" text-anchor="middle" fill="var(--color-text-muted)">Communication Task</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Message Queue Example</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 2: Asynchronous and Shared Resources -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Shared Computing</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Asynchronous Processing</h2>
+                    <h1 class="font-serif text-main mb-3">共有リソースと非同期処理</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-3">
+                        <div class="p-5 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-navy block border-b border-border pb-1">共有リソースの待機</span>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                自分よりも計算能力の高い外部のシステムに処理を依頼する場合、その計算能力は多くのユーザーが利用したい「共有リソース」となります。
+                            </p>
+                            <p class="text-slate-500 text-[11px] leading-relaxed">
+                                リソースが空くまで、あなたの送信したデータはキューの中で待機することになります。
+                            </p>
+                        </div>
+
+                        <div class="p-5 bg-surface-2 border border-terracotta rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-terracotta block border-b border-border pb-1">非同期（Asynchronous）の利点</span>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                リアルタイム（即時）の処理が必要でない場合、データはメッセージキューに蓄えられます。
+                            </p>
+                            <p class="text-slate-500 text-[11px] leading-relaxed">
+                                キューの順番が回ってきたときに初めて、その計算が実行されます。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Asynchronous Processing</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 3: Blackboard Recreation (Message Queue) -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Architecture</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Architecture</h2>
+                    <h1 class="font-serif text-main mb-3">メッセージキューの基本構造</h1>
+                    
+                    <!-- 板書再現 (Message Queue) -->
+                    <div class="board-container flex flex-col items-center p-6 w-full max-w-[850px] mx-auto mt-2">
+                        <div class="text-xl font-bold font-serif mb-12">Message Queue</div>
+                        
+                        <!-- Queue sequence -->
+                        <div class="flex items-center gap-3 relative w-[600px] justify-center">
+                            <!-- Element 1 + Tail -->
+                            <div class="flex flex-col items-center absolute -left-4 top-0">
+                                <div class="board-element">Element 1</div>
+                                <svg width="14" height="24" class="mt-2"><polygon points="7,0 14,8 10,8 10,24 4,24 4,8 0,8" fill="white" stroke="black" stroke-width="1"/></svg>
+                                <span class="font-serif text-[13px] mt-1">Tail</span>
+                            </div>
+                            
+                            <!-- Arrow 1 -->
+                            <svg width="24" height="14" class="absolute left-[88px] top-3.5"><polygon points="0,4 16,4 16,0 24,7 16,14 16,10 0,10" fill="white" stroke="black" stroke-width="1"/></svg>
+                            
+                            <!-- Dashed box -->
+                            <div class="border-[1.5px] border-dashed border-gray-600 p-2 flex items-center gap-3 relative left-2">
+                                <div class="board-element">Element 2</div>
+                                <svg width="24" height="14"><polygon points="0,4 16,4 16,0 24,7 16,14 16,10 0,10" fill="white" stroke="black" stroke-width="1"/></svg>
+                                <div class="board-element">Element 3</div>
+                                <svg width="24" height="14"><polygon points="0,4 16,4 16,0 24,7 16,14 16,10 0,10" fill="white" stroke="black" stroke-width="1"/></svg>
+                                <div class="board-element">Element 4</div>
+                            </div>
+                            
+                            <!-- Arrow 2 -->
+                            <svg width="24" height="14" class="absolute right-[88px] top-3.5"><polygon points="0,4 16,4 16,0 24,7 16,14 16,10 0,10" fill="white" stroke="black" stroke-width="1"/></svg>
+                            
+                            <!-- Element 5 + Head -->
+                            <div class="flex flex-col items-center absolute -right-4 top-0">
+                                <div class="board-element">Element 5</div>
+                                <svg width="14" height="24" class="mt-2"><polygon points="7,0 14,8 10,8 10,24 4,24 4,8 0,8" fill="white" stroke="black" stroke-width="1"/></svg>
+                                <span class="font-serif text-[13px] mt-1">Head</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Text lines -->
+                        <div class="flex flex-col items-center mt-[70px] mb-8 font-serif text-[15px] gap-3 text-gray-800">
+                            <div>Tail is a client's last message</div>
+                            <div>Head is a client's first message</div>
+                        </div>
+                        
+                        <!-- Cloud & Laptops -->
+                        <div class="flex items-end justify-between w-full px-6 mt-4 relative">
+                            <!-- Left Laptop -->
+                            <div class="relative flex flex-col items-center">
+                                <div class="absolute -top-10 -right-4 board-element px-2 py-1 text-[11px] shadow-md">6/3?</div>
+                                <svg width="90" height="60" viewBox="0 0 100 70">
+                                    <rect x="25" y="15" width="50" height="35" fill="white" stroke="black" stroke-width="1.5"/>
+                                    <path d="M10 50 L90 50 L95 65 L5 65 Z" fill="white" stroke="black" stroke-width="1.5"/>
+                                    <rect x="35" y="55" width="30" height="3" fill="white" stroke="black" stroke-width="1"/>
+                                </svg>
+                            </div>
+                            
+                            <!-- Arrow Right -->
+                            <svg width="45" height="14" class="mb-5 ml-2"><polygon points="0,4 35,4 35,0 45,7 35,14 35,10 0,10" fill="white" stroke="black" stroke-width="1"/></svg>
+                            
+                            <!-- Cloud -->
+                            <div class="relative flex justify-center items-center mb-1">
+                                <svg width="180" height="85" viewBox="0 0 180 90">
+                                    <path d="M 40 80 C 20 80 15 60 30 50 C 30 30 60 20 80 30 C 100 10 140 20 145 45 C 160 50 160 80 130 80 Z" fill="white" stroke="black" stroke-width="1.5"/>
+                                    <line x1="30" y1="83" x2="140" y2="83" stroke="black" stroke-width="1.5"/>
+                                    <line x1="32" y1="86" x2="138" y2="86" stroke="black" stroke-width="1"/>
+                                    <text x="85" y="62" text-anchor="middle" font-family="Times New Roman" font-size="13" font-weight="bold" fill="black">Message queue</text>
+                                </svg>
+                            </div>
+                            
+                            <!-- Arrow Right -->
+                            <svg width="45" height="14" class="mb-5 mr-2"><polygon points="0,4 35,4 35,0 45,7 35,14 35,10 0,10" fill="white" stroke="black" stroke-width="1"/></svg>
+                            
+                            <!-- Right Laptop -->
+                            <div class="relative flex flex-col items-center">
+                                <div class="absolute -top-10 -left-4 board-element px-2 py-1 text-[11px] shadow-md">2x3?</div>
+                                <svg width="90" height="60" viewBox="0 0 100 70">
+                                    <rect x="25" y="15" width="50" height="35" fill="white" stroke="black" stroke-width="1.5"/>
+                                    <path d="M10 50 L90 50 L95 65 L5 65 Z" fill="white" stroke="black" stroke-width="1.5"/>
+                                    <rect x="35" y="55" width="30" height="3" fill="white" stroke="black" stroke-width="1"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="slide-footer">
+                    <span>Message Queue Architecture</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 4: Restaurant Metaphor -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Metaphor</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>The Restaurant Metaphor</h2>
+                    <h1 class="font-serif text-main mb-4">レストランのウェイターの比喩</h1>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-5 flex justify-center py-6 bg-surface-1 border border-border rounded-sm">
+                            <svg viewBox="0 0 120 120" class="w-40 h-40">
+                                <circle cx="30" cy="40" r="8" fill="none" stroke="var(--navy)" stroke-width="1.5"/>
+                                <line x1="38" y1="40" x2="55" y2="40" stroke="var(--terracotta)" stroke-width="1.5"/>
+                                
+                                <rect x="65" y="20" width="12" height="15" fill="var(--color-border)"/>
+                                <rect x="80" y="20" width="12" height="15" fill="var(--color-border)"/>
+                                <rect x="95" y="20" width="12" height="15" fill="none" stroke="var(--navy)" stroke-width="1"/>
+                                
+                                <line x1="65" y1="40" x2="107" y2="40" stroke="var(--navy)" stroke-width="1.5"/>
+                                
+                                <path d="M 30 60 C 50 80, 70 80, 90 60" fill="none" stroke="var(--color-text-light)" stroke-width="1" stroke-dasharray="2 2"/>
+                            </svg>
+                        </div>
+                        <div class="md:col-span-7 space-y-4">
+                            <ul class="minimal-list">
+                                <li>ウェイターは各テーブルを回り、注文を取ります。</li>
+                                <li>取った注文は、厨房が料理を準備するための「キュー（順番待ち）」に入れられます。</li>
+                                <li>ウェイターは、あるテーブルの料理ができるのを待たずに、すぐに次のテーブルの注文を取りに行きます。</li>
+                            </ul>
+                            <p class="text-xs text-muted leading-relaxed mt-4 bg-surface-2 p-3 border-l-2 border-accent-temp">
+                                この非同期的なアプローチにより、処理全体の効率とスループットが劇的に向上します。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Restaurant Metaphor</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 5: Conclusion -->
+            <section class="slide text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Conclusion</span>
+                    <span></span>
+                </div>
+                <div class="slide-content max-w-2xl py-8">
+                    <h2>Essential Part of Computing</h2>
+                    <h1 class="font-serif text-main mb-6">現代のコンピューティングの根幹</h1>
+                    
+                    <p class="text-[13px] text-muted leading-relaxed max-w-lg mx-auto mb-6">
+                        キューは単なる抽象的なデータ構造ではありません。<br>
+                        現代のコンピューティングシステムを構成する上で<span class="highlight font-semibold">不可欠な要素（Essential part）</span>として、様々なサービスの裏側で稼働しています。
+                    </p>
+
+                    <div class="w-16 h-[1px] bg-border mx-auto mb-6"></div>
+
+                    <span class="font-mono text-[9px] text-terracotta tracking-[0.2em] uppercase">End of Section</span>
+                </div>
+                <div class="slide-footer">
+                    <span>Conclusion</span><span></span>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Navigation Controls -->
+    <div class="absolute bottom-4 left-8 right-8 flex justify-between items-center pointer-events-auto z-30">
+        <div class="flex gap-6">
+            <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-600 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold cursor-pointer">
+                <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
+            </button>
+            <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-600 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold cursor-pointer">
+                Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
+            </button>
+        </div>
+        <!-- Indicators (No page numbers) -->
+        <div class="flex gap-1.5 overflow-x-auto max-w-xs justify-center px-2 no-scrollbar" id="dots-container"></div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsContainer = document.getElementById('dots-container');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const navSidebar = document.getElementById('navSidebar');
+        const navOverlay = document.getElementById('navOverlay');
+        const navMenu = document.getElementById('navMenu');
+        
+        let currentSlide = 0;
+        let indicators = [];
+
+        slides.forEach((slide, index) => {
+            const dot = document.createElement('span');
+            dot.className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 ' + (index === 0 ? 'dot-active' : 'dot-inactive');
+            dotsContainer.appendChild(dot);
+            indicators.push(dot);
+
+            const title = slide.querySelector('h1')?.innerText.replace(/\n/g, ' ') || `Slide ${index + 1}`;
+            const navItem = document.createElement('div');
+            navItem.className = `nav-item ${index === 0 ? 'active' : ''}`;
+            navItem.textContent = `${index + 1}. ${title}`;
+            navItem.onclick = () => { updateSlide(index); closeSidebar(); };
+            navMenu.appendChild(navItem);
+        });
+
+        function updateSlide(index) {
+            if (index < 0) {
+                currentSlide = 0;
+                return;
+            }
+            if (index >= slides.length) {
+                currentSlide = slides.length - 1;
+                return;
+            }
+
+            slides[currentSlide].classList.remove('active');
+            indicators[currentSlide].className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 bg-gray-300';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.remove('active');
+
+            currentSlide = index;
+            
+            slides[currentSlide].classList.add('active');
+            indicators[currentSlide].className = 'w-1.5 h-1.5 rounded-full transition-all duration-300 bg-black';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.add('active');
+
+            prevBtn.style.opacity = currentSlide === 0 ? '0.2' : '1';
+            prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+            nextBtn.style.opacity = currentSlide === slides.length - 1 ? '0.2' : '1';
+            nextBtn.style.pointerEvents = currentSlide === slides.length - 1 ? 'none' : 'auto';
+        }
+
+        function closeSidebar() {
+            navSidebar.classList.remove('open');
+            navOverlay.classList.remove('open');
+            hamburgerBtn.classList.remove('active');
+        }
+
+        hamburgerBtn.onclick = () => {
+            hamburgerBtn.classList.toggle('active');
+            navSidebar.classList.toggle('open');
+            navOverlay.classList.toggle('open');
+        };
+        navOverlay.onclick = closeSidebar;
+
+        prevBtn.onclick = () => updateSlide(currentSlide - 1);
+        nextBtn.onclick = () => updateSlide(currentSlide + 1);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                updateSlide(currentSlide - 1);
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                updateSlide(currentSlide + 1);
+            }
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const deck = document.getElementById('deck');
+        deck.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        deck.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                updateSlide(currentSlide + 1);
+            }
+            if (touchEndX > touchStartX + 50) {
+                updateSlide(currentSlide - 1);
+            }
+        }
+
+        updateSlide(0);
+    </script>
+</body>
+</html>

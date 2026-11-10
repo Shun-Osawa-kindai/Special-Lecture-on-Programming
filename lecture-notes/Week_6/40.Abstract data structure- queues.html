@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>講義スライド：抽象データ構造「キュー (Queue)」への導入</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --color-bg-outer: #D1CFCA;      
+            --color-bg-slide:  #F7F6F4;     
+            --color-surface-1: #F2EFEA;    
+            --color-surface-2: #FFFFFF;    
+            --color-border: #DDDAD5;       
+            --color-text-main: #222222;    
+            --color-text-muted: #555555;   
+            --color-text-light: #999999;   
+            --color-accent-temp: #8C7A6B;  
+            --navy: #344D61;               
+            --terracotta: #994F60;         
+            --gold-muted: #C4B298;         
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--color-bg-outer);
+            color: var(--color-text-main);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+        }
+
+        h1, h2, h3, .font-serif {
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-weight: 400;
+        }
+
+        .presentation-viewport {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .slide-deck {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--color-bg-slide);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            padding: 4.5% 6.5% 56px 6.5%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            transform: translateY(10px);
+            background: var(--color-bg-slide);
+            overflow-y: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        h1 {
+            color: var(--color-text-main);
+            font-size: 1.85rem; 
+            font-weight: 400;
+            line-height: 1.38;
+            margin-bottom: 1.1rem;
+            letter-spacing: 0.04em;
+        }
+
+        h2 {
+            color: var(--color-accent-temp);
+            font-size: 0.65rem; 
+            font-weight: 600;
+            letter-spacing: 0.35em;
+            margin-bottom: 0.45rem;
+            text-transform: uppercase;
+        }
+
+        .main-text {
+            font-size: 1.02rem; 
+            line-height: 1.75;
+            color: var(--color-text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        .highlight {
+            background: linear-gradient(transparent 70%, #E2DDD5 70%);
+            font-weight: 500;
+            padding: 0 0.15em;
+        }
+
+        .minimal-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .minimal-list li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.55rem;
+            font-size: 0.92rem; 
+            color: var(--color-text-muted);
+            display: block;
+            line-height: 1.55;
+        }
+        .minimal-list li::before {
+            content: "・";
+            position: absolute;
+            left: 0;
+            color: var(--color-accent-temp);
+            font-weight: bold;
+        }
+
+        .slide-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: var(--color-text-light);
+            border-top: 1px solid var(--color-border);
+            padding-top: 0.65rem;
+            margin-top: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .nav-btn {
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            color: var(--color-text-main);
+            opacity: 1 !important;
+        }
+
+        .hamburger-btn {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            z-index: 50;
+            background: rgba(247, 246, 244, 0.9);
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 0;
+            width: 48px;
+            height: 48px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+
+        .hamburger-btn:hover {
+            background: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .hamburger-btn span {
+            width: 18px;
+            height: 2px;
+            background-color: var(--color-text-main);
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+
+        .nav-sidebar {
+            position: fixed;
+            left: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background-color: var(--color-bg-slide);
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
+            z-index: 40;
+            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            border-right: 1px solid var(--color-border);
+        }
+
+        .nav-sidebar.open {
+            left: 0;
+        }
+
+        .nav-sidebar-content {
+            padding: 100px 24px 40px 24px;
+        }
+
+        .nav-sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--color-text-light);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .nav-item {
+            padding: 10px 0;
+            font-size: 12px;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            padding-left: 12px;
+            line-height: 1.4;
+        }
+
+        .nav-item:hover {
+            color: var(--color-text-main);
+            border-left-color: var(--color-accent-temp);
+            background: rgba(0,0,0,0.01);
+        }
+
+        .nav-item.active {
+            color: var(--color-accent-temp);
+            font-weight: 600;
+            border-left-color: var(--color-accent-temp);
+        }
+
+        .nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0);
+            z-index: 30;
+            transition: background-color 0.3s ease;
+            pointer-events: none;
+        }
+
+        .nav-overlay.open {
+            background-color: rgba(0, 0, 0, 0.3);
+            pointer-events: auto;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* ボード（板書）描画用カスタムスタイル */
+        .board-container {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            font-family: "Times New Roman", Times, serif;
+            color: #333;
+        }
+        
+        .board-element {
+            background-color: #a8a8a8;
+            border: 1px solid #777;
+            box-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            padding: 8px 16px;
+            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-btn" id="hamburgerBtn" title="目次を開く">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Navigation Sidebar -->
+    <div class="nav-sidebar" id="navSidebar">
+        <div class="nav-sidebar-content">
+            <div class="nav-sidebar-title">講義スライド一覧</div>
+            <div id="navMenu"></div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <div class="presentation-viewport">
+        <div class="slide-deck" id="deck">
+
+            <!-- Slide 1: Introduction -->
+            <section class="slide active">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Data Structures</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Abstract Data Structure</h2>
+                    <h1 class="font-serif text-main mb-4">新しいデータ構造の導入：<br><span class="highlight">「キュー（Queue）」</span></h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-4">
+                            <p class="main-text text-xs text-muted leading-relaxed">
+                                ベクターに続く、新しい抽象データ構造「キュー（Queue）」について考察します。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                レストランの順番待ちや、カスタマーサポートの電話保留など、私たちは日常生活で頻繁に「待ち行列（Queue）」を経験しています。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                キューの根底にある概念は、<span class="highlight font-semibold">「リソースが存在するが、すぐにはアクセスできないため、待機する必要がある状態」</span>をモデル化したものです。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <svg viewBox="0 0 160 120" class="w-48 h-32 bg-[#F2EFEA] rounded-sm p-2">
+                                <!-- 順番待ちの抽象アイコン -->
+                                <circle cx="40" cy="60" r="10" fill="var(--navy)" />
+                                <circle cx="80" cy="60" r="10" fill="var(--navy)" opacity="0.6"/>
+                                <circle cx="120" cy="60" r="10" fill="var(--navy)" opacity="0.3"/>
+                                
+                                <path d="M 55 60 L 65 60" stroke="var(--terracotta)" stroke-width="2" stroke-dasharray="2 1"/>
+                                <path d="M 95 60 L 105 60" stroke="var(--terracotta)" stroke-width="2" stroke-dasharray="2 1"/>
+                                
+                                <rect x="15" y="85" width="130" height="2" fill="var(--color-border)"/>
+                                <text x="80" y="105" font-size="7" font-family="sans-serif" text-anchor="middle" fill="var(--color-text-muted)">Waiting in Line (Queue)</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Introduction to Queues</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 2: FIFO (First In, First Out) -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Queue Principle</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>First In, First Out</h2>
+                    <h1 class="font-serif text-main mb-3">キューの原則：「FIFO」</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-3">
+                        <div class="p-5 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-navy block border-b border-border pb-1">First Come, First Served</span>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                長く待っている人ほど早くリソースが提供される、「先着順」のルールです。
+                            </p>
+                            <p class="text-slate-500 text-[11px] leading-relaxed">
+                                コンピューティングの世界では、これを <span class="highlight font-semibold">FIFO (First In, First Out)</span> という用語で呼びます。
+                            </p>
+                        </div>
+
+                        <div class="p-5 bg-surface-2 border border-terracotta rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-terracotta block border-b border-border pb-1">列の先頭（Head）</span>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                キューにおいて、列の一番前にいるデータ（先頭のアイテム）が、最初に列から離れる（処理される）ことになります。
+                            </p>
+                            <p class="text-slate-500 text-[11px] leading-relaxed">
+                                コンピューティングの文脈で「FIFO」と聞けば、それは「キュー（Queue）」の話をしていると理解してください。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>FIFO Principle</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 3: Vector vs Queue (Blackboard 1) -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Structural Comparison</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Vector vs. Queue</h2>
+                    <h1 class="font-serif text-main mb-3">ベクターとキューの構造的比較</h1>
+                    <p class="text-xs text-muted leading-relaxed mb-3">
+                        どちらもデータが一列に並ぶ「シーケンシャル（順番に並んでいる）」構造ですが、大きな違いがあります。
+                    </p>
+                    
+                    <!-- 板書再現 (Vector vs Queue) -->
+                    <div class="board-container flex flex-col items-center gap-6 p-6 w-full max-w-2xl mx-auto">
+                        <!-- Vector -->
+                        <div class="flex flex-col items-start w-full gap-1">
+                            <div class="flex items-center gap-4">
+                                <span class="text-lg font-bold font-serif min-w-[80px]">A vector:</span>
+                                <div class="border border-dashed border-gray-600 p-2 flex gap-3">
+                                    <div class="board-element">Element 1</div>
+                                    <div class="board-element">Element 2</div>
+                                    <div class="board-element">Element 3</div>
+                                </div>
+                            </div>
+                            <div class="w-full text-center text-xs font-serif mt-1 pl-12 text-gray-700">Sequential: ordered elements</div>
+                        </div>
+                        
+                        <!-- Queue -->
+                        <div class="flex flex-col items-start w-full gap-2 mt-2">
+                            <div class="text-lg font-bold font-serif mb-1">A queue:</div>
+                            <div class="flex items-center gap-2 pl-4">
+                                <div class="flex flex-col items-center gap-1">
+                                    <div class="board-element">Element 1</div>
+                                    <!-- Tail Arrow -->
+                                    <svg width="14" height="24"><polygon points="7,0 14,8 10,8 10,24 4,24 4,8 0,8" fill="white" stroke="black" stroke-width="1"/></svg>
+                                    <span class="font-serif text-xs">Tail</span>
+                                </div>
+                                
+                                <!-- Right Arrow -->
+                                <svg width="24" height="14" class="-mt-6"><polygon points="0,4 16,4 16,0 24,7 16,14 16,10 0,10" fill="white" stroke="black" stroke-width="1"/></svg>
+                                
+                                <div class="border border-dashed border-gray-600 p-2 flex items-center gap-2 -mt-6">
+                                    <div class="board-element">Element 2</div>
+                                    <svg width="20" height="12"><polygon points="0,3 12,3 12,0 20,6 12,12 12,9 0,9" fill="white" stroke="black" stroke-width="1"/></svg>
+                                    <div class="board-element">Element 3</div>
+                                    <svg width="20" height="12"><polygon points="0,3 12,3 12,0 20,6 12,12 12,9 0,9" fill="white" stroke="black" stroke-width="1"/></svg>
+                                    <div class="board-element">Element 4</div>
+                                </div>
+                                
+                                <svg width="24" height="14" class="-mt-6"><polygon points="0,4 16,4 16,0 24,7 16,14 16,10 0,10" fill="white" stroke="black" stroke-width="1"/></svg>
+                                
+                                <div class="flex flex-col items-center gap-1">
+                                    <div class="board-element">Element 5</div>
+                                    <!-- Head Arrow -->
+                                    <svg width="14" height="24"><polygon points="7,0 14,8 10,8 10,24 4,24 4,8 0,8" fill="white" stroke="black" stroke-width="1"/></svg>
+                                    <span class="font-serif text-xs">Head</span>
+                                </div>
+                            </div>
+                            <div class="w-full text-center text-xs font-serif mt-1 pr-12 text-gray-700">Sequential: ordered elements</div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="slide-footer">
+                    <span>Structural Comparison</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 4: Extensible (Blackboard 2) -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Extensibility &amp; Rules</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Extensible Structure</h2>
+                    <h1 class="font-serif text-main mb-3">要素の追加と削除（長さの拡張性）</h1>
+                    <p class="text-xs text-muted leading-relaxed mb-3">
+                        ベクターとは異なり、キューは長さが固定されておらず<span class="highlight">拡張可能（Extensible）</span>です。<br>
+                        ただし、要素を任意の場所に追加することはできず、<strong>特定の場所（Tail と Head）</strong>でのみ操作が許されます。
+                    </p>
+
+                    <!-- 板書再現 (Extensible) -->
+                    <div class="board-container flex flex-col items-start gap-5 p-6 w-full max-w-2xl mx-auto">
+                        <div class="text-lg font-bold font-serif">Extensible:</div>
+                        
+                        <div class="flex w-full justify-around mt-2">
+                            <!-- Add element to tail -->
+                            <div class="flex flex-col items-center gap-3">
+                                <span class="font-serif text-sm text-gray-800">Add element to tail</span>
+                                <div class="flex items-center gap-3">
+                                    <div class="board-element">Element 0</div>
+                                    <svg width="24" height="14"><polygon points="0,4 16,4 16,0 24,7 16,14 16,10 0,10" fill="white" stroke="black" stroke-width="1"/></svg>
+                                    <!-- U-shaped bracket opening left -->
+                                    <div class="border-y-2 border-r-2 border-gray-800 p-1 pl-0 ml-1">
+                                        <div class="board-element ml-1">Element 1</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Remove element from head -->
+                            <div class="flex flex-col items-center gap-3">
+                                <span class="font-serif text-sm text-gray-800">Remove element from head</span>
+                                <div class="flex items-center gap-3">
+                                    <svg width="24" height="14"><polygon points="0,4 16,4 16,0 24,7 16,14 16,10 0,10" fill="white" stroke="black" stroke-width="1"/></svg>
+                                    <!-- U-shaped bracket opening right -->
+                                    <div class="border-y-2 border-l-2 border-gray-800 p-1 pr-0 mr-1">
+                                        <div class="board-element mr-1">Element 3</div>
+                                    </div>
+                                    <svg width="24" height="14"><polygon points="0,4 16,4 16,0 24,7 16,14 16,10 0,10" fill="white" stroke="black" stroke-width="1"/></svg>
+                                    <div class="board-element">Element 4</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="slide-footer">
+                    <span>Extensible Rules</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 5: アクセス制限 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Access Restriction</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Restricted Access</h2>
+                    <h1 class="font-serif text-main mb-3">任意の要素へのアクセス方法</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-3">
+                        <div class="p-5 bg-surface-2 border border-terracotta rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-terracotta block border-b border-border pb-1">ベクターとの違い</span>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                ベクターでは、<code>select</code> 操作を使ってどの要素にも直接アクセスできました。
+                            </p>
+                            <p class="text-slate-500 text-[11px] leading-relaxed">
+                                キューでは、両端（Head と Tail）にしかアクセスできません。その他の要素は、ただ待機している状態です。
+                            </p>
+                        </div>
+
+                        <div class="p-5 bg-surface-2 border border-navy rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-navy block border-b border-border pb-1">中間の要素を取り出すには</span>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                キューの途中にある任意の要素にアクセスするには、<span class="highlight font-semibold">その前にあるすべての要素をキューから削除（Dequeue）</span>する必要があります。
+                            </p>
+                            <p class="text-slate-500 text-[11px] leading-relaxed">
+                                目的の要素が先頭（Head）に来て初めて、アクセスが可能になります。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Access Restriction</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 6: Operations (Blackboard 3) -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Queue Operations</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Queue Operations</h2>
+                    <h1 class="font-serif text-main mb-3">キューの基本操作と擬似コード表記</h1>
+                    
+                    <!-- 板書再現 (Operations Table) -->
+                    <div class="board-container flex flex-col items-center p-5 w-full max-w-2xl mx-auto font-serif">
+                        
+                        <table class="w-[85%] mt-2 text-center text-[15px] border-collapse">
+                            <tr class="border-b border-black">
+                                <th class="py-2 font-normal text-lg w-1/2">Operation</th>
+                                <th class="py-2 font-normal text-lg border-l border-black w-1/2">Pseudocode</th>
+                            </tr>
+                            <tr>
+                                <td class="py-3">head</td>
+                                <td class="py-3 border-l border-black font-mono">HEAD[<span class="italic font-serif">q</span>]</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3">dequeue!</td>
+                                <td class="py-3 border-l border-black font-mono">DEQUEUE[<span class="italic font-serif">q</span>]</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3">enqueue![o]</td>
+                                <td class="py-3 border-l border-black font-mono">ENQUEUE[<span class="italic font-serif">o</span>, <span class="italic font-serif">q</span>]</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3">empty?</td>
+                                <td class="py-3 border-l border-black font-mono">EMPTY[<span class="italic font-serif">q</span>]</td>
+                            </tr>
+                        </table>
+                        
+                        <div class="flex items-center justify-between w-[85%] mt-5 px-4 pt-4 border-t border-dashed border-gray-300">
+                            <div class="text-[15px] text-center leading-tight">Construct new (empty)<br>queue</div>
+                            <div class="text-[16px] font-bold">new <span class="font-normal">Queue <span class="italic">q</span></span></div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="slide-footer">
+                    <span>Queue Operations</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 7: 振り返り課題 -->
+            <section class="slide text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Reflection Challenge</span>
+                    <span></span>
+                </div>
+                <div class="slide-content max-w-2xl py-3">
+                    <h2>Reflection Challenge</h2>
+                    <h1 class="font-serif text-main mb-4">身の回りの「キュー」を探す</h1>
+                    
+                    <p class="text-xs text-muted leading-relaxed max-w-lg mx-auto mb-4">
+                        日常生活やコンピューティングの世界で遭遇する「キュー（待ち行列）」の例を考えてみましょう。
+                    </p>
+
+                    <div class="p-4 bg-surface-2 border border-navy rounded-sm shadow-sm text-left text-xs space-y-2 max-w-md mx-auto mb-4">
+                        <span class="font-bold text-navy block border-b border-border pb-1">分析のポイント</span>
+                        <ul class="minimal-list">
+                            <li>それらは、今回定義したような厳密なキュー（HeadとTailのみにアクセス制限されている）でしょうか？</li>
+                            <li>例外的な割り込み（途中の要素へのアクセス）が発生する「緩い意味でのキュー」でしょうか？</li>
+                        </ul>
+                    </div>
+
+                    <div class="p-3 bg-surface-1 border border-border rounded-sm max-w-md mx-auto text-center">
+                        <span class="font-mono text-[10px] text-terracotta font-bold uppercase tracking-wider block mb-0.5">Discussion</span>
+                        <p class="text-[11px] text-slate-700 font-medium">
+                            例を見つけ、その性質を分析して授業ノートにまとめてください。
+                        </p>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Challenge Mission</span><span></span>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Navigation Controls -->
+    <div class="absolute bottom-4 left-8 right-8 flex justify-between items-center pointer-events-auto z-30">
+        <div class="flex gap-6">
+            <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-600 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold cursor-pointer">
+                <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
+            </button>
+            <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-600 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold cursor-pointer">
+                Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
+            </button>
+        </div>
+        <!-- Indicators (No page numbers) -->
+        <div class="flex gap-1.5 overflow-x-auto max-w-xs justify-center px-2 no-scrollbar" id="dots-container"></div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const dotsContainer = document.getElementById('dots-container');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const navSidebar = document.getElementById('navSidebar');
+        const navOverlay = document.getElementById('navOverlay');
+        const navMenu = document.getElementById('navMenu');
+        
+        let currentSlide = 0;
+        let indicators = [];
+
+        slides.forEach((slide, index) => {
+            const dot = document.createElement('span');
+            dot.className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 ' + (index === 0 ? 'dot-active' : 'dot-inactive');
+            dotsContainer.appendChild(dot);
+            indicators.push(dot);
+
+            const title = slide.querySelector('h1')?.innerText.replace(/\n/g, ' ') || `Slide ${index + 1}`;
+            const navItem = document.createElement('div');
+            navItem.className = `nav-item ${index === 0 ? 'active' : ''}`;
+            navItem.textContent = `${index + 1}. ${title}`;
+            navItem.onclick = () => { updateSlide(index); closeSidebar(); };
+            navMenu.appendChild(navItem);
+        });
+
+        function updateSlide(index) {
+            if (index < 0) {
+                currentSlide = 0;
+                return;
+            }
+            if (index >= slides.length) {
+                currentSlide = slides.length - 1;
+                return;
+            }
+
+            slides[currentSlide].classList.remove('active');
+            indicators[currentSlide].className = 'w-[5px] h-[5px] rounded-full transition-all duration-300 bg-gray-300';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.remove('active');
+
+            currentSlide = index;
+            
+            slides[currentSlide].classList.add('active');
+            indicators[currentSlide].className = 'w-1.5 h-1.5 rounded-full transition-all duration-300 bg-black';
+            document.querySelectorAll('.nav-item')[currentSlide].classList.add('active');
+
+            prevBtn.style.opacity = currentSlide === 0 ? '0.2' : '1';
+            prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+            nextBtn.style.opacity = currentSlide === slides.length - 1 ? '0.2' : '1';
+            nextBtn.style.pointerEvents = currentSlide === slides.length - 1 ? 'none' : 'auto';
+        }
+
+        function closeSidebar() {
+            navSidebar.classList.remove('open');
+            navOverlay.classList.remove('open');
+            hamburgerBtn.classList.remove('active');
+        }
+
+        hamburgerBtn.onclick = () => {
+            hamburgerBtn.classList.toggle('active');
+            navSidebar.classList.toggle('open');
+            navOverlay.classList.toggle('open');
+        };
+        navOverlay.onclick = closeSidebar;
+
+        prevBtn.onclick = () => updateSlide(currentSlide - 1);
+        nextBtn.onclick = () => updateSlide(currentSlide + 1);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                updateSlide(currentSlide - 1);
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                updateSlide(currentSlide + 1);
+            }
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const deck = document.getElementById('deck');
+        deck.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        deck.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                updateSlide(currentSlide + 1);
+            }
+            if (touchEndX > touchStartX + 50) {
+                updateSlide(currentSlide - 1);
+            }
+        }
+
+        updateSlide(0);
+    </script>
+</body>
+</html>

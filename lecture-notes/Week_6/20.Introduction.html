@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>講義スライド：データ構造への導入と抽象化 (Algorithms and Data Structures)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --color-bg-outer: #D1CFCA;      
+            --color-bg-slide:  #F7F6F4;     
+            --color-surface-1: #F2EFEA;    
+            --color-surface-2: #FFFFFF;    
+            --color-border: #DDDAD5;       
+            --color-text-main: #222222;    
+            --color-text-muted: #555555;   
+            --color-text-light: #999999;   
+            --color-accent-temp: #8C7A6B;  
+            --navy: #344D61;               
+            --terracotta: #994F60;         
+            --gold-muted: #C4B298;         
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--color-bg-outer);
+            color: var(--color-text-main);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            margin: 0;
+        }
+
+        h1, h2, h3, .font-serif {
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-weight: 400;
+        }
+
+        .presentation-viewport {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .slide-deck {
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: var(--color-bg-slide);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            border: 1px solid var(--color-border);
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            padding: 4.5% 6.5% 56px 6.5%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            transform: translateY(10px);
+            background: var(--color-bg-slide);
+            overflow-y: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 960px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        h1 {
+            color: var(--color-text-main);
+            font-size: 1.85rem; 
+            font-weight: 400;
+            line-height: 1.38;
+            margin-bottom: 1.1rem;
+            letter-spacing: 0.04em;
+        }
+
+        h2 {
+            color: var(--color-accent-temp);
+            font-size: 0.65rem; 
+            font-weight: 600;
+            letter-spacing: 0.35em;
+            margin-bottom: 0.45rem;
+            text-transform: uppercase;
+        }
+
+        .main-text {
+            font-size: 1.02rem; 
+            line-height: 1.75;
+            color: var(--color-text-muted);
+            letter-spacing: 0.02em;
+        }
+
+        .highlight {
+            background: linear-gradient(transparent 70%, #E2DDD5 70%);
+            font-weight: 500;
+            padding: 0 0.15em;
+        }
+
+        code {
+            background: var(--color-surface-1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 2px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--terracotta);
+            font-weight: bold;
+            font-size: 0.88em;
+            border: 1px solid var(--color-border);
+        }
+
+        .minimal-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .minimal-list li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.55rem;
+            font-size: 0.92rem; 
+            color: var(--color-text-muted);
+            display: block;
+            line-height: 1.55;
+        }
+        .minimal-list li::before {
+            content: "・";
+            position: absolute;
+            left: 0;
+            color: var(--color-accent-temp);
+            font-weight: bold;
+        }
+
+        .slide-footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: var(--color-text-light);
+            border-top: 1px solid var(--color-border);
+            padding-top: 0.65rem;
+            margin-top: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .nav-btn {
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover {
+            color: var(--color-text-main);
+            opacity: 1 !important;
+        }
+
+        .hamburger-btn {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            z-index: 50;
+            background: rgba(247, 246, 244, 0.9);
+            border: 1px solid var(--color-border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            padding: 0;
+            width: 48px;
+            height: 48px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+
+        .hamburger-btn:hover {
+            background: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .hamburger-btn span {
+            width: 18px;
+            height: 2px;
+            background-color: var(--color-text-main);
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(4px, 4px);
+        }
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(4px, -4px);
+        }
+
+        .nav-sidebar {
+            position: fixed;
+            left: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background-color: var(--color-bg-slide);
+            box-shadow: 4px 0 25px rgba(0, 0, 0, 0.1);
+            z-index: 40;
+            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            border-right: 1px solid var(--color-border);
+        }
+
+        .nav-sidebar.open {
+            left: 0;
+        }
+
+        .nav-sidebar-content {
+            padding: 100px 24px 40px 24px;
+        }
+
+        .nav-sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--color-text-light);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .nav-item {
+            padding: 10px 0;
+            font-size: 12px;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            padding-left: 12px;
+            line-height: 1.4;
+        }
+
+        .nav-item:hover {
+            color: var(--color-text-main);
+            border-left-color: var(--color-accent-temp);
+            background: rgba(0,0,0,0.01);
+        }
+
+        .nav-item.active {
+            color: var(--color-accent-temp);
+            font-weight: 600;
+            border-left-color: var(--color-accent-temp);
+        }
+
+        .nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0);
+            z-index: 30;
+            transition: background-color 0.3s ease;
+            pointer-events: none;
+        }
+
+        .nav-overlay.open {
+            background-color: rgba(0, 0, 0, 0.3);
+            pointer-events: auto;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Hamburger Menu Button -->
+    <button class="hamburger-btn" id="hamburgerBtn" title="目次を開く">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Navigation Sidebar -->
+    <div class="nav-sidebar" id="navSidebar">
+        <div class="nav-sidebar-content">
+            <div class="nav-sidebar-title">講義スライド一覧</div>
+            <div id="navMenu"></div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <div class="presentation-viewport">
+        <div class="slide-deck" id="deck">
+
+            <!-- Slide 1: コンテキストとデータの構造化 -->
+            <section class="slide active">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Context &amp; Structure</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Beyond Raw Numbers</h2>
+                    <h1 class="font-serif text-main mb-4">単なる数値から「コンテキスト」への拡張<br><span class="highlight">「データ構造の重要性」</span></h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-4">
+                            <p class="main-text text-xs text-muted leading-relaxed">
+                                前回の誕生日パーティー問題において、私たちのアルゴリズムは「最大のゲスト人数」という数値のみを計算しました。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                しかし現実には、ゲストの<span class="highlight">名前</span>や<span class="highlight">招待の優先順位</span>（親友がリストの1番目であるなど）といった重要な文脈（Context）が存在します。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                データをどのように構造化するかは、現実世界でもコンピューティングの世界でも極めて重要です。
+                            </p>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <svg viewBox="0 0 200 120" class="w-48 h-32 bg-[#F2EFEA] rounded-sm p-2">
+                                <rect x="20" y="20" width="40" height="20" fill="white" stroke="var(--navy)" stroke-width="1"/>
+                                <text x="40" y="33" font-size="8" font-family="monospace" text-anchor="middle" fill="var(--navy)">6</text>
+                                <text x="40" y="55" font-size="6" font-family="sans-serif" text-anchor="middle" fill="var(--color-text-muted)">Raw Data</text>
+
+                                <path d="M 70 30 L 95 30" stroke="var(--terracotta)" stroke-width="1.5" stroke-dasharray="2 2"/>
+                                <polygon points="95,27 100,30 95,33" fill="var(--terracotta)"/>
+
+                                <rect x="110" y="15" width="70" height="30" fill="white" stroke="var(--navy)" stroke-width="1"/>
+                                <text x="145" y="25" font-size="6" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">1. Alice (Best Friend)</text>
+                                <text x="145" y="35" font-size="6" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">2. Bob (Cousin)</text>
+                                <text x="145" y="60" font-size="6" font-family="sans-serif" text-anchor="middle" fill="var(--color-text-muted)">Structured Data</text>
+                                
+                                <text x="100" y="100" font-size="7" font-family="monospace" text-anchor="middle" fill="var(--terracotta)">Context &amp; Order</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Context &amp; Structure</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 2: 日常生活におけるリストの構造 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Everyday Structures</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Real-World Data</h2>
+                    <h1 class="font-serif text-main mb-3">日常生活におけるリストと制約</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-3">
+                        <div class="p-5 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-navy block border-b border-border pb-1">リストの作成と区切り</span>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                私たちは日常的に、買い物リストや料理の材料などのリストを作成します。
+                            </p>
+                            <p class="text-slate-500 text-[11px] leading-relaxed">
+                                アイテムに番号を振り、改行（Line breaks）で区切ることで、視覚的な構造を作り出します。
+                            </p>
+                        </div>
+
+                        <div class="p-5 bg-surface-2 border border-terracotta rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-terracotta block border-b border-border pb-1">構造がもたらす制約</span>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                データの構造は、私たちがそれを「どのように修正できるか」を制約（Constrain）します。
+                            </p>
+                            <p class="text-slate-500 text-[11px] leading-relaxed">
+                                例えば、1〜6番まで番号が振られたリストにアイテムを追加する最も簡単な方法は、<span class="highlight font-semibold">一番下に追加し、相応の番号を振ること</span>です。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Everyday Structures</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 3: 物理メモリと抽象データ構造 -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Physical vs Abstract</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Abstract Data Structures</h2>
+                    <h1 class="font-serif text-main mb-3">物理的ストレージから「抽象的モデル」へ</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                コンピュータ科学において、データが RAM、ハードドライブ（不揮発性メモリ）、クラウドのどこに物理的に保存されるかは重要です。
+                            </p>
+                            <p class="text-xs text-muted leading-relaxed">
+                                しかし、アルゴリズムを設計する際は、ハードウェアの技術的詳細を最小化し、<span class="highlight">データの変更方法を含めた根本的な構造</span>について考えます。
+                            </p>
+                            <ul class="minimal-list text-xs space-y-1">
+                                <li>これを<strong>「抽象データ構造（Abstract Data Structures）」</strong>と呼びます。</li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <svg viewBox="0 0 160 160" class="w-32 h-32 bg-[#F2EFEA] rounded-sm p-2">
+                                <rect x="20" y="20" width="40" height="40" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <line x1="30" y1="20" x2="30" y2="10" stroke="var(--navy)" stroke-width="1.2"/>
+                                <line x1="40" y1="20" x2="40" y2="10" stroke="var(--navy)" stroke-width="1.2"/>
+                                <line x1="50" y1="20" x2="50" y2="10" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="40" y="45" font-size="7" font-family="monospace" text-anchor="middle" fill="var(--navy)">RAM</text>
+                                
+                                <path d="M 65 40 L 95 40" stroke="var(--terracotta)" stroke-width="1.5" stroke-dasharray="2 2"/>
+                                <polygon points="95,37 100,40 95,43" fill="var(--terracotta)"/>
+
+                                <rect x="110" y="10" width="30" height="60" fill="white" stroke="var(--accent-temp)" stroke-width="1.2"/>
+                                <line x1="110" y1="30" x2="140" y2="30" stroke="var(--accent-temp)" stroke-width="1.2"/>
+                                <line x1="110" y1="50" x2="140" y2="50" stroke="var(--accent-temp)" stroke-width="1.2"/>
+                                <text x="125" y="85" font-size="7" font-family="monospace" text-anchor="middle" fill="var(--accent-temp)">Array</text>
+                                
+                                <text x="80" y="130" font-size="6.5" font-family="sans-serif" text-anchor="middle" fill="var(--color-text-muted)">Physical ➔ Abstract</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Physical vs Abstract</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 4: データ構造が操作を決定づける -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Structure Dictates Operations</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Dictating Operations</h2>
+                    <h1 class="font-serif text-main mb-3">構造が「基本操作」を決定づける</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mt-3">
+                        <div class="p-5 bg-surface-2 border border-border rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-navy block border-b border-border pb-1">リストの普遍的な構造</span>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                誕生日パーティーのリストが紙に書かれていようと、ホワイトボードに書かれていようと、重要なのは<span class="highlight font-semibold">「順序付けられたエントリ（Ordered entries）」</span>であるという構造です。
+                            </p>
+                        </div>
+
+                        <div class="p-5 bg-surface-2 border border-navy rounded-sm shadow-sm space-y-2">
+                            <span class="font-mono text-xs font-bold text-terracotta block border-b border-border pb-1">表現形式とアルゴリズム</span>
+                            <p class="text-slate-600 text-[11.5px] leading-relaxed">
+                                以前、整数の偶奇を判定するアルゴリズムを見ました。
+                            </p>
+                            <p class="text-slate-500 text-[11px] leading-relaxed">
+                                データが<strong>ビット列（2進数）</strong>で表現されているか、<strong>10進数</strong>で表現されているかによって、アルゴリズムが必要とする「基本操作」が変わります。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Structure Dictates Operations</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 5: 偶奇判定における表現の違い（Bit vs Decimal） -->
+            <section class="slide">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Example: Even or Odd</span>
+                    <span></span>
+                </div>
+                <div class="slide-content">
+                    <h2>Representation Example</h2>
+                    <h1 class="font-serif text-main mb-3">表現によるアルゴリズムの変化：偶数か奇数か</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mt-2">
+                        <div class="md:col-span-7 space-y-3">
+                            <p class="text-xs text-muted leading-relaxed">
+                                データをどのように保存・表現するかを認識することは絶対に必要です。
+                            </p>
+                            <ul class="minimal-list text-xs space-y-2">
+                                <li><strong>ビット列（Bit string）：</strong><br>最後の1ビットを見るだけで偶奇が瞬時に判定できる（例：<code>1010</code> ➔ 偶数）。</li>
+                                <li><strong>10進数（Decimal notation）：</strong><br>数学的なモジュロ演算（<code>n mod 2</code>）を実行する必要がある。</li>
+                            </ul>
+                        </div>
+                        <div class="md:col-span-5 flex justify-center py-4 bg-surface-2 border border-border rounded-sm shadow-sm">
+                            <svg viewBox="0 0 180 120" class="w-44 h-32 bg-[#F2EFEA] rounded-sm p-2">
+                                <rect x="20" y="20" width="60" height="25" fill="white" stroke="var(--navy)" stroke-width="1.2"/>
+                                <text x="50" y="36" font-size="8" font-family="monospace" text-anchor="middle" fill="var(--navy)">1010 (Bin)</text>
+
+                                <rect x="100" y="20" width="60" height="25" fill="white" stroke="var(--terracotta)" stroke-width="1.2"/>
+                                <text x="130" y="36" font-size="8" font-family="monospace" text-anchor="middle" fill="var(--terracotta)">10 (Dec)</text>
+
+                                <path d="M 50 45 L 50 70" stroke="var(--navy)" stroke-width="1.5"/>
+                                <path d="M 130 45 L 130 70" stroke="var(--terracotta)" stroke-width="1.5"/>
+
+                                <rect x="20" y="70" width="60" height="25" rx="2" fill="var(--surface-1)" stroke="var(--navy)" stroke-width="1"/>
+                                <text x="50" y="85" font-size="6" font-family="sans-serif" text-anchor="middle" fill="var(--navy)">Check last bit</text>
+
+                                <rect x="100" y="70" width="60" height="25" rx="2" fill="var(--surface-1)" stroke="var(--terracotta)" stroke-width="1"/>
+                                <text x="130" y="85" font-size="6" font-family="sans-serif" text-anchor="middle" fill="var(--terracotta)">Mod 2</text>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Example: Even or Odd</span><span></span>
+                </div>
+            </section>
+
+            <!-- Slide 6: まとめ：アルゴリズムの有用性をモデル化する -->
+            <section class="slide text-center">
+                <div class="flex justify-between items-start w-full">
+                    <span class="text-[9px] tracking-[0.3em] uppercase text-light font-semibold">Summary</span>
+                    <span></span>
+                </div>
+                <div class="slide-content max-w-2xl py-3">
+                    <h2>Summary</h2>
+                    <h1 class="font-serif text-main mb-4">データ構造とアルゴリズムの比較</h1>
+                    
+                    <div class="p-4 bg-surface-2 border border-navy rounded-sm shadow-sm text-left text-xs space-y-2 max-w-md mx-auto">
+                        <div class="border-b border-border pb-2">
+                            <span class="font-bold text-navy block">文脈と構造の重要性：</span>
+                            <span class="text-slate-600 text-[11px] leading-relaxed">単なる数値だけでなく、名前や順序といったコンテキストを保持するためにデータ構造（リストなど）が必要になる。</span>
+                        </div>
+                        <div class="pt-1">
+                            <span class="font-bold text-terracotta block">アルゴリズムの有用性のモデル化：</span>
+                            <span class="text-slate-600 text-[11px] leading-relaxed">データの格納方法（データ構造）を意識することで、同じ問題を解く異なるアルゴリズムを数学的に比較・評価することが可能になる。</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide-footer">
+                    <span>Summary</span><span></span>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- Minimalist Navigation Controls Footer overlay inside the slide deck -->
+    <div class="absolute bottom-4 left-8 right-8 flex justify-between items-center pointer-events-auto z-30">
+        <div class="flex gap-6">
+            <button id="prevBtn" class="nav-btn nav-btn-prev text-[11px] tracking-widest text-slate-600 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold cursor-pointer">
+                <i class="fa-solid fa-chevron-left text-[9px]"></i> Prev
+            </button>
+            <button id="nextBtn" class="nav-btn text-[11px] tracking-widest text-slate-600 hover:text-slate-900 uppercase flex items-center gap-2 font-semibold cursor-pointer">
+                Next <i class="fa-solid fa-chevron-right text-[9px]"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const navSidebar = document.getElementById('navSidebar');
+        const navOverlay = document.getElementById('navOverlay');
+        const navMenu = document.getElementById('navMenu');
+        
+        let currentSlide = 0;
+
+        slides.forEach((slide, index) => {
+            const title = slide.querySelector('h1')?.innerText.replace(/\n/g, ' ') || `Slide ${index + 1}`;
+            const navItem = document.createElement('div');
+            navItem.className = `nav-item ${index === 0 ? 'active' : ''}`;
+            navItem.textContent = `${index + 1}. ${title}`;
+            navItem.onclick = () => { updateSlide(index); closeSidebar(); };
+            navMenu.appendChild(navItem);
+        });
+
+        function updateSlide(index) {
+            if (index < 0) {
+                currentSlide = 0;
+                return;
+            }
+            if (index >= slides.length) {
+                currentSlide = slides.length - 1;
+                return;
+            }
+
+            slides[currentSlide].classList.remove('active');
+            document.querySelectorAll('.nav-item')[currentSlide].classList.remove('active');
+
+            currentSlide = index;
+            
+            slides[currentSlide].classList.add('active');
+            document.querySelectorAll('.nav-item')[currentSlide].classList.add('active');
+
+            prevBtn.style.opacity = currentSlide === 0 ? '0.2' : '1';
+            prevBtn.style.pointerEvents = currentSlide === 0 ? 'none' : 'auto';
+            nextBtn.style.opacity = currentSlide === slides.length - 1 ? '0.2' : '1';
+            nextBtn.style.pointerEvents = currentSlide === slides.length - 1 ? 'none' : 'auto';
+        }
+
+        function closeSidebar() {
+            navSidebar.classList.remove('open');
+            navOverlay.classList.remove('open');
+            hamburgerBtn.classList.remove('active');
+        }
+
+        hamburgerBtn.onclick = () => {
+            hamburgerBtn.classList.toggle('active');
+            navSidebar.classList.toggle('open');
+            navOverlay.classList.toggle('open');
+        };
+        navOverlay.onclick = closeSidebar;
+
+        prevBtn.onclick = () => updateSlide(currentSlide - 1);
+        nextBtn.onclick = () => updateSlide(currentSlide + 1);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                updateSlide(currentSlide - 1);
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                updateSlide(currentSlide + 1);
+            }
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const deck = document.getElementById('deck');
+        deck.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        deck.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) {
+                updateSlide(currentSlide + 1);
+            }
+            if (touchEndX > touchStartX + 50) {
+                updateSlide(currentSlide - 1);
+            }
+        }
+
+        updateSlide(0);
+    </script>
+</body>
+</html>
