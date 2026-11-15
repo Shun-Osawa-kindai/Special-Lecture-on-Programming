@@ -31,6 +31,12 @@
         .slide-desc { margin:0; font-size:.85rem; color:var(--muted); }
         .action { display:inline-flex; align-items:center; gap:10px; font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--navy); white-space:nowrap; }
         .action i { font-size:.62rem; }
+        .carryover-note { margin:14px 0 6px; font-size:.86rem; color:#b3261e; font-weight:700; }
+        .carryover-item { background:rgba(179,38,30,.06); }
+        .carryover-item:hover { background:rgba(179,38,30,.12); }
+        .carryover-item .slide-label,
+        .carryover-item .slide-title,
+        .carryover-item .action { color:#b3261e; font-weight:700; }
         .meta { margin-top:18px; font-size:.78rem; color:var(--muted); }
         .bottom { margin-top:20px; border-top:1px solid var(--border); padding-top:12px; display:flex; justify-content:space-between; font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--light); }
         @media (max-width: 840px) { .card { padding:28px 20px 18px; } .slide-item { grid-template-columns:1fr; } }
@@ -60,12 +66,13 @@
                 <a class="slide-item" href="./110.Solution%20to%20the%20Theseus%20and%20Minotaur%20problem.html"><div><p class="slide-label">110 / Ready</p><h2 class="slide-title serif">Solution to the Theseus and Minotaur problem</h2><p class="slide-desc">テセウス問題の解法を、スタックとの対応で説明します。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
                 <a class="slide-item" href="./120.Arrays.html"><div><p class="slide-label">120 / Ready</p><h2 class="slide-title serif">Arrays</h2><p class="slide-desc">配列を導入し、抽象データ型との関係を具体化します。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
                 <a class="slide-item" href="./130.Dynamic%20arrays.html"><div><p class="slide-label">130 / Ready</p><h2 class="slide-title serif">Dynamic arrays</h2><p class="slide-desc">動的配列の拡張・再配置の考え方を扱います。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
-                <a class="slide-item" href="./140.Linear%20search%20algorithm.html"><div><p class="slide-label">140 / Ready</p><h2 class="slide-title serif">Linear search algorithm</h2><p class="slide-desc">線形探索アルゴリズムの手順と計算の流れを学びます。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
-                <a class="slide-item" href="./150.Searching%20%CF%80.html"><div><p class="slide-label">150 / Ready</p><h2 class="slide-title serif">Searching π</h2><p class="slide-desc">円周率を題材に、探索手順の実行イメージを掴みます。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
-                <a class="slide-item" href="./160.Searching%20stacks%20and%20queues.html"><div><p class="slide-label">160 / Ready</p><h2 class="slide-title serif">Searching stacks and queues</h2><p class="slide-desc">スタック／キュー上での探索の特徴を比較します。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
-                <a class="slide-item" href="./170.Linked%20lists.html"><div><p class="slide-label">170 / Ready</p><h2 class="slide-title serif">Linked lists</h2><p class="slide-desc">連結リストの構造と配列との違いを整理します。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
-                <a class="slide-item" href="./180.Implementing%20stacks%20and%20queues%20with%20linked%20lists.html"><div><p class="slide-label">180 / Ready</p><h2 class="slide-title serif">Implementing stacks and queues with linked lists</h2><p class="slide-desc">連結リストでスタック／キューを実装する方法を学びます。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
-                <a class="slide-item" href="./190.Summary%20and%20the%20Lottery%20Problem.html"><div><p class="slide-label">190 / Ready</p><h2 class="slide-title serif">Summary and the Lottery Problem</h2><p class="slide-desc">全体総括と、応用問題（Lottery Problem）で理解を確認します。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+                <p class="carryover-note">※第6回で扱いきれなかったスライド（第7回で扱います）</p>
+                <a class="slide-item carryover-item" href="./140.Linear%20search%20algorithm.html"><div><p class="slide-label">140 / Ready</p><h2 class="slide-title serif">Linear search algorithm</h2><p class="slide-desc">線形探索アルゴリズムの手順と計算の流れを学びます。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+                <a class="slide-item carryover-item" href="./150.Searching%20%CF%80.html"><div><p class="slide-label">150 / Ready</p><h2 class="slide-title serif">Searching π</h2><p class="slide-desc">円周率を題材に、探索手順の実行イメージを掴みます。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+                <a class="slide-item carryover-item" href="./160.Searching%20stacks%20and%20queues.html"><div><p class="slide-label">160 / Ready</p><h2 class="slide-title serif">Searching stacks and queues</h2><p class="slide-desc">スタック／キュー上での探索の特徴を比較します。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+                <a class="slide-item carryover-item" href="./170.Linked%20lists.html"><div><p class="slide-label">170 / Ready</p><h2 class="slide-title serif">Linked lists</h2><p class="slide-desc">連結リストの構造と配列との違いを整理します。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+                <a class="slide-item carryover-item" href="./180.Implementing%20stacks%20and%20queues%20with%20linked%20lists.html"><div><p class="slide-label">180 / Ready</p><h2 class="slide-title serif">Implementing stacks and queues with linked lists</h2><p class="slide-desc">連結リストでスタック／キューを実装する方法を学びます。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+                <a class="slide-item carryover-item" href="./190.Summary%20and%20the%20Lottery%20Problem.html"><div><p class="slide-label">190 / Ready</p><h2 class="slide-title serif">Summary and the Lottery Problem</h2><p class="slide-desc">全体総括と、応用問題（Lottery Problem）で理解を確認します。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
     </section>
     <p class="meta">全19本（Week 6 ディレクトリ内の HTML スライドを反映）</p>
     <div class="bottom"><span>Kindai University</span><a href="../../index.html">Back to Week List</a></div>
