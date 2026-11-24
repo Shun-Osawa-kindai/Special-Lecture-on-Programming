@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 9-10 講義ノート | プログラミング特講</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --bg:#d1cfca; --card:#f7f6f4; --surface:#fff; --border:#dddad5; --text:#222; --muted:#666; --light:#9b9b9b; --navy:#344d61; --accent:#8c7a6b; }
+        * { box-sizing: border-box; }
+        body { margin:0; font-family:"Inter","Noto Sans JP",sans-serif; background:var(--bg); color:var(--text); line-height:1.7; }
+        h1,h2,.serif { font-family:"Playfair Display","Noto Serif JP",serif; font-weight:400; }
+        .viewport { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:32px 20px; }
+        .card { width:100%; max-width:980px; background:var(--card); border:1px solid var(--border); border-radius:8px; box-shadow:0 26px 55px -20px rgba(0,0,0,.16); padding:44px 52px 24px; }
+        .top { display:flex; justify-content:space-between; font-size:10px; letter-spacing:.28em; text-transform:uppercase; color:var(--light); margin-bottom:28px; }
+        .top a,.bottom a { text-decoration:none; color:inherit; }
+        .top a:hover,.bottom a:hover { color:var(--accent); }
+        .eyebrow { margin:0 0 8px 0; font-size:10px; letter-spacing:.34em; text-transform:uppercase; color:var(--accent); }
+        h1 { margin:0 0 10px 0; font-size:clamp(1.75rem,2.7vw,2.2rem); }
+        .subtitle { margin-top:8px; color:var(--muted); font-size:.92rem; }
+        .section { margin-top:22px; border:1px solid var(--border); background:var(--surface); border-radius:6px; padding:16px 18px; }
+        .section h2 { margin:0 0 10px; font-size:.9rem; letter-spacing:.08em; color:var(--navy); }
+        .keywords { margin:0; color:var(--muted); font-size:.88rem; }
+        .syllabus-lines { margin:0; padding-left:1.1rem; color:var(--muted); font-size:.88rem; }
+        .syllabus-lines li { margin:.25rem 0; }
+        .group { margin-top:24px; }
+        .group h2 { margin:0 0 8px; font-size:.9rem; letter-spacing:.08em; color:var(--navy); }
+        .group-note { margin:0 0 8px; color:var(--muted); font-size:.84rem; }
+        .slide-list { border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
+        .slide-item { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:20px; align-items:center; padding:14px 0; border-bottom:1px solid var(--border); text-decoration:none; color:inherit; transition:background-color .18s ease, padding-left .18s ease; }
+        .slide-item:hover { background:rgba(255,255,255,.5); padding-left:10px; }
+        .slide-item:last-child { border-bottom:none; }
+        .slide-label { margin:0; color:var(--light); font-size:10px; letter-spacing:.2em; text-transform:uppercase; }
+        .slide-title { margin:3px 0 3px; font-size:1.02rem; color:var(--navy); }
+        .slide-desc { margin:0; font-size:.85rem; color:var(--muted); }
+        .action { display:inline-flex; align-items:center; gap:10px; font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--navy); white-space:nowrap; }
+        .action i { font-size:.62rem; }
+        .bottom { margin-top:20px; border-top:1px solid var(--border); padding-top:12px; display:flex; justify-content:space-between; font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--light); }
+        @media (max-width: 840px) { .card { padding:28px 20px 18px; } .slide-item { grid-template-columns:1fr; } }
+    </style>
+</head>
+<body>
+<div class="viewport"><main class="card" aria-label="Week 9-10 ハブ">
+    <div class="top"><a href="../../index.html">← Course Hub</a><span>Week 9-10 / Hub</span></div>
+    <p class="eyebrow">Special Lecture on Programming</p>
+    <h1 class="serif">第9・10回 Data persistence, databases, and state changes</h1>
+    <p class="subtitle">授業形式：演習を含む講義（2回分を1つの資料群として公開）</p>
+
+    <section class="section">
+        <h2>授業計画の内容（第9回・第10回）</h2>
+        <p class="keywords">Data persistence； arrays versus databases； data models； program state の表現； State changes； data creation and update； history； application と database の接続</p>
+    </section>
+
+    <section class="section">
+        <h2>このページの使い方</h2>
+        <ul class="syllabus-lines">
+            <li>この <code>index.html</code> から、同一フォルダ内の教材ファイルへ直接移動できます。</li>
+            <li>学生向けの入口は <code>00_Student_Start.html</code> です。まずここから開始してください。</li>
+            <li>既存ファイル同士のリンクはそのまま維持し、入口だけを一元化しています。</li>
+        </ul>
+    </section>
+
+    <section class="group" aria-label="入口と参照資料">
+        <h2>入口と参照資料</h2>
+        <p class="group-note">学生が最初に開く入口と、授業中の補助資料。</p>
+        <div class="slide-list">
+            <a class="slide-item" href="00_Student_Start.html"><div><p class="slide-label">Start / Student</p><h3 class="slide-title serif">00_Student_Start.html</h3><p class="slide-desc">学生向けの最小導線。資料閲覧と実習開始のための入口。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+            <a class="slide-item" href="Lab_SQL_Practice_Guide.html"><div><p class="slide-label">Lab Guide</p><h3 class="slide-title serif">Lab_SQL_Practice_Guide.html</h3><p class="slide-desc">SQLラボの進め方と操作手順（第9・10回共通）。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+            <a class="slide-item" href="Student_Reference.html"><div><p class="slide-label">Reference</p><h3 class="slide-title serif">Student_Reference.html</h3><p class="slide-desc">今回読むPython/SQLの基礎を確認する参照資料。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        </div>
+        <p class="group-note">※ 実習用ファイルは別配布の <code>webapplication_starter</code> を使用します（<code>flask_sqlite_rsa_starter</code> / <code>practice</code> / <code>lab</code>）。</p>
+    </section>
+
+    <section class="group" aria-label="第9回 本編スライド">
+        <h2>第9回 本編スライド</h2>
+        <p class="group-note">一括版（Complete）または分割版（01〜04）を選んで利用できます。</p>
+        <div class="slide-list">
+            <a class="slide-item" href="Lecture09_Complete.html"><div><p class="slide-label">Week 9 / Complete</p><h3 class="slide-title serif">Lecture09_Complete.html</h3><p class="slide-desc">第9回の一括版（通しで進行したいとき）。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+            <a class="slide-item" href="Lecture09_01_Programs_and_State.html"><div><p class="slide-label">Week 9 / 01</p><h3 class="slide-title serif">Lecture09_01_Programs_and_State.html</h3><p class="slide-desc">Programs and State。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+            <a class="slide-item" href="Lecture09_02_Data_Models.html"><div><p class="slide-label">Week 9 / 02</p><h3 class="slide-title serif">Lecture09_02_Data_Models.html</h3><p class="slide-desc">Data Models。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+            <a class="slide-item" href="Lecture09_03_SQLite_Read_and_Create.html"><div><p class="slide-label">Week 9 / 03</p><h3 class="slide-title serif">Lecture09_03_SQLite_Read_and_Create.html</h3><p class="slide-desc">SQLite Read and Create。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+            <a class="slide-item" href="Lecture09_04_Persistence_and_Reflection.html"><div><p class="slide-label">Week 9 / 04</p><h3 class="slide-title serif">Lecture09_04_Persistence_and_Reflection.html</h3><p class="slide-desc">Persistence and Reflection。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        </div>
+    </section>
+
+    <section class="group" aria-label="第10回 本編スライド">
+        <h2>第10回 本編スライド</h2>
+        <p class="group-note">一括版（Complete）または分割版（01〜04）を選んで利用できます。</p>
+        <div class="slide-list">
+            <a class="slide-item" href="Lecture10_Complete.html"><div><p class="slide-label">Week 10 / Complete</p><h3 class="slide-title serif">Lecture10_Complete.html</h3><p class="slide-desc">第10回の一括版（通しで進行したいとき）。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+            <a class="slide-item" href="Lecture10_01_State_Changes.html"><div><p class="slide-label">Week 10 / 01</p><h3 class="slide-title serif">Lecture10_01_State_Changes.html</h3><p class="slide-desc">State Changes。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+            <a class="slide-item" href="Lecture10_02_Forms_Application_Database.html"><div><p class="slide-label">Week 10 / 02</p><h3 class="slide-title serif">Lecture10_02_Forms_Application_Database.html</h3><p class="slide-desc">Forms / Application / Database。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+            <a class="slide-item" href="Lecture10_03_History_and_Commit.html"><div><p class="slide-label">Week 10 / 03</p><h3 class="slide-title serif">Lecture10_03_History_and_Commit.html</h3><p class="slide-desc">History and Commit。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+            <a class="slide-item" href="Lecture10_04_Modify_and_Verify.html"><div><p class="slide-label">Week 10 / 04</p><h3 class="slide-title serif">Lecture10_04_Modify_and_Verify.html</h3><p class="slide-desc">Modify and Verify。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        </div>
+    </section>
+
+    <section class="group" aria-label="補足スライド">
+        <h2>補足スライド（Supplement）</h2>
+        <p class="group-note">授業中の補足説明や自習での深掘りに使う資料。</p>
+        <div class="slide-list">
+            <a class="slide-item" href="Supplement_App_Architecture.html"><div><p class="slide-label">Supplement</p><h3 class="slide-title serif">Supplement_App_Architecture.html</h3><p class="slide-desc">配布アプリの見取り図。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+            <a class="slide-item" href="Supplement_Browser_HTML_DOM_Canvas.html"><div><p class="slide-label">Supplement</p><h3 class="slide-title serif">Supplement_Browser_HTML_DOM_Canvas.html</h3><p class="slide-desc">Browser / HTML / DOM / Canvas の整理。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+            <a class="slide-item" href="Supplement_Data_Model_Design.html"><div><p class="slide-label">Supplement</p><h3 class="slide-title serif">Supplement_Data_Model_Design.html</h3><p class="slide-desc">データモデル設計の補足。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+            <a class="slide-item" href="Supplement_API_JSON_and_Save.html"><div><p class="slide-label">Supplement</p><h3 class="slide-title serif">Supplement_API_JSON_and_Save.html</h3><p class="slide-desc">API / JSON / 保存の補足。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+            <a class="slide-item" href="Supplement_Requirements_and_Changes.html"><div><p class="slide-label">Supplement</p><h3 class="slide-title serif">Supplement_Requirements_and_Changes.html</h3><p class="slide-desc">観察から要求・改修へつなぐ補足。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+            <a class="slide-item" href="Supplement_SQL_Update_and_Rollback.html"><div><p class="slide-label">Supplement</p><h3 class="slide-title serif">Supplement_SQL_Update_and_Rollback.html</h3><p class="slide-desc">SQL更新とロールバックの補足演習。</p></div><span class="action">Open<i class="fa-solid fa-arrow-right"></i></span></a>
+        </div>
+    </section>
+
+    <div class="bottom"><span>Kindai University</span><a href="../../index.html">Back to Week List</a></div>
+</main></div>
+</body>
+</html>

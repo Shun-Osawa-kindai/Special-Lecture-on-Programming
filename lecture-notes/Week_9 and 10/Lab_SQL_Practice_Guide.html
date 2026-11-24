@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>第9・10回 SQLラボの使い方</title><style>
+:root{--bg:#f7f5f1;--ink:#253640;--muted:#717777;--rose:#995467;--line:#ddd6ca}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Hiragino Sans","Yu Gothic",system-ui,sans-serif;line-height:1.85}main{max-width:980px;margin:auto;padding:55px 28px 80px}header{border-bottom:1px solid var(--line);padding-bottom:28px;margin-bottom:32px}.eyebrow{font-size:12px;letter-spacing:.15em;color:var(--rose)}h1{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:36px;font-weight:500;margin:12px 0}h2{font-size:25px;font-weight:500;border-top:1px solid var(--line);padding-top:30px;margin:46px 0 16px}h3{font-size:18px;color:var(--rose);font-weight:500;margin:28px 0 10px}p{margin:12px 0}a{color:var(--rose);text-underline-offset:4px}nav{display:flex;flex-wrap:wrap;gap:12px 22px;margin:20px 0}pre{font-family:ui-monospace,Consolas,monospace;font-size:14px;line-height:1.7;background:#eee9e1;border-left:3px solid #b49b82;padding:18px 20px;white-space:pre-wrap;overflow-wrap:anywhere}code{font-family:ui-monospace,Consolas,monospace;font-size:.92em}table{border-collapse:collapse;width:100%;font-size:15px}th,td{text-align:left;vertical-align:top;padding:12px;border-bottom:1px solid var(--line)}th{font-weight:500;color:var(--muted)}.note{color:var(--muted);font-size:14px}.important{border-left:3px solid var(--rose);padding:8px 20px;background:#fffdfa}details{border:1px solid var(--line);padding:13px 18px;margin:15px 0}summary{cursor:pointer;color:var(--rose)}li{margin:8px 0}.answer{background:#eeeee4;padding:12px 18px}.scroll{overflow:auto}@media(max-width:600px){main{padding:30px 18px}h1{font-size:28px}h2{font-size:23px}table{font-size:13px}th,td{padding:8px}}@media print{body{background:white}main{max-width:none;padding:0}nav{display:none}pre,table,details{break-inside:avoid}h2{break-after:avoid}}
+</style></head><body><main>
+<header><p class="eyebrow">LECTURE 09 / 10 · SQL PRACTICE</p><h1>SQLラボの使い方</h1><p>表の内容を予測し、SQLを実行し、結果を確認します。Pythonの標準ライブラリだけで使える練習用コンソールを用意しました。</p><p class="note">この練習のbook表と、ToDoアプリのDBは別のファイルです。演習09-C・09-Dは、元の問題番号を保って第10回に配置しています。</p></header>
+<p class="note"><a href="index.html">← Week 9-10 indexへ戻る</a> / <a href="00_Student_Start.html">学生用スタートへ</a></p>
+<div class="important"><p>この資料で使う実習ファイルは、講義ノート本体とは別配布の <code>webapplication_starter</code> にあります。SQL練習は <code>webapplication_starter/lab</code>、観察補助は <code>webapplication_starter/practice</code>、Webアプリ本体は <code>webapplication_starter/flask_sqlite_rsa_starter</code> を使います。</p></div>
+<nav aria-label="目次"><a href="#prepare">準備</a><a href="#lecture9">第9回</a><a href="#checkpoint">確認用DB</a><a href="#lecture10">第10回</a><a href="#reset">初期状態へ戻す</a><a href="#help">困ったとき</a></nav>
+
+<section id="prepare"><h2>準備と入力する場所</h2><p>端末で、<code>webapplication_starter/lab</code>（<code>lab.py</code> がある場所）へ移動します。以下はそのフォルダ内で実行します。追加ライブラリのインストールは不要です。</p><p>コマンド中の <code>python</code> はPython 3を表します。環境に合わせて <code>python3</code> または <code>py -3</code> に置き換えます。</p><table><thead><tr><th>入力する場所</th><th>入力するもの</th></tr></thead><tbody><tr><td>通常の端末</td><td><code>python lab.py start9</code> など、Pythonを動かすコマンド</td></tr><tr><td><code>sqlite&gt;</code> が出ているコンソール</td><td><code>SELECT ...;</code> などのSQL、<code>.quit</code> などの操作</td></tr></tbody></table><p>説明に出てくる <code>sqlite&gt;</code> や <code>...&gt;</code> は入力待ちの表示です。自分では入力しません。SQLの末尾は <code>;</code>、コンソールの終了は <code>.quit</code> です。</p><p class="important">このコンソールでは、BEGINを指定していないSQLは一文ごとに自動で確定します。第10回では、BEGINとCOMMIT／ROLLBACKを明示して、複数の操作を一まとまりとして扱います。</p></section>
+
+<section id="lecture9"><h2>第9回：追加して、必要な行を読む</h2><h3>空のbook表を用意する</h3><pre>python lab.py start9
+python lab.py open9</pre><p><code>data/book9.sqlite3</code> にbook表を用意します。初めて作ったときは0行です。すでに同じDBがあれば、記録を保持します。</p><p>次はコンソール内に入力します。</p><pre>.databases
+.tables
+.schema book
+SELECT id, name, price_pence FROM book ORDER BY id;</pre><p>初回のSELECTは0行です。表は存在しますが、データ行がまだない状態です。<code>start9</code> が表を作るので、同じ表を再びCREATEする必要はありません。</p>
+<h3>初期の三冊を追加する</h3><p>book表が0行であることを確認してから、次を一度だけ実行します。価格の単位はペンスです。4025ペンスは40.25ポンドに相当します。</p><pre>INSERT INTO book (id, name, price_pence)
+VALUES
+    (1, 'Database book', 4025),
+    (2, 'Node.js book', 2500),
+    (3, 'Express book', 3199);
+
+SELECT id, name, price_pence FROM book ORDER BY id;</pre><table><thead><tr><th>id</th><th>name</th><th>price_pence</th></tr></thead><tbody><tr><td>1</td><td>Database book</td><td>4025</td></tr><tr><td>2</td><td>Node.js book</td><td>2500</td></tr><tr><td>3</td><td>Express book</td><td>3199</td></tr></tbody></table>
+<h3>演習09-A：表示する列を選ぶ</h3><p>本の名前だけを表示してください。続いて、本の名前と価格を表示してください。</p><details><summary>解答例と確認</summary><pre>SELECT name FROM book ORDER BY id;
+SELECT name, price_pence FROM book ORDER BY id;</pre><p>どちらも3行です。最初はnameの一列、次はnameとprice_penceの二列になります。表示する列を減らしても、元の表の列は消えません。</p></details>
+<h3>演習09-B：一冊を追加する</h3><p>ID 4、名前「Testing book」、価格1800ペンスの本を追加してください。</p><details><summary>解答例と確認</summary><pre>INSERT INTO book (id, name, price_pence)
+VALUES (4, 'Testing book', 1800);
+
+SELECT id, name, price_pence FROM book WHERE id = 4;</pre><p>結果はID 4の一行です。全件を確認すると4行になります。同じINSERTを繰り返すとIDの重複で拒否されます。</p></details>
+<h3>条件と表示順</h3><p>30ポンドより高い本を調べます。保存単位がペンスなので、条件には3000を使います。</p><pre>SELECT name, price_pence
+FROM book
+WHERE price_pence &gt; 3000
+ORDER BY id;</pre><p>結果はDatabase bookとExpress bookの2行です。次は価格の高い順に表示します。</p><pre>SELECT id, name, price_pence
+FROM book
+ORDER BY price_pence DESC, id;</pre><p>09-Bまで終えていれば、表示順はID 1、3、2、4です。検索結果の順番が変わっても、IDは変わりません。</p>
+<h3>開き直して確かめる</h3><p>コンソールで <code>.quit</code> を入力して終了します。その後、通常の端末で次を実行します。</p><pre>python lab.py show9
+python lab.py open9</pre><p>第9回の最後は、ID 1〜4の4行で、ID 2の価格は2500です。DBのパスと値を確認します。開き直すときに <code>--reset</code> は付けません。</p></section>
+
+<section id="checkpoint"><h2>途中から確認するための別DB</h2><p>第9回の四冊が入った状態から読み取りを試したい場合は、通常の端末で次を実行します。</p><pre>python lab.py checkpoint9
+python lab.py open-checkpoint9</pre><p><code>data/book9_checkpoint.sqlite3</code> を作り、ID 1〜4の四冊を入れます。ID 2の価格は2500です。自分の <code>book9.sqlite3</code> は変更しません。</p><p>すでに確認用DBがある場合も、それを保持します。現在の内容だけを見る場合は次を使います。</p><pre>python lab.py show-checkpoint9</pre><p class="note">確認用DBと自分の演習用DBは、自動で同期しません。<code>.databases</code> で開いているファイルを確かめてください。</p></section>
+
+<section id="lecture10"><h2>第10回：一件の変更と確定</h2><h3>四冊から始める</h3><p>第10回では別の練習用DBを使います。第9回の結果を残したまま、同じ開始状態を用意できます。</p><pre>python lab.py start10
+python lab.py open10</pre><p>新しく作った <code>data/book10.sqlite3</code> には、ID 1〜4の四冊が入っています。価格は順に4025、2500、3199、1800です。既存のDBがあれば保持します。</p>
+<h3>演習09-C：一件だけ更新する</h3><p>ID 2の本の価格を2800ペンスに変更してください。実行前と実行後に、対象の行を確認してください。</p><details><summary>解答例と確認</summary><pre>SELECT id, name, price_pence FROM book WHERE id = 2;
+
+BEGIN;
+UPDATE book SET price_pence = 2800 WHERE id = 2;
+SELECT changes() AS changed_rows;
+SELECT id, name, price_pence FROM book WHERE id = 2;
+COMMIT;
+
+SELECT id, name, price_pence FROM book ORDER BY id;</pre><p><code>changed_rows</code> は1です。ID 2の価格だけが2500から2800へ変わり、他の三冊の値はそのままです。COMMITで、この変更を確定します。</p></details>
+<h3>WHEREを外した場合を観察する</h3><p>次は練習用DBで、確定せずに結果を観察する例です。何行が変わるかを予想してから実行します。</p><pre>BEGIN;
+UPDATE book SET price_pence = 0;
+SELECT id, name, price_pence FROM book ORDER BY id;
+ROLLBACK;
+
+SELECT id, name, price_pence FROM book ORDER BY id;</pre><p>最初のSELECTでは四冊すべての価格が0です。ROLLBACK後には、4025、2800、3199、1800へ戻ります。ID 2の2800は、先の演習09-Cで確定した値です。</p><p class="important">ROLLBACKで戻せるのは、いま未確定のトランザクションです。すでにCOMMITした変更を、あとから同じROLLBACKで取り消すことはできません。</p>
+<h3>演習09-D：指定した行を削除する</h3><p>ID 4の本を削除してください。削除対象と、削除後の表を確認してください。</p><details><summary>解答例と確認</summary><pre>SELECT id, name, price_pence FROM book WHERE id = 4;
+
+BEGIN;
+DELETE FROM book WHERE id = 4;
+SELECT changes() AS changed_rows;
+COMMIT;
+
+SELECT id, name, price_pence FROM book ORDER BY id;</pre><p><code>changed_rows</code> は1です。ID 1、2、3の三冊が残ります。DELETEはデータ行を削除する操作で、表の定義は残ります。</p></details>
+<h3>制約を確かめる</h3><p>以下を一文ずつ実行し、受け付けられない理由を説明してください。</p><pre>INSERT INTO book (id, name, price_pence)
+VALUES (2, 'Another book', 1000);
+
+INSERT INTO book (id, name, price_pence)
+VALUES (5, NULL, 1000);
+
+INSERT INTO book (id, name, price_pence)
+VALUES (6, 'Negative price', -1);</pre><details><summary>理由と確認</summary><p>順に、ID 2の重複、名前のNULL、負の価格が拒否されます。エラーメッセージの見え方は環境によって異なります。</p><pre>SELECT id, name, price_pence FROM book ORDER BY id;</pre><p>拒否された行は追加されません。ID 1、2、3の三冊、価格4025、2800、3199のままです。</p></details>
+<h3>最後の状態を開き直す</h3><p>コンソールを <code>.quit</code> で終了し、通常の端末で次を実行します。</p><pre>python lab.py show10
+python lab.py open10</pre><p>09-C・09-Dを終えた場合の期待結果は、次の三冊です。</p><table><thead><tr><th>id</th><th>name</th><th>price_pence</th></tr></thead><tbody><tr><td>1</td><td>Database book</td><td>4025</td></tr><tr><td>2</td><td>Node.js book</td><td>2800</td></tr><tr><td>3</td><td>Express book</td><td>3199</td></tr></tbody></table><p>09-Dを行っていなければID 4も残ります。自分がどこまで操作したかに合わせて確認してください。</p></section>
+
+<section id="reset"><h2>初期状態への戻し方</h2><p class="important">現在開いているSQLコンソールを <code>.quit</code> で終了してから実行します。<code>--reset</code> は、その練習用book表の現在の記録を消して、開始状態に戻す明示的な操作です。</p><table><thead><tr><th>目的</th><th>通常の端末で実行するコマンド</th><th>結果</th></tr></thead><tbody><tr><td>第9回を最初から</td><td><code>python lab.py start9 --reset</code></td><td>book9のbook表を0行に戻す</td></tr><tr><td>第10回を最初から</td><td><code>python lab.py start10 --reset</code></td><td>book10のbook表を四冊、ID 2=2500に戻す</td></tr><tr><td>第9回の続きをする</td><td><code>python lab.py open9</code></td><td>同じbook9を開く。初期化しない</td></tr><tr><td>第10回の続きをする</td><td><code>python lab.py open10</code></td><td>同じbook10を開く。初期化しない</td></tr></tbody></table><p><code>start9</code> と <code>start10</code> だけでは、すでにあるDBの記録は変えません。初期化してよいと判断した場合にだけ <code>--reset</code> を付けます。ほかの練習用DBやToDoアプリのDBは変更しません。</p></section>
+
+<section id="help"><h2>困ったとき</h2><table><thead><tr><th>状況</th><th>確認すること</th></tr></thead><tbody><tr><td>DBがありませんと表示される</td><td>案内された <code>start9</code>、<code>start10</code> または <code>checkpoint9</code> を先に実行する。open/showは新規DBを作らない。</td></tr><tr><td><code>...&gt;</code> が続く</td><td>SQL末尾のセミコロンや、引用符の閉じ忘れを確認する。Control+Cで入力中のSQLを捨てられる。</td></tr><tr><td>IDの重複エラー</td><td>同じINSERTを繰り返した可能性がある。SELECTで現在の行を確認する。</td></tr><tr><td>BEGINを実行できない</td><td>すでにトランザクションを開始していないか確認する。意図した変更か確かめ、COMMITまたはROLLBACKで区切る。</td></tr><tr><td>開き直すと値が戻る</td><td>BEGIN後の変更をCOMMITしたか確認する。未確定のまま.quitで終了すると、その変更は取り消す。</td></tr><tr><td>期待した行がない</td><td><code>.databases</code> でDBのパスを確認する。WHEREの条件と、自分が実行した演習の範囲を確認する。</td></tr></tbody></table><p class="note">この簡易コンソールは、授業で使うSQLと一部のドットコマンドに対応しています。完全なSQLite CLIと表示や対応コマンドは同一ではありません。<code>.help</code> で対応する操作を確認できます。</p></section>
+</main></body></html>
